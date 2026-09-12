@@ -1,0 +1,372 @@
+schema_version: 1
+policy_version: 0.1.0
+name: model-routing
+description: >
+  Provider-aware model and reasoning policy for selecting an AI model from task
+  intent, scope, risk, latency, autonomy, and cost/quota constraints.
+updated: 2026-09-12
+
+# Keep callers dependent on logical profiles and intents, not scattered model IDs.
+defaults:
+  strategy: first_match
+  fallback_route: general_balanced
+  normalize_reasoning_names:
+    extra_high: xhigh
+    extra-high: xhigh
+  principles:
+    - Use the least expensive/slow model that can reliably satisfy the task.
+    - Increase capability or reasoning because the task demands it, not by default.
+    - Prefer fast interactive models for bounded edit-run-inspect loops.
+    - Prefer frontier models for ambiguity, architecture, long-horizon work, and high consequence.
+    - Escalate after evidence of difficulty; de-escalate once the difficult part is resolved.
+    - Keep model bindings centralized so projects consume roles rather than hard-coded model names.
+
+models:
+  frontier:
+    provider: openai
+    model: gpt-6-astra
+    display_name: GPT-6 Astra
+    surfaces: [api, chat, codex, work]
+    reasoning:
+      supported: [low, medium, high, xhigh, max]
+      default: medium
+    attributes:
+      capability: frontier
+      latency: moderate
+      cost: very_high
+      context: very_large
+      autonomy: excellent
+      ambiguity_handling: excellent
+      software_engineering: excellent
+      interactive_iteration: good
+    prefer_for:
+      - architecture
+      - difficult_reasoning
+      - long_horizon_execution
+      - cross_cutting_refactors
+      - deep_debugging
+      - security_critical_review
+      - final_adversarial_review
+    avoid_when:
+      - task_is_mechanical
+      - requirements_are_fully_determined_and_scope_is_small
+      - latency_is_primary_and_fast_iteration_is_available
+
+  balanced:
+    provider: openai
+    model: gpt-5.6-sol
+    display_name: GPT-5.6 Sol
+    surfaces: [api, chat, codex, work]
+    reasoning:
+      supported: [none, low, medium, high, xhigh, max]
+      default: medium
+    attributes:
+      capability: high
+      latency: moderate
+      cost: high
+      context: very_large
+      autonomy: strong
+      ambiguity_handling: strong
+      software_engineering: strong
+      interactive_iteration: good
+    prefer_for:
+      - general_engineering
+      - documentation
+      - implementation_from_strong_spec
+      - independent_second_review
+      - overflow_from_frontier
+    avoid_when:
+      - bounded_realtime_coding_has_dedicated_fast_model
+      - frontier_judgment_is_material_to_outcome
+
+  value:
+    provider: openai
+    model: gpt-5.6-terra
+    display_name: GPT-5.6 Terra
+    surfaces: [api, codex, work]
+    reasoning:
+      supported: [none, low, medium, high, xhigh, max]
+      default: medium
+    attributes:
+      capability: medium_high
+      latency: moderate
+      cost: medium
+      context: very_large
+      autonomy: good
+      ambiguity_handling: good
+      software_engineering: good
+      interactive_iteration: good
+    prefer_for:
+      - routine_implementation
+      - mechanical_refactors
+      - structured_transformations
+      - test_generation
+      - cost_sensitive_agents
+    avoid_when:
+      - architecture_is_unsettled
+      - repeated_failures_indicate_more_reasoning_is_needed
+
+  bulk:
+    provider: openai
+    model: gpt-5.6-luna
+    display_name: GPT-5.6 Luna
+    surfaces: [api, chat, work]
+    reasoning:
+      supported: [none, low, medium, high, xhigh, max]
+      default: low
+    attributes:
+      capability: economical
+      latency: fast
+      cost: very_low
+      context: very_large
+      autonomy: moderate
+      ambiguity_handling: moderate
+      software_engineering: moderate
+      interactive_iteration: strong
+    prefer_for:
+      - classification
+      - extraction
+      - repetitive_transformations
+      - simple_generation
+      - high_volume_low_risk_work
+    avoid_when:
+      - correctness_depends_on_deep_reasoning
+      - architectural_or_security_consequence_is_high
+
+  realtime_coding:
+    provider: openai
+    model: gpt-5.3-codex-spark
+    display_name: GPT-5.3-Codex-Spark
+    surfaces: [codex]
+    reasoning:
+      # Spark effort controls can vary by Codex/runtime version. A host adapter may
+      # supply a supported effort; otherwise omit it rather than inventing one.
+      supported: host_defined
+      default: null
+    attributes:
+      capability: specialized
+      latency: ultra_fast
+      cost: quota_dependent
+      context: medium
+      autonomy: bounded
+      ambiguity_handling: moderate
+      software_engineering: strong
+      interactive_iteration: excellent
+    runtime_notes:
+      - Research-preview availability and limits may change.
+      - When a separate Spark allowance exists, prefer Spark for eligible work before that allowance expires.
+      - Explicitly request tests/validation; Spark's default working style is intentionally lightweight.
+    prefer_for:
+      - targeted_edits
+      - bounded_implementation
+      - edit_run_inspect_fix_loops
+      - localized_debugging
+      - test_writing
+      - failing_test_repair
+      - small_refactors
+      - cli_and_ci_changes
+      - rapid_prototyping
+    avoid_when:
+      - long_horizon_autonomy
+      - repository_wide_architecture_is_unsettled
+      - deep_cross_system_reasoning
+      - context_requirements_exceed_runtime_limits
+
+routes:
+  # Planning and architecture
+  - id: architecture_critical
+    match:
+      intent: architecture
+      consequence: high
+    select:
+      model_profile: frontier
+      reasoning: xhigh
+
+  - id: architecture_default
+    match:
+      intent: architecture
+    select:
+      model_profile: frontier
+      reasoning: high
+
+  - id: project_definition
+    match:
+      intent: project_definition
+    select:
+      model_profile: frontier
+      reasoning: medium
+
+  - id: implementation_plan
+    match:
+      intent: implementation_plan
+    select:
+      model_profile: frontier
+      reasoning: high
+
+  # Coding
+  - id: realtime_bounded_coding
+    match:
+      intent: coding
+      scope: bounded
+      interaction: iterative
+    select:
+      model_profile: realtime_coding
+      reasoning: null
+
+  - id: coding_from_strong_spec
+    match:
+      intent: coding
+      requirements: explicit
+      architecture: settled
+    select:
+      model_profile: realtime_coding
+      reasoning: null
+    fallback:
+      model_profile: value
+      reasoning: medium
+
+  - id: autonomous_coding_default
+    match:
+      intent: coding
+      autonomy: long_horizon
+    select:
+      model_profile: frontier
+      reasoning: low
+
+  - id: complex_cross_cutting_coding
+    match:
+      intent: coding
+      scope: cross_cutting
+    select:
+      model_profile: frontier
+      reasoning: medium
+
+  - id: difficult_coding
+    match:
+      intent: coding
+      difficulty: high
+    select:
+      model_profile: frontier
+      reasoning: high
+
+  # Debugging and review
+  - id: localized_debugging
+    match:
+      intent: debugging
+      scope: bounded
+    select:
+      model_profile: realtime_coding
+      reasoning: null
+
+  - id: deep_debugging
+    match:
+      intent: debugging
+      difficulty: high
+    select:
+      model_profile: frontier
+      reasoning: high
+
+  - id: final_review
+    match:
+      intent: review
+      depth: deep
+    select:
+      model_profile: frontier
+      reasoning: high
+
+  - id: independent_second_review
+    match:
+      intent: review
+      goal: model_diversity
+    select:
+      model_profile: balanced
+      reasoning: high
+
+  # Routine work
+  - id: routine_engineering
+    match:
+      intent: routine_engineering
+    select:
+      model_profile: value
+      reasoning: medium
+
+  - id: mechanical_work
+    match:
+      intent: mechanical
+    select:
+      model_profile: value
+      reasoning: none
+
+  - id: high_volume_low_risk
+    match:
+      intent: bulk
+      consequence: low
+    select:
+      model_profile: bulk
+      reasoning: low
+
+  - id: documentation
+    match:
+      intent: documentation
+    select:
+      model_profile: balanced
+      reasoning: medium
+
+  - id: general_balanced
+    match:
+      intent: "*"
+    select:
+      model_profile: balanced
+      reasoning: medium
+
+escalation:
+  triggers:
+    - condition: repeated_failed_attempts >= 2
+      action: increase_reasoning_or_model_capability
+    - condition: architecture_becomes_unsettled
+      action: route_to_frontier_high
+    - condition: scope_expands_to_cross_cutting
+      action: route_to_frontier_medium_or_high
+    - condition: security_or_data_loss_consequence_becomes_high
+      action: route_to_frontier_high_or_xhigh
+    - condition: model_is_thrashing_or_repeating_work
+      action: stop_and_reframe_before_spending_more_compute
+  frontier_reasoning_chain: [low, medium, high, xhigh, max]
+  model_capability_chain: [bulk, value, balanced, frontier]
+
+deescalation:
+  triggers:
+    - condition: architecture_is_settled_and_remaining_work_is_bounded
+      action: route_to_realtime_coding_or_value
+    - condition: difficult_bug_has_been_isolated
+      action: route_fix_and_validation_to_realtime_coding
+    - condition: remaining_work_is_repetitive
+      action: route_to_value_or_bulk
+
+recommended_workflow:
+  - stage: define
+    route: project_definition
+  - stage: design
+    route: architecture_default
+  - stage: challenge_design
+    route: architecture_critical
+  - stage: specify_phase
+    route: implementation_plan
+  - stage: implement_bounded_work
+    route: realtime_bounded_coding
+  - stage: implement_long_horizon_work
+    route: autonomous_coding_default
+  - stage: escalate_hard_parts
+    route: difficult_coding
+  - stage: deep_review
+    route: final_review
+  - stage: apply_review_fixes
+    route: realtime_bounded_coding
+
+maintenance:
+  rules:
+    - Treat model names, availability, pricing, and quota behavior as replaceable bindings.
+    - Review provider bindings when models or product limits change.
+    - Do not change intent names merely because a provider renames a model.
+    - Prefer versioned releases/tags when multiple projects consume this policy.
+    - Add a JSON Schema only when automated validation becomes useful enough to justify it.
