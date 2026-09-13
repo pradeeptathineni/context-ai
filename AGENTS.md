@@ -2,7 +2,7 @@
 
 ## Purpose
 
-`context-ai` is a reusable library of provider-independent AI context, structured model routing, provider adapters, and evaluation guidance. Keep it concise, evidence-grounded, and progressively disclosed.
+`context-ai` is a reusable library of provider-independent AI context, opt-in project standards, structured model routing, provider adapters, and evaluation guidance. Keep it concise, evidence-grounded, and progressively disclosed.
 
 ## Read by task
 
@@ -12,10 +12,12 @@
 - For research or source refreshes, also read `core/research.md`.
 - For evals or comparisons, also read `core/benchmarking.md` and `core/testing.md`.
 - For releases, compatibility, or schema changes, also read `core/versioning.md`.
+- For opinionated project practice, load only the relevant files under `custom/` after the core contexts they cite.
 
 ## Boundaries
 
 - `core/` is canonical and provider-independent.
+- `custom/` contains opt-in house standards derived from `core/`; specialize by reference instead of duplicating canonical rules.
 - `models/` is machine-readable configuration; do not turn volatile model facts into prose-only guidance.
 - `providers/` describes provider behavior without duplicating `core/`.
 - Record material influences and review dates in `docs/references.md`.

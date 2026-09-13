@@ -6,7 +6,7 @@ Prefer authoritative specifications, then first-party product documentation, the
 
 External material is summarized and linked unless a pinned local copy has clear maintenance value and redistribution is permitted. A vendored artifact must record its local path, upstream URL, revision or tag, license, and review date, and must remain distinct from canonical adaptations. Volatile provider and model facts are reviewed against the product surface that consumes them.
 
-All external sources below were reviewed on **2026-09-12** unless another date is shown. No upstream artifacts are vendored in v0.1.0, so no `sourced/` directory exists.
+All external sources below were reviewed on **2026-09-12** unless another date is shown. No upstream artifacts are vendored in v0.2.0, so no `sourced/` directory exists.
 
 ## Repository context and configuration map
 
@@ -54,6 +54,17 @@ All external sources below were reviewed on **2026-09-12** unless another date i
   - [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html) supplied repository release semantics and the separation of a `v`-prefixed Git tag from the semantic version.
   - [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) supplied the human-oriented Unreleased and dated release structure.
 
+### Opinionated custom context
+
+The custom layer is a project-owned synthesis of recurring practice, reviewed on **2026-09-12**. It introduces no volatile external facts and derives its general rules from the canonical files and their sources above.
+
+- [`custom/README.md`](../custom/README.md) applies the progressive-disclosure and authority rules in [`core/context.md`](../core/context.md) to opt-in house standards.
+- [`custom/project-intent.md`](../custom/project-intent.md) specializes [`core/engineering.md`](../core/engineering.md) around durable user value, proportional scope, and evidence-qualified claims.
+- [`custom/technical-design.md`](../custom/technical-design.md) composes [`core/engineering.md`](../core/engineering.md), [`core/development.md`](../core/development.md), and [`core/testing.md`](../core/testing.md) into a condensed-but-complete design standard.
+- [`custom/ai-implementation.md`](../custom/ai-implementation.md) composes engineering, context, testing, and benchmarking guidance into an established-tooling, deterministic-mechanism, then bounded-model decision order.
+- [`custom/context-efficiency.md`](../custom/context-efficiency.md) combines [`core/context.md`](../core/context.md), [`core/compression.md`](../core/compression.md), and [`core/benchmarking.md`](../core/benchmarking.md) to minimize total tokens subject to retained outcome quality.
+- [`custom/delivery.md`](../custom/delivery.md) specializes development, testing, review, and versioning into an authorized end-to-end implementation, refinement, commit, push, and release loop.
+
 - [`models/routing.yaml`](../models/routing.yaml)
   - [OpenAI API models](https://developers.openai.com/api/docs/models) verified model IDs, reasoning levels, and relative family positioning. Reviewed 2026-09-12.
   - [OpenAI Codex models](https://learn.chatgpt.com/docs/models) verified Codex bindings and the requirement to account for product, authentication, workspace, client, and rollout. Reviewed 2026-09-12.
@@ -72,7 +83,7 @@ All external sources below were reviewed on **2026-09-12** unless another date i
 
 - [`scripts/validate.rb`](../scripts/validate.rb) and [`.github/workflows/validate.yml`](../.github/workflows/validate.yml)
   - [GitHub Actions quickstart](https://docs.github.com/en/actions/get-started/quickstart) supplied the minimal push and pull-request workflow convention.
-  - Validation rules come directly from the repository's v0.1.0 integrity contract; no third-party validation framework is used.
+  - Validation rules come directly from the repository's v0.2.0 integrity contract; no third-party validation framework is used.
 
 ## Cross-provider conventions considered
 

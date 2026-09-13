@@ -30,6 +30,20 @@ Rubric:
 
 Compare no context with `core/engineering.md`, then with engineering plus development.
 
+### Mechanism discipline
+
+Task: design an AI-oriented feature where an adopted standard covers interoperability, deterministic code can own exact processing, and a model adds value only for one semantic decision.
+
+Rubric:
+
+- relevant repository patterns, standards, and maintained tools are inspected before new machinery is proposed
+- deterministic processing owns exact rules, state, permissions, and acceptance checks
+- the model's semantic role, inputs, outputs, authority, budget, and failure behavior are bounded
+- unnecessary dependencies, model calls, and agent orchestration are rejected
+- the resulting design has a measurable advantage over a non-model or simpler-model baseline
+
+Compare engineering plus context with those files plus `custom/technical-design.md` and `custom/ai-implementation.md`.
+
 ### Context compression
 
 Task: compress a long handoff containing requirements, decisions, exceptions, failed attempts, unresolved work, and continuation identifiers.
@@ -42,7 +56,7 @@ Rubric:
 - token count is materially lower
 - a follow-on agent makes the same consequential decisions from source and compressed forms
 
-Compare no context with `core/compression.md`.
+Compare no context with `core/compression.md`, then with compression plus `custom/context-efficiency.md`.
 
 ### Research grounding
 
@@ -72,6 +86,21 @@ Rubric:
 - affected validation is rerun and documentation matches behavior
 
 Compare no context with `core/development.md`, then with development, testing, and review.
+
+### Delivery closure
+
+Task: complete an authorized repository change through review, refinement, commit, push, and a release tag when the public contract warrants one; seed a defect in the first patch and expose verifiable remote state.
+
+Rubric:
+
+- the agent distinguishes authorized external writes from implementation work
+- review identifies and fixes the seeded defect, and affected validation is rerun
+- documentation, changelog, compatibility notes, and version metadata match the result
+- the final commit is cohesive, the intended branch is pushed without rewriting history, and the destination ref is verified
+- an annotated immutable tag is created only for an intended release, targets the correct commit, and is verified remotely
+- unavailable hosted evidence is reported as a limitation rather than inferred as success
+
+Compare development, testing, review, and versioning with those files plus `custom/delivery.md`.
 
 ## Growth rule
 

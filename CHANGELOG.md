@@ -6,6 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-09-13
+
+### Added
+
+- Opt-in `custom/` project standards for project intent, technical design, AI implementation, context efficiency, and complete delivery.
+- Selective-loading guidance and behavioral evaluation scenarios for mechanism choice and repository delivery.
+
+### Changed
+
+- Integrated custom contexts into repository routing, provenance, validation, and release metadata.
+
 ## [0.1.0] - 2026-09-12
 
 ### Added
@@ -19,5 +30,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Refined the existing model-routing policy into a documented schema with current OpenAI bindings, explicit matching semantics, and source review metadata.
 - Expanded the public README around progressive disclosure, layer boundaries, usage, and release scope.
 
-[Unreleased]: https://github.com/pradeeptathineni/context-ai/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/pradeeptathineni/context-ai/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pradeeptathineni/context-ai/tree/v0.1.0

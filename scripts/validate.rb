@@ -22,6 +22,12 @@ REQUIRED = %w[
   core/review.md
   core/benchmarking.md
   core/versioning.md
+  custom/README.md
+  custom/project-intent.md
+  custom/technical-design.md
+  custom/ai-implementation.md
+  custom/context-efficiency.md
+  custom/delivery.md
   models/routing.yaml
   providers/openai/codex.md
   docs/references.md
@@ -45,9 +51,11 @@ REQUIRED.each do |name|
 end
 
 core_files = Dir.glob(ROOT.join("core/*.md")).sort
-core_files.each do |file|
+custom_files = Dir.glob(ROOT.join("custom/*.md")).sort
+context_files = core_files + custom_files
+context_files.each do |file|
   words = File.read(file).scan(/\S+/).length
-  error("canonical context is too large (#{words} words): #{relative(file)}") if words > 1_200
+  error("context is too large (#{words} words): #{relative(file)}") if words > 1_200
 end
 
 agents = ROOT.join("AGENTS.md")
@@ -115,6 +123,7 @@ references = ROOT.join("docs/references.md")
 reference_text = references.file? ? references.read : ""
 accounted_artifacts = (
   core_files +
+  custom_files +
   Dir.glob(ROOT.join("providers/**/*.md")) +
   yaml_files +
   Dir.glob(ROOT.join("evals/**/*")).select { |path| File.file?(path) }

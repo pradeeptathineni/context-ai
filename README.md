@@ -7,10 +7,11 @@ Reusable AI context engineering.
 ## What lives where
 
 - [`core/`](core/) contains provider-independent behavioral context. Load only the files relevant to the task.
+- [`custom/`](custom/) contains opt-in, opinionated project standards that compose and specialize the canonical core.
 - [`models/routing.yaml`](models/routing.yaml) is a machine-readable policy for selecting a model profile and reasoning level from task attributes.
 - [`providers/`](providers/) contains product-specific adapters: discovery, scope, precedence, configuration, and consumption guidance.
 - [`evals/`](evals/) defines how context quality can be compared without putting nondeterministic model calls in CI.
-- A nested `sourced/` directory may hold a pinned, redistributable upstream artifact when a local snapshot has clear value. None are included in v0.1.0.
+- A nested `sourced/` directory may hold a pinned, redistributable upstream artifact when a local snapshot has clear value. None are included in v0.2.0.
 - [`docs/references.md`](docs/references.md) maps maintained artifacts to the sources that materially shaped them.
 
 Markdown is used for instructions people and models should read naturally. YAML is used where consumers need stable fields, validation, and routing logic. Provider adapters reference canonical context instead of copying it.
@@ -37,22 +38,25 @@ An integration can evaluate task attributes against `models/routing.yaml`, selec
 
 See [`providers/openai/codex.md`](providers/openai/codex.md) for Codex-specific instruction discovery and configuration behavior.
 
+Projects that adopt the opinionated layer should select from [`custom/README.md`](custom/README.md), not load the directory wholesale. For example, an AI implementation may add `custom/ai-implementation.md`; add `custom/delivery.md` when the task needs the full implementation-to-integration loop or includes publication or release.
+
 ## Design
 
 Context is a finite attention budget. Start with small, always-relevant instructions; retrieve task-specific context just in time; and load provider guidance only for that provider. Preserve project facts, decisions, and non-obvious constraints. Avoid repeating generic knowledge a capable model already has.
 
-The four layers have different change pressures:
+The five layers have different change pressures:
 
 1. Canonical context changes when durable guidance improves.
-2. Structured configuration changes when a machine-readable contract or binding changes.
-3. Provider adapters change with product behavior.
-4. References and evaluations show why an artifact exists and whether it still works.
+2. Custom context changes when repeated project practice justifies an opinionated specialization.
+3. Structured configuration changes when a machine-readable contract or binding changes.
+4. Provider adapters change with product behavior.
+5. References and evaluations show why an artifact exists and whether it still works.
 
 This separation lets model and provider facts evolve without rewriting the behavioral library.
 
-## v0.1.0 scope
+## v0.2.0 scope
 
-The first release includes nine core contexts, an OpenAI model-routing policy, a Codex adapter, a provenance map, deterministic repository validation, and an initial evaluation protocol. Future variants should be deltas from canonical context, and future packs should compose references rather than copy content. Additional providers, Agent Skills packaging, `llms.txt`, and automated model-graded evals wait for a real consumer or evidence that they improve outcomes.
+This release adds five custom contexts for project intent, technical design, AI implementation, context efficiency, and complete delivery, plus a small router for selective use. The nine canonical core contexts, OpenAI model-routing policy, Codex adapter, provenance map, deterministic validation, and evaluation protocol remain intact. Custom guidance stays a delta from canonical context and composes references rather than copying content. Additional providers, Agent Skills packaging, `llms.txt`, and automated model-graded evals wait for a real consumer or evidence that they improve outcomes.
 
 Run validation with:
 
