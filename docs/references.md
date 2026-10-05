@@ -112,7 +112,7 @@ The additional house files below were reviewed on **2026-10-05**. They distill p
 - [`scripts/lookup.rb`](../scripts/lookup.rb) reads the validated registry and resolves concept-specific signal sources without a new dependency; its output does not assert runtime capability. Reviewed 2026-10-05.
 - [`scripts/validate.rb`](../scripts/validate.rb) and [`.github/workflows/validate.yml`](../.github/workflows/validate.yml)
   - [GitHub Actions quickstart](https://docs.github.com/en/actions/get-started/quickstart) supplied the minimal push and pull-request workflow convention.
-  - Validation rules come directly from the repository's v0.2.0 integrity contract; no third-party validation framework is used.
+  - Validation rules come directly from the repository's v0.2.0 integrity contract; the original validator uses Ruby standard libraries; loadout and interchange validation additionally use pinned PyYAML and jsonschema.
 
 ## Cross-provider conventions considered
 
@@ -122,3 +122,13 @@ The additional house files below were reviewed on **2026-10-05**. They distill p
 - [Agent Skills specification](https://agentskills.io/specification): the format now used for the `standard` backpack. It complements provider-independent canonical context and always-on repository routing.
 
 These sources influenced the layer boundaries and future extension model. Provider adapters for Claude Code, Gemini CLI, and Copilot are intentionally absent until there is a consumer to validate them.
+
+## v1 bootstrap (reviewed 2026-10-05)
+
+`loadouts/standard.yaml`, `loadouts/context-authoring.yaml`, `loadouts/research-evidence.yaml`, `capabilities.yaml`, `decisions/bootstrap.yaml`, `skills/context-loadout/SKILL.md`, `procedures/research-evidence.md`, and `docs/loadouts.md` implement the delivery policy in the user-supplied context-signals-v1-kit. The decision ledger records project policy separately from source-supported interfaces. The frozen `schemas/evidence-bundle-v1.schema.json` is an unchanged kit contract, intended for canonical ownership by Signals; it grants no execution authority.
+
+The research procedure composes `core/research.md` with the MIT-licensed Maestro research skill at producer commit f21844f12442c2fefdcf64f737c7423245959457; it is a summary, not a second research engine. [Producer procedure](https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/.agents/skills/maestro-research/SKILL.md).
+
+[Current Codex models](https://learn.chatgpt.com/docs/models) supports the balanced profile's GPT-6.1 Sol binding and documents Spark retirement. Availability still depends on the account/client. Installed desktop tool metadata exposes that binding here; no inference probe, API entitlement claim, or global settings change was needed.
+
+`.agents/skills/context-loadout/SKILL.md` is a local generated router owned by materialization; the maintained source is `skills/context-loadout/SKILL.md`. It preserves the existing locally installed `standard` skill. `evals/bootstrap-use.json` records a builder-proxy explicit read and actual validator maintenance, not independent compliance or measured token savings.

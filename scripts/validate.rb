@@ -80,7 +80,7 @@ agents = ROOT.join("AGENTS.md")
 error("AGENTS.md exceeds the 8 KiB routing budget") if agents.file? && agents.size > 8 * 1024
 
 text_files = Dir.glob(ROOT.join("**/*"), File::FNM_DOTMATCH).select do |path|
-  File.file?(path) && !path.include?("/.git/")
+  File.file?(path) && !path.include?("/.git/") && !%w[.context-ai .venv __pycache__ node_modules .examples-output].any? { |dir| Pathname.new(relative(path)).each_filename.include?(dir) }
 end
 
 text_files.each do |file|
@@ -324,6 +324,11 @@ if routing.is_a?(Hash)
       unless model.is_a?(Hash)
         error("model profile #{profile} must be a map")
         next
+      end
+      if model["provider"] == "openai"
+        allowed = %w[gpt-6-astra gpt-6.1-sol gpt-6-sol gpt-6-luna]
+        error("model profile #{profile} selects unreviewed or retired model: #{model['model']}") unless allowed.include?(model["model"])
+        error("model profile #{profile} lifecycle must be current") unless model["lifecycle"] == "current"
       end
       error("model profile #{profile} must name a provider model") if model["provider"].to_s.empty? || model["model"].to_s.empty?
       source_refs = Array(model["source_refs"])

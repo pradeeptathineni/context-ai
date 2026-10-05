@@ -41,3 +41,16 @@ git diff --check
 ```
 
 Use repository tags and `CHANGELOG.md` for library releases. Keep `schema_version` independent from the release version, document compatibility changes, and do not change a published tag.
+<!-- context-ai:begin -->
+## Context AI project loadout
+Project instructions and explicit task authority take precedence. Use the pinned `.context-ai/lock.json`.
+Read `.context-ai/resources/skills/context-loadout/SKILL.md` for selection and use receipts.
+Load only the modules for the current stage:
+- inspect: `.context-ai/resources/core/engineering.md`, `.context-ai/resources/core/context.md`, `.context-ai/resources/custom/prior-art.md`
+- implement: `.context-ai/resources/core/development.md`, `.context-ai/resources/custom/patterns.md`, `.context-ai/resources/custom/code-comments.md`, `.context-ai/resources/core/compression.md`, `.context-ai/resources/custom/context-efficiency.md`
+- test: `.context-ai/resources/core/testing.md`
+- review: `.context-ai/resources/core/review.md`, `.context-ai/resources/custom/evidence-claims.md`
+- deliver: `.context-ai/resources/core/versioning.md`, `.context-ai/resources/custom/delivery.md`
+- research: `.context-ai/resources/core/research.md`
+A selected recipe is not execution or deployment permission.
+<!-- context-ai:end -->

@@ -1,0 +1,41 @@
+schema_version: 1
+skills:
+- context-loadout
+capabilities:
+  python-runtime: required
+  git: required
+options: {}
+decisions:
+- D-001
+- D-002
+- D-003
+- D-004
+- D-005
+- D-006
+- D-012
+compose: []
+id: standard
+description: Proportional development using existing project tools.
+characteristics:
+- software
+- maintenance
+stages:
+  inspect:
+  - core/engineering.md
+  - core/context.md
+  - custom/prior-art.md
+  implement:
+  - core/development.md
+  - custom/patterns.md
+  - custom/code-comments.md
+  test:
+  - core/testing.md
+  review:
+  - core/review.md
+  - custom/evidence-claims.md
+  deliver:
+  - core/versioning.md
+  - custom/delivery.md
+checks:
+- Use the repository validation commands; inspect the actual diff; preserve unrelated
+  work.

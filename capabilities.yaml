@@ -1,0 +1,10 @@
+schema_version: 1
+capabilities:
+  python-runtime:
+    kind: command
+    command: python3
+    boundary: Python 3.10+ and requirements.txt; no installer side effects.
+  git:
+    kind: command
+    command: git
+    boundary: Read-only discovery; mutation needs task authority.

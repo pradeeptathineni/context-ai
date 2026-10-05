@@ -1,0 +1,38 @@
+schema_version: 1
+skills:
+- context-loadout
+capabilities:
+  python-runtime: required
+  git: required
+options: {}
+decisions:
+- D-001
+- D-002
+- D-003
+- D-004
+- D-005
+- D-006
+- D-012
+compose: []
+id: context-authoring
+description: Maintain concise coherent context with retained requirements and provenance.
+characteristics:
+- context
+- instructions
+- configuration
+stages:
+  inspect:
+  - core/context.md
+  implement:
+  - core/compression.md
+  - custom/context-efficiency.md
+  research:
+  - core/research.md
+  test:
+  - core/testing.md
+  review:
+  - core/review.md
+  deliver:
+  - core/versioning.md
+checks:
+- Validate metadata, links, instruction authority, compatibility and requirement retention.

@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "checkpoint": "0.3.0-bootstrap.1",
+  "consumer": "context-ai",
+  "stage": "bootstrap-maintenance",
+  "capability": "context-loadout",
+  "action": "validated",
+  "discovery": "explicit-read",
+  "lock_sha256": "cfc6d9843ec7f3db008e777e4a138c52d89bc018072b1f0e9b829eb13dd1cf62",
+  "pin": "4cb1a07df9a7a03955aba803e8caa8b86b53ecbbc498c6ce70347f1ceec386ec",
+  "resources_read": [
+    "skills/context-loadout/SKILL.md",
+    "core/context.md",
+    "core/compression.md",
+    "core/testing.md"
+  ],
+  "task": "Add discriminating rejection tests for retired model and invalid reasoning while updating the balanced binding to documented GPT-6.1 Sol.",
+  "commands": [
+    "python3 -m unittest discover -s tests -v",
+    "ruby scripts/validate.rb",
+    "python3 scripts/context_ai.py verify --project /Users/pradeeptathineni/code/personal/ai-systems/context-ai"
+  ],
+  "result": "4 tests passed; repository validation passed; reapply stable and user changes preserved.",
+  "limits": [
+    "Instruction reads are self-reported. Native discovery is not measured. Token savings and comparative quality are unmeasured."
+  ]
+}

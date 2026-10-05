@@ -1,0 +1,31 @@
+schema_version: 1
+skills:
+- context-loadout
+capabilities:
+  python-runtime: required
+  git: required
+options: {}
+decisions:
+- D-001
+- D-002
+- D-003
+- D-004
+- D-005
+- D-006
+- D-012
+compose: []
+id: research-evidence
+description: Acquire primary evidence and actionable options through the Signals research
+  procedure.
+characteristics:
+- research
+- adoption
+stages:
+  research:
+  - core/research.md
+  - procedures/research-evidence.md
+  - custom/prior-art.md
+  - custom/evidence-claims.md
+checks:
+- Verify claim/source references, freshness, producer mode and exact-byte interchange
+  integrity.
