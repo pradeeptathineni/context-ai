@@ -83,7 +83,7 @@ end
 
 core_files = Dir.glob(ROOT.join("core/*.md")).sort
 custom_files = Dir.glob(ROOT.join("custom/*.md")).sort
-skill_files = Dir.glob(ROOT.join(".agents/skills/*/SKILL.md")).sort
+skill_files = Dir.glob(ROOT.join(".agents/skills/*/SKILL.md")).reject { |path| relative(path).start_with?(".agents/skills/context-") }.sort
 overlay_files = Dir.glob(ROOT.join("overlays/*.md")).sort
 domain_files = Dir.glob(ROOT.join("domains/**/*.md")).sort
 context_files = core_files + custom_files + overlay_files + domain_files
@@ -96,7 +96,7 @@ agents = ROOT.join("AGENTS.md")
 error("AGENTS.md exceeds the 8 KiB routing budget") if agents.file? && agents.size > 8 * 1024
 
 text_files = Dir.glob(ROOT.join("**/*"), File::FNM_DOTMATCH).select do |path|
-  File.file?(path) && !path.include?("/.git/") && !%w[.context-ai .venv __pycache__ node_modules .examples-output].any? { |dir| Pathname.new(relative(path)).each_filename.include?(dir) }
+  File.file?(path) && !path.include?("/.git/") && !relative(path).start_with?(".agents/skills/context-") && !%w[.context-ai .venv __pycache__ node_modules .examples-output].any? { |dir| Pathname.new(relative(path)).each_filename.include?(dir) }
 end
 
 text_files.each do |file|
@@ -199,10 +199,11 @@ end
 
 concept_document = yaml_documents["concepts.yaml"]
 concepts = concept_document.is_a?(Hash) ? concept_document["concepts"] : nil
-error("concepts.yaml schema_version must be 1") unless concept_document.is_a?(Hash) && concept_document["schema_version"] == 1
+error("concepts.yaml schema_version must be 2") unless concept_document.is_a?(Hash) && concept_document["schema_version"] == 2
 error("concepts.yaml concepts must be a non-empty map") unless concepts.is_a?(Hash) && !concepts.empty?
 if concepts.is_a?(Hash)
-  concepts.each do |id, description|
+  concepts.each do |id, entry|
+    description = entry.is_a?(Hash) ? entry["definition"] : nil
     error("invalid concept id: #{id}") unless id.is_a?(String) && id.match?(/\A[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+\z/)
     error("concept #{id} needs a one-line description") unless description.is_a?(String) && !description.strip.empty? && !description.include?("\n")
   end

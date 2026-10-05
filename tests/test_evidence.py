@@ -72,3 +72,19 @@ class Evidence(unittest.TestCase):
         self.assertFalse(result['activation'])
         with self.assertRaisesRegex(e.Invalid,'identity'):
             e.load_bundle(bundle,sha,'forged/producer',commit,now=NOW)
+
+    def test_complete_campaign_checkpoint_retains_multiple_candidates_and_claim_uncertainty(self):
+        b=self.fixture();b['mode']='agent-assisted';b['producer']={'repository':'example/signals','commit':'a'*40,'protocol':'signals-evidence-v1'};b['sources'][0]['source_class']='documentation'
+        alternative=copy.deepcopy(b['candidates'][0]);alternative['id']='alternative';alternative['disposition']='consider';b['candidates'].append(alternative)
+        b['claims'][0]['status']='uncertain';b['candidates'][0]['disposition']='consider'
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);bundle=root/'evidence.json';bundle.write_text(json.dumps(b))
+            status={'campaign':'pact-hrr-2026-10-05','producer':'signals','repository':'example/signals','state':'ready','revision':1,'commit':'a'*40,'artifacts':[{'kind':'evidence','path':'evidence.json','sha256':hashlib.sha256(bundle.read_bytes()).hexdigest()}]}
+            path=root/'status.json';path.write_text(json.dumps(status))
+            result=e.consume_checkpoint(path,'example/signals')[0]
+            self.assertEqual(len(result['recommendations']),2)
+            self.assertEqual(result['claims'][0]['status'],'uncertain')
+            self.assertFalse(result['activation'])
+            for mutate in [lambda x:x.update(state='writing'),lambda x:x['artifacts'][0].update(path='../evidence.json'),lambda x:x['artifacts'][0].update(sha256='0'*64)]:
+                broken=copy.deepcopy(status);mutate(broken);path.write_text(json.dumps(broken))
+                with self.assertRaises(e.Invalid):e.consume_checkpoint(path,'example/signals')

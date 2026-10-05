@@ -9,20 +9,18 @@
 | Location | Role |
 | --- | --- |
 | `core/*.md` | Concise, durable behavior shared across providers. It is selective, not an exhaustive encyclopedia. |
-| `custom/*.md` | The maintainer's optional house practice, also provider neutral. `custom` means project-owned specialization, not a catch-all for provider variants. |
+| `overlays/*.md` | The maintainer's optional house practice, also provider neutral. `custom` means project-owned specialization, not a catch-all for provider variants. |
 | `concepts.yaml` | Stable names for decision areas. It carries no executable or behavioral instruction. |
 | `signals/common.yaml` | Provider-neutral standards, tools, and practices worth considering for a named concept. |
 | `providers/<provider>/signals.yaml` | Provider-specific candidates, each scoped to the products it applies to. |
 | `providers/<provider>/<product>.md` | Actual product discovery, precedence, configuration, and consumption behavior. |
 | `sources.yaml` | Original source for each signal. |
 
-`custom/` is a broad name, but it is an existing published path. Here it specifically means the maintainer's house practice across projects. A rename such as `house/` would break current references without improving the behavior, so the meaning is defined here and the path stays stable.
-
-There is no provider copy of `core/` or `custom/`. A provider-specific exception belongs in its product adapter; a provider-specific candidate belongs in its signals file. Add a provider directory when its first verified consumer needs one. Keep product availability and model bindings current at use time. [`models/routing.yaml`](../models/routing.yaml) remains the separate policy for selecting model profiles; its own sources document volatile bindings.
+There is no provider copy of `core/` or `overlays/`. A provider-specific exception belongs in its product adapter; a provider-specific candidate belongs in its signals file. Add a provider directory when its first verified consumer needs one. Keep product availability and model bindings current at use time. [`models/routing.yaml`](../models/routing.yaml) remains the separate policy for selecting model profiles; its own sources document volatile bindings.
 
 ## Use a signal
 
-1. Read the current task, repository contract, and the smallest relevant `core/` or `custom/` guidance.
+1. Read the current task, repository contract, and the smallest relevant `core/` or `overlays/` guidance.
 2. Identify the decision in `concepts.yaml`. Use `ruby scripts/lookup.rb --search WORDS` to find an ID, then `ruby scripts/lookup.rb CONCEPT_ID --provider openai --product codex` for a Codex task. The [lookup script](../scripts/lookup.rb) prints matching common and provider signals with their source links. A missing signal means there is no endorsed candidate in this index yet.
 3. Open each relevant `source_refs` entry in `sources.yaml`, check the current product and environment, and assess fit against the project's requirements. Read the original source for detail rather than treating the short signal as complete documentation.
 4. Make the choice using [`custom/prior-art.md`](../custom/prior-art.md) when consequential. Record the selected owner, evidence, unknowns, and revisit trigger in the project's existing decision artifact.
@@ -36,3 +34,7 @@ For example, `context.skills` points to the open Agent Skills specification and 
 - Put a cross-provider standard or practice in `signals/common.yaml`. Put a product capability in its provider file, with explicit `products`. Do not make empty provider files to reserve names.
 - Keep source entries at original publishers or pinned project revisions; update `reviewed_on` after a real check. A source review date is not a promise of runtime availability.
 - Run `ruby scripts/validate.rb` to check YAML shape, concept references, signal IDs, source references, review dates, and required repository files.
+
+## Research needs and coverage
+
+`concepts.yaml` schema 2 is the canonical catalog. Each row defines its job and applicable modules; shared defaults mark unassessed concepts as gaps. Claims bind the exact producer bundle and original sources. Run `.venv/bin/python scripts/concepts.py needs` for grouped questions, `coverage` for every disposition, and `definitions` for the earlier string map. Views are generated rather than maintained as parallel tables.

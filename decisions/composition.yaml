@@ -32,3 +32,39 @@ decisions:
     composition.
   revisit_when: A real selected procedure cannot reach its instructions, or a maintained
     distributor proves lower total burden with preservation/undo.
+- id: D-018
+  revision: 2
+  supersedes: 1
+  concept: context.loadouts
+  action: adapt
+  selection: Explicit resource prerequisites with selected notices and source pins
+  rationale: Retain the corrected explicit closure after peer primary-source dependency
+    advice and independent challenge. The Bazel precedent supports declaring dependencies;
+    local tests, rather than the precedent or older model paper, establish Context
+    behavior.
+  evidence:
+  - https://agentskills.io/specification
+  - Signals:ee4aea154c461aaa8f9f0cbb770240c28c19dde7:claim-skills
+  - Signals:ee4aea154c461aaa8f9f0cbb770240c28c19dde7:claim-react
+  - tests/test_resources.py
+  - Signals:3badfed8922e896e1c83d20c68654057487541ca:option-selective-context:selective-context-bazel
+  - sha256:21f90afb4a2e688f45d2e10dc2d06942b12d6b286c3c710ba93b104243d7eb34
+  applicability: Codex project-local compositions; informational links never select
+    dependencies.
+  alternatives:
+  - Retain implicit recursive links
+  - Replace distributor with an unproved external installer
+  - Correct the current narrow adapter and declare prerequisites
+  unknowns:
+  - Materialized bytes are measured; model token savings and human benefit are unmeasured.
+  validation:
+  - Regression reproduced unintended AGENTS inclusion before correction; selected
+    dependencies, notices, casing, cycles and source integrity checked.
+  - Independent review exposed missing routes; corrected React/design navigation retains
+    applicable guidance.
+  - Exact bootstrap pin was used for the closure correction and by Signals for public
+    Corpus responsibility tracing.
+  rollback: Use exact earlier source/pin; undo unchanged files before changing the
+    composition.
+  revisit_when: A real selected procedure cannot reach its instructions, or a maintained
+    distributor proves lower total burden with preservation/undo.

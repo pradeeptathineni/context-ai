@@ -11,14 +11,10 @@ def check():
     for p in (ROOT/'schemas').glob('*.schema.json'):
         Draft202012Validator.check_schema(json.loads(p.read_text()))
     decisions=current_decisions()
-    concepts=read_yaml(ROOT/'concepts.yaml')
-    ids=set(concepts['concepts'])
-    for id,detail in concepts['details'].items():
-        if id not in ids:raise ValueError('unknown detailed concept')
-        for path in detail['modules']+detail['evidence']:
-            if not inside(ROOT,path).is_file():raise ValueError('broken concept resource')
-        for d in detail['decisions']:
-            if d not in decisions:raise ValueError('unresolved concept decision')
+    from concepts import catalog, validate_catalog
+    concepts=catalog()
+    validate_catalog(concepts, decisions)
+    ids=set(concepts)
     seed_aliases={
         'agent-instruction-entrypoint':'context.instructions','progressive-procedure-packaging':'context.skills',
         'canonical-behavior-format':'context.instructions','loadout-definition':'context.loadouts',

@@ -324,3 +324,5 @@ Pinned upstream text retains its original whitespace, including Markdown hard br
 `procedures/react-review.md` adapts pinned Vercel navigation to the installed compiled guide; framework-specific advice remains conditional. The focused closure review identified and corrected Mac filename casing and missing React/design routes. Reviewed 2026-10-05.
 
 `decisions/composition.yaml` records measured closure choices, including the precise supported packaging/React claims in the verified Signals successor at `ee4aea154c461aaa8f9f0cbb770240c28c19dde7`. Those source claims do not prove local efficiency.
+
+The catalog schema-2 consolidation preserves all 140 IDs and replaces repeated generic evidence pointers with generated explicit gaps or precise source/claim dispositions. The nine primary-source summaries from Signals commit `3badfed8922e896e1c83d20c68654057487541ca`, bundle SHA-256 `21f90afb4a2e688f45d2e10dc2d06942b12d6b286c3c710ba93b104243d7eb34`, remain agent-assisted evidence. Context narrows their applicability; no peer recommendation enables a capability. Reviewed 2026-10-05.

@@ -1,101 +1,153 @@
-# High-confidence, provider-neutral candidates. Applicability is decided at use time.
 schema_version: 1
 scope: common
 signals:
   research.prior_art:
-    - id: shoulda-decision-contract
-      name: ShouldaUsedThat candidate-to-decision contract
-      type: practice
-      use_when: A new dependency, tool, or custom mechanism needs a contextual choice.
-      boundary: Repository evidence nominates candidates; project fit needs its own assessment.
-      source_refs: [shoulda-contract]
-    - id: maestro-reuse-register
-      name: Maestro AI reuse register
-      type: practice
-      use_when: An AI system is accumulating custom infrastructure or duplicate owners.
-      boundary: A documented candidate is not installed, adopted, or verified in the current project.
-      source_refs: [maestro-reuse]
+  - id: shoulda-decision-contract
+    name: ShouldaUsedThat candidate-to-decision contract
+    type: practice
+    use_when: A new dependency, tool, or custom mechanism needs a contextual choice.
+    boundary: Repository evidence nominates candidates; project fit needs its own
+      assessment.
+    source_refs:
+    - shoulda-contract
+  - id: maestro-reuse-register
+    name: Maestro AI reuse register
+    type: practice
+    use_when: An AI system is accumulating custom infrastructure or duplicate owners.
+    boundary: A documented candidate is not installed, adopted, or verified in the
+      current project.
+    source_refs:
+    - maestro-reuse
   research.decision:
-    - id: shoulda-decision-brief
-      name: ShouldaUsedThat decision brief and revisit trigger
-      type: practice
-      use_when: A consequential tool choice should remain reviewable as evidence changes.
-      boundary: Use the project's existing decision artifact instead of requiring this format.
-      source_refs: [shoulda-contract]
+  - id: shoulda-decision-brief
+    name: ShouldaUsedThat decision brief and revisit trigger
+    type: practice
+    use_when: A consequential tool choice should remain reviewable as evidence changes.
+    boundary: Use the project's existing decision artifact instead of requiring this
+      format.
+    source_refs:
+    - shoulda-contract
   context.instructions:
-    - id: agents-md-format
-      name: AGENTS.md open format
-      type: standard
-      use_when: A coding repository needs durable, scoped agent guidance.
-      boundary: Check each agent's discovery behavior; a linked file is not automatically loaded.
-      source_refs: [agents-md]
+  - id: agents-md-format
+    name: AGENTS.md open format
+    type: standard
+    use_when: A coding repository needs durable, scoped agent guidance.
+    boundary: Check each agent's discovery behavior; a linked file is not automatically
+      loaded.
+    source_refs:
+    - agents-md
   context.skills:
-    - id: agent-skills-format
-      name: Agent Skills specification
-      type: standard
-      use_when: A reusable procedure should be discovered by metadata and loaded on demand.
-      boundary: Client support and available tools vary; a skill is not an execution guarantee.
-      source_refs: [agent-skills]
+  - id: agent-skills-format
+    name: Agent Skills specification
+    type: standard
+    use_when: A reusable procedure should be discovered by metadata and loaded on
+      demand.
+    boundary: Client support and available tools vary; a skill is not an execution
+      guarantee.
+    source_refs:
+    - agent-skills
   integration.mcp:
-    - id: mcp-protocol
-      name: Model Context Protocol
-      type: standard
-      use_when: A model application needs a standardized connection to tools or resources.
-      boundary: Protocol support does not grant access, authorization, or trust in a server.
-      source_refs: [mcp-spec]
+  - id: mcp-protocol
+    name: Model Context Protocol
+    type: standard
+    use_when: A model application needs a standardized connection to tools or resources.
+    boundary: Protocol support does not grant access, authorization, or trust in a
+      server.
+    source_refs:
+    - mcp-spec
   architecture.composition:
-    - id: shoulda-reuse-gate
-      name: ShouldaUsedThat reuse gate
-      type: practice
-      use_when: Existing tools could cover part of a proposed custom subsystem.
-      boundary: Select an owner for each role and implement only the remaining need.
-      source_refs: [shoulda-reuse]
+  - id: shoulda-reuse-gate
+    name: ShouldaUsedThat reuse gate
+    type: practice
+    use_when: Existing tools could cover part of a proposed custom subsystem.
+    boundary: Select an owner for each role and implement only the remaining need.
+    source_refs:
+    - shoulda-reuse
   architecture.contracts:
-    - id: json-schema
-      name: JSON Schema
-      type: standard
-      use_when: JSON data needs a portable, machine-checkable shape and validation rules.
-      boundary: Schema validation does not prove domain semantics or workflow correctness.
-      source_refs: [json-schema]
+  - id: json-schema
+    name: JSON Schema
+    type: standard
+    use_when: JSON data needs a portable, machine-checkable shape and validation rules.
+    boundary: Schema validation does not prove domain semantics or workflow correctness.
+    source_refs:
+    - json-schema
   integration.api_contracts:
-    - id: openapi
-      name: OpenAPI Specification
-      type: standard
-      use_when: An HTTP API needs a machine-readable interface description.
-      boundary: The description must be checked against the live implementation.
-      source_refs: [openapi]
+  - id: openapi
+    name: OpenAPI Specification
+    type: standard
+    use_when: An HTTP API needs a machine-readable interface description.
+    boundary: The description must be checked against the live implementation.
+    source_refs:
+    - openapi
   operations.observability:
-    - id: opentelemetry
-      name: OpenTelemetry
-      type: standard
-      use_when: A service needs interoperable traces, metrics, or logs.
-      boundary: Instrument only signals tied to diagnosis or service decisions.
-      source_refs: [opentelemetry]
+  - id: opentelemetry
+    name: OpenTelemetry
+    type: standard
+    use_when: A service needs interoperable traces, metrics, or logs.
+    boundary: Instrument only signals tied to diagnosis or service decisions.
+    source_refs:
+    - opentelemetry
   delivery.versioning:
-    - id: semantic-versioning
-      name: Semantic Versioning 2.0.0
-      type: standard
-      use_when: A published interface needs a clear compatibility signal.
-      boundary: Define the public API first; version numbers alone do not establish compatibility.
-      source_refs: [semver]
+  - id: semantic-versioning
+    name: Semantic Versioning 2.0.0
+    type: standard
+    use_when: A published interface needs a clear compatibility signal.
+    boundary: Define the public API first; version numbers alone do not establish
+      compatibility.
+    source_refs:
+    - semver
   security.supply_chain:
-    - id: slsa
-      name: SLSA specification
-      type: standard
-      use_when: Build provenance and artifact integrity need a stated assurance level.
-      boundary: Claim only the level whose requirements the build actually satisfies.
-      source_refs: [slsa]
+  - id: slsa
+    name: SLSA specification
+    type: standard
+    use_when: Build provenance and artifact integrity need a stated assurance level.
+    boundary: Claim only the level whose requirements the build actually satisfies.
+    source_refs:
+    - slsa
   communication.voice:
-    - id: shoulda-public-writing
-      name: ShouldaUsedThat public writing practice
-      type: practice
-      use_when: A technical project needs reader-first prose that retains the maintainer's voice.
-      boundary: Preserve the actual author's intent and verify every project-specific claim.
-      source_refs: [shoulda-writing]
+  - id: shoulda-public-writing
+    name: ShouldaUsedThat public writing practice
+    type: practice
+    use_when: A technical project needs reader-first prose that retains the maintainer's
+      voice.
+    boundary: Preserve the actual author's intent and verify every project-specific
+      claim.
+    source_refs:
+    - shoulda-writing
   communication.anti_slop:
-    - id: no-ai-slop-editorial
-      name: No AI slop editorial skill
-      type: practice
-      use_when: A draft has generic phrasing, empty emphasis, or flattened personal voice.
-      boundary: Use as an editorial reference; it is not an installed or deterministic quality gate.
-      source_refs: [no-ai-slop]
+  - id: no-ai-slop-editorial
+    name: No AI slop editorial skill
+    type: practice
+    use_when: A draft has generic phrasing, empty emphasis, or flattened personal
+      voice.
+    boundary: Use as an editorial reference; it is not an installed or deterministic
+      quality gate.
+    source_refs:
+    - no-ai-slop
+  context.loadouts:
+  - id: explicit-context-closure
+    name: Managed explicit context prerequisites
+    type: practice
+    use_when: A project needs reproducible stage resources with safe refresh and undo.
+    boundary: Only declared dependencies and notices ship; instructions still require
+      actual reads.
+    source_refs:
+    - development-bazel
+  - id: direct-stage-reads
+    name: Direct stage instruction reads
+    type: practice
+    use_when: A short task already has its exact source checkout and no installation
+      lifecycle need.
+    boundary: No installed ownership or portable lock is established; record the source
+      pin separately.
+    source_refs:
+    - agent-skills
+  quality.review:
+  - id: bounded-review-understanding
+    name: Bounded review of behavior and consequences
+    type: practice
+    use_when: A consequential change needs a fresh artifact-based challenge.
+    boundary: The human study supports understanding the change; it does not prove
+      more AI reviewers are better.
+    source_refs:
+    - development-review-study

@@ -100,6 +100,7 @@ def load_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=False,
             'producer':b['producer'],'mode':b['mode'],'concept_ids':mapped,
             'admitted_as':'fixture-test' if fixture else 'pinned-peer-evidence',
             'stale_source_ids':stale,'unknown_freshness_ids':unknown,
+            'sources':list(sources.values()),'claims':list(claims.values()),
             'recommendations':list(candidates.values()),'constraints':b['need'].get('constraints',[]),
             'activation':False,'extensions_authority':'none',
             'limitations':b['limitations']+['Hashes verify bytes and local pinned origin, not truth. Claim/source ID resolution does not prove claim support. Recommendations and constraints require a Context adoption decision.']}
@@ -107,9 +108,13 @@ def load_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=False,
 def consume_checkpoint(status_path,expected_repository):
     owner_root=status_path.parent.resolve()
     status=json.loads(status_path.read_text())
-    if status['owner']!='signals' or not re.fullmatch('[0-9a-f]{40}',status['commit']):
+    campaign = status.get('campaign') == 'pact-hrr-2026-10-05'
+    owner = status.get('producer') if campaign else status.get('owner')
+    if campaign and (status.get('state') != 'ready' or status.get('repository') != expected_repository or not isinstance(status.get('revision'),int) or status['revision'] < 1):
+        raise Invalid('incomplete or unexpected campaign checkpoint')
+    if owner!='signals' or not re.fullmatch('[0-9a-f]{40}',status['commit']):
         raise Invalid('unexpected checkpoint owner/commit')
-    if status['contract_sha256']!=hashlib.sha256((ROOT/'schemas/evidence-bundle-v1.schema.json').read_bytes()).hexdigest():
+    if not campaign and status['contract_sha256']!=hashlib.sha256((ROOT/'schemas/evidence-bundle-v1.schema.json').read_bytes()).hexdigest():
         raise Invalid('unsupported peer contract')
     bundles=[]
     for artifact in status['artifacts']:

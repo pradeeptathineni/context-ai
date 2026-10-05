@@ -19,7 +19,7 @@ end
 
 usage(0) if ARGV == ["--help"]
 
-concepts = load_yaml("concepts.yaml").fetch("concepts")
+concepts = load_yaml("concepts.yaml").fetch("concepts").transform_values { |entry| entry.is_a?(Hash) ? entry.fetch("definition") : entry }
 
 if ARGV.first == "--search"
   query = ARGV.drop(1).join(" ").strip.downcase
