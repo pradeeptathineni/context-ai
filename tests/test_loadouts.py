@@ -38,6 +38,23 @@ class Loadouts(unittest.TestCase):
         self.assertEqual(run.returncode,0,run.stderr)
         self.assertEqual(json.loads(run.stdout)['resolution']['options']['brand'],'expressive')
         self.assertEqual(pin,(self.project/'.context-ai/lock.json').read_bytes())
+    def test_plan_discloses_owned_files_removed_by_selection_change(self):
+        lock,files=c.resolve(['react-web'],self.project,'codex')
+        c.apply(self.project,lock,files)
+        old_owned=set(c.installed(self.project)['owned'])
+        before=(self.project/'.context-ai/lock.json').read_bytes()
+        command=[sys.executable,str(ROOT/'scripts/context_ai.py'),'plan','service-api',
+                 '--project',str(self.project)]
+        run=subprocess.run(command,capture_output=True,text=True)
+        self.assertEqual(run.returncode,0,run.stderr)
+        proposed=json.loads(run.stdout)
+        self.assertEqual(proposed['removals'],sorted(old_owned-set(proposed['writes'])))
+        self.assertIn('.agents/skills/context-react-review/SKILL.md',proposed['removals'])
+        self.assertEqual(before,(self.project/'.context-ai/lock.json').read_bytes())
+        next_lock,next_files=c.resolve(['service-api'],self.project,'codex')
+        c.apply(self.project,next_lock,next_files)
+        self.assertFalse(any((self.project/name).exists() for name in proposed['removals']))
+        c.verify(self.project)
     def test_composition_deduplicates_and_non_ui_keeps_design_out(self):
         lock,files=c.resolve(['standard','context-authoring','research-evidence','standard'],self.project,'codex')
         for modules in lock['stages'].values():self.assertEqual(len(modules),len(set(modules)))

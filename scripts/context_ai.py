@@ -641,7 +641,9 @@ def main():
             else:
                 state=installed(project)
                 old=state['resolution']['resources'] if state else {}
-                result={'resolution':lock,'writes':list(materialized(lock,files))+['AGENTS.md','.context-ai/lock.json'],
+                targets=materialized(lock,files)
+                result={'resolution':lock,'writes':list(targets)+['AGENTS.md','.context-ai/lock.json'],
+                        'removals':sorted(set(state['owned'])-set(targets)) if state else [],
                         'changes':sorted(p for p in set(old)|set(lock['resources']) if old.get(p)!=lock['resources'].get(p)),
                         'activation':'proposed'}
     print(encoded(result).decode(),end='')
