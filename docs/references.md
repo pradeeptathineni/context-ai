@@ -123,7 +123,7 @@ The additional house files below were reviewed on **2026-10-05**. They distill p
 
 These sources influenced the layer boundaries and future extension model. Provider adapters for Claude Code, Gemini CLI, and Copilot are intentionally absent until there is a consumer to validate them.
 
-## v1 bootstrap (reviewed 2026-10-05)
+## Initial delivery influences (historical, reviewed 2026-10-05)
 
 `loadouts/standard.yaml`, `loadouts/context-authoring.yaml`, `loadouts/research-evidence.yaml`, `capabilities.yaml`, `decisions/bootstrap.yaml`, `skills/context-loadout/SKILL.md`, `procedures/research-evidence.md`, and `docs/loadouts.md` implement the delivery policy in the user-supplied context-signals-v1-kit. The decision ledger records project policy separately from source-supported interfaces. The frozen `schemas/evidence-bundle-v1.schema.json` is an unchanged kit contract, intended for canonical ownership by Signals; it grants no execution authority.
 
@@ -133,7 +133,7 @@ The research procedure composes `core/research.md` with the MIT-licensed Maestro
 
 `.agents/skills/context-loadout/SKILL.md` is a local generated router owned by materialization; the maintained source is `skills/context-loadout/SKILL.md`. It preserves the existing locally installed `standard` skill. `evals/bootstrap-use.json` records a builder-proxy explicit read and actual validator maintenance, not independent compliance or measured token savings.
 
-## v1 modules and selections (reviewed 2026-10-05)
+## Module and selection influences (reviewed 2026-10-05)
 
 Canonical additions `core/code-comments.md`, `core/version-control.md`, `core/prior-art.md` label source-supported fundamentals and local choices. House guidance now lives in `overlays/`; the previous `custom/` files are compatibility routes. `concepts.yaml` now unifies definitions and exact coverage in schema 2; the generated definitions view preserves legacy lookup consumers. `decisions/adapters.yaml` records tested adapter, tooling and model choices and an immutable D-007 successor.
 
@@ -340,3 +340,9 @@ CI uses the explicit Ubuntu 24.04 image. GitHub reported hosted-runner acquisiti
 `core/context.md` owns selective reading and one canonical owner; `core/prior-art.md` owns PACT/HRR and proportional evidence. The first-use path and D-004 revision 2 apply those existing rules to an ordinary digest-helper README task. The baseline completed the task but installed a broad selection and searched for a receipt schema; no API decision or defect catch was attributed to Context. Small maintenance probes are diagnostic, with private raw evidence retained locally.
 
 `scripts/context_ai.py` owns composition for both explanation and materialization, installation integrity verification, and the derived current decision view. `docs/loadouts.md` owns that command contract; `docs/compatibility.md` owns pin/recovery and output compatibility. Foundation records now share reporting defaults and cite their actual modules/original sources. Exact older source commits retain earlier records; installed locks remain independent of the current registry. This consolidation does not change lock schemas, upstream snapshots, or publication state.
+
+`REVISION` uses Git's existing [`export-subst`](https://git-scm.com/docs/gitattributes#_export_subst) attribute rather than an archive wrapper. Source/archive checks reproduced missing markers and a surrounding consumer commit incorrectly overriding a supplied source marker. `tests/test_consumer_path.py` verifies native expansion, checkout identity and unknown/tree-only fallback; selected resource hashes remain authoritative for bytes. Reviewed 2026-10-05.
+
+A fresh uncoached adoption-guide task used explicit Context reads in a disposable repository clone and corrected the single-project route while preserving optional global setup. Its first full-suite run exposed Node 16 on the default command PATH; an existing Node 24 passed the retained gates. Development prerequisites now state that full loadout tests need supported Node even for a docs change. No global configuration or native-discovery claim followed.
+
+Completed peer feedback at Signals `78d7f1c4e35bed6e3a0dce61cece04479c95f41e` reported the same archive-marker gap while using Context `efad6ab8e7981ba3d2dda3f8840150eb81ffe333`. Its exact feedback digest `dfbc18a97acbf42548b318bd6f86aa9ed347e97802c90678f134d3192f21c1b0` was verified before use; the local archive regression independently reproduced the mechanical issue. This is consumer observation, not human validation. No peer checkout or database was modified.

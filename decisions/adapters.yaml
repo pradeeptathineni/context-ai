@@ -84,11 +84,11 @@ decisions:
   supersedes: 1
   evidence:
   - sources.lock.json
-  applicability: Context consumers using the declared model profiles
+  applicability: Web selections using the pinned instruction-only Impeccable adapter.
   alternatives:
   - existing repository guidance
   unknowns:
   - Binary/hook behavior is not exercised or endorsed.
   validation:
-  - Source/notice review and the v1 representative browser exercise.
+  - Source/notice review and the representative browser fixture.
   rollback: Undo unchanged owned materialization; retain old pins.

@@ -15,7 +15,7 @@ For one task, start with project instructions and read only relevant guidance di
 | aws-infrastructure | Existing Terraform/AWS identity/state/hosting constraints | Safe source inspection, format/isolated validation, authorized plan/rollback |
 | release-review | Final review, compatibility, immutable release and destination | Clean checkout/package, remote SHA/CI then tag/release verification |
 
-Each has a real disposable materialization test in `tests/test_loadouts.py`. The actual library used standard + context-authoring; research-evidence guides source/adoption stages; release-review guides publication. The browser exercise in `examples/web/` uses standard + web-experience. These tested compositions do not imply every possible cross-product or production stack is tested.
+Each has a real disposable materialization test in `tests/test_loadouts.py`. The complete development suite exercises all eight and needs Node 20+ even for a documentation-only library change; individual consumer selections use only their declared prerequisites. The actual library used standard + context-authoring; research-evidence guides source/adoption stages; release-review guides publication. The browser exercise in `examples/web/` uses standard + web-experience. These tested compositions do not imply every possible cross-product or production stack is tested.
 
 ## Commands
 

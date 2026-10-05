@@ -244,6 +244,20 @@ def explain(ids, options=None):
             'capabilities':{id:registry[id] for id in selected['capabilities']},
             'capability_requirements':selected['capabilities']}
 
+def source_revision():
+    # An exported tree nested in a consumer repository must not inherit its commit.
+    try:
+        top=subprocess.check_output(['git','-C',str(ROOT),'rev-parse','--show-toplevel'],
+                                    stderr=subprocess.DEVNULL,text=True).strip()
+        if Path(top).resolve()==ROOT.resolve():
+            return subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],
+                                           stderr=subprocess.DEVNULL,text=True).strip()
+    except subprocess.CalledProcessError:
+        pass
+    marker=ROOT/'REVISION'
+    revision=marker.read_text().strip() if marker.is_file() else ''
+    return revision if re.fullmatch(r'[0-9a-f]{40}',revision) else 'exported-tree'
+
 def resolve(ids, project, provider, options=None):
     if provider != 'codex':
         raise Invalid('supported adapter is codex')
@@ -262,11 +276,7 @@ def resolve(ids, project, provider, options=None):
         files['loadouts/'+id+'.yaml'] = (ROOT/'loadouts'/ (id+'.yaml')).read_bytes()
     file_hashes = {name:digest(data) for name,data in sorted(files.items())}
     tree_hash = digest(encoded(file_hashes))
-    try:
-        revision = subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],stderr=subprocess.DEVNULL,text=True).strip()
-    except subprocess.CalledProcessError:
-        revision = (ROOT/'REVISION').read_text().strip() if (ROOT/'REVISION').is_file() else 'exported-tree'
-    lock = {**selected,'schema_version':2,'provider':provider,'project':'.','library_revision':revision,
+    lock = {**selected,'schema_version':2,'provider':provider,'project':'.','library_revision':source_revision(),
             'source_tree_sha256':tree_hash,'capabilities':states,
             'decisions':decisions,'resources':file_hashes}
     validate_schema('lock',lock)

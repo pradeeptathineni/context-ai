@@ -6,6 +6,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Preserved source commit identity in native Git archives and prevented an exported library from inheriting a surrounding consumer repository commit.
+
+- Clarified single-project adoption without global setup and the supported Node prerequisite for full library development tests.
 - Made direct task reads the first-use path for small settled work; project loadouts remain optional for recurring selections, and ordinary task results replace mandatory receipt files.
 - Fixed explanation to resolve inherited loadouts, effective design/brand options, stage routes and suggested checks through the same composition owner as installation.
 - Made installation verification report executed runtime probes, missing optional boundaries and project checks not run.

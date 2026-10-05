@@ -179,6 +179,40 @@ decisions:
   - Reproduced explain react-web omitting inherited web guidance and ignoring lightweight;
     shared composition now agrees with plan and retains one primary procedure.
   - Verify reports installation scope, executed runtime probes and project checks not run.
+  - A fresh matched README probe used direct reads, preserved instructions/API/user notes,
+    and passed the same tests without installing Context or writing a receipt; no API defect was caught.
   rollback: Keep earlier source pins; undo unchanged owned files. Direct reads leave no materialization.
   revisit_when: A real task needs durable selection or exposes missing guidance, misleading verification,
     or a direct-read path that cannot preserve project constraints.
+- id: D-019
+  revision: 2
+  supersedes: 1
+  concept: architecture.portability
+  action: adapt
+  selection: Portable declarations, verified ownership and native archive commit markers
+  rationale: Retain the existing ownership, export/rebind and recovery mechanisms. A native source
+    archive lacked its commit marker, and an export nested in a consumer repository inherited the
+    consumer commit even with a source marker. Use Git export-subst and accept Git identity only
+    when the source itself is the repository root.
+  evidence:
+  - https://git-scm.com/docs/gitattributes#_export_subst
+  - sha256:dfbc18a97acbf42548b318bd6f86aa9ed347e97802c90678f134d3192f21c1b0
+  - tests/test_consumer_path.py
+  - tests/test_portability.py
+  - docs/compatibility.md
+  applicability: Exact Context checkouts and source archives; no automatic retrieval or publication.
+  alternatives:
+  - Manually normalize every extracted archive
+  - Add a custom export wrapper
+  - Use Git native substitution and a checked source-root boundary
+  unknowns:
+  - A marker identifies a claimed source commit, not authenticated provenance; resource hashes
+    still pin selected bytes. Older or tree-only archives can retain unknown revision identity.
+  - Concurrent hostile filesystem writers and power-loss durability remain outside the guarantee.
+  validation:
+  - Baseline archive reported exported-tree; a nested export reported the consumer commit.
+  - Native archive expansion, source-root identity and unexpanded/missing marker fallback are checked.
+  - Retained ownership, portability, instruction preservation and interruption recovery gates pass.
+  rollback: Use earlier exact sources/pins; recover pending writes and undo unchanged files.
+  revisit_when: A real supported source format loses its identity or authenticated producer provenance
+    becomes necessary beyond the current trusted source boundary.

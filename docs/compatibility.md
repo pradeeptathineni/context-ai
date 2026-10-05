@@ -8,7 +8,7 @@ House policies moved from custom/ to overlays/. Every old custom Markdown path r
 
 Codex is the current supported materialization adapter. Its project-local skill routers use unique context-prefixed names; the existing standard discovery name is untouched. Instruction-only upstream adaptations declare omitted binaries/hooks and preserve pinned documentation/notice files. A project can continue a stage on its earlier lock while the library advances; review a refresh at a checkpoint before changing the active pin.
 
-Exact snapshots remain available in Git commits and exported release/checkpoint archives. Materialization does not retrieve an old revision automatically: use the exact checkout/archive to reproduce that pin. Use the commit or archive digest as the source identity; no stable designation is implied.
+Exact snapshots remain available in Git commits and exported release/checkpoint archives. Materialization does not retrieve an old revision automatically: use the exact checkout/archive to reproduce that pin. New `git archive COMMIT` exports expand the tracked `REVISION` marker using Git `export-subst`; checkout copies, tree-only archives and older archives may lack a concrete marker. The resolver uses Git only when the source itself is the repository root, then a concrete archive marker, otherwise `exported-tree` plus resource hashes. A consumer repository surrounding an export cannot supply the library commit. A marker records provenance; resource hashes still establish selected bytes. Use the commit or archive digest as the source identity; no stable designation is implied.
 
 ## Portable ownership
 

@@ -51,7 +51,7 @@ Review the plan before applying. It lists resources, stage routes, capabilities,
 - [overlays](overlays/README.md): opt-in house policy; old custom paths remain compatibility routers.
 - [loadouts](loadouts/standard.yaml): authored selections for recurring project work; task use is reported separately.
 - [context-loadout skill](skills/context-loadout/SKILL.md): selection/use procedure, alongside the preserved local standard skill.
-- [concepts](concepts.yaml) and [sources](sources.yaml): decision areas and original references. Use `scripts/context_ai.py decisions` for the resolved current choices, or `explain LOADOUT` for choices applying to a selection; predecessors stay outside that reading path.
+- [concepts](concepts.yaml) and [sources](sources.yaml): decision areas and original references. Use `.venv/bin/python scripts/context_ai.py decisions` for the resolved current choices, or `explain LOADOUT` for choices applying to a selection; predecessors stay outside that reading path.
 - [source lock](sources.lock.json) and inactive sourced snapshots: exact upstream pins with licences/notices.
 - [model routing](models/routing.yaml): stable logical profiles and reviewed provider bindings; no global settings change.
 
@@ -60,6 +60,8 @@ Review the plan before applying. It lists resources, stage routes, capabilities,
 Tests cover all eight selections, explicit dependency closure, portable pins, edited-file protection and interruption recovery. The existing [web exercise](examples/web/brief.md) checks four widths, two example palettes, interactions and accessibility with Playwright/axe. [References](docs/references.md) records source influences and review dates. These are deterministic and builder checks; human usefulness and model input savings remain unmeasured.
 
 Codex is the current delivery adapter. Impeccable binaries/hooks/extensions are excluded; its selected documentation works through direct reads. This is a context library, with no agent runtime, automatic tool installation, deployment side effects or signal-scoring engine. Installation verification suggests project-specific checks; the working agent must execute them. Fixture tests, local browser judgment and self-reported reads do not prove production behavior, human usefulness, or native skill activation. Signals evidence advice never grants installation authority.
+
+For library development, use Python 3.10+, Ruby and Node 20+ (Node 24 in CI). The full Python suite materializes every loadout and probes Node, including during a docs change; a consumer selecting `standard` needs only its declared Python/Git prerequisites. The browser gate also requires the pinned Chromium runtime. Use an existing supported Node on the command PATH; these checks do not install or switch it.
 
 Run the deterministic gates:
 

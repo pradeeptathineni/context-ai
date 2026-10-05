@@ -77,3 +77,35 @@ class ConsumerPath(unittest.TestCase):
             self.assertFalse(any(e.startswith('kit:') for e in d['evidence']))
             for field in ('alternatives','unknowns','validation','rollback'):
                 self.assertTrue(d[field])
+
+    def test_native_archive_pin_does_not_inherit_consumer_git_revision(self):
+        import io
+        import tarfile
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);source=root/'source';source.mkdir()
+            for name in ['REVISION','.gitattributes']:
+                (source/name).write_bytes((ROOT/name).read_bytes())
+            subprocess.run(['git','init','-q',str(source)],check=True)
+            subprocess.run(['git','-C',str(source),'add','.'],check=True)
+            subprocess.run(['git','-C',str(source),'-c','user.name=Fixture','-c',
+                            'user.email=fixture@example.invalid','commit','-qm','Source fixture'],check=True)
+            revision=subprocess.check_output(['git','-C',str(source),'rev-parse','HEAD'],text=True).strip()
+            with patch.object(c,'ROOT',source):
+                self.assertEqual(c.source_revision(),revision)
+            archive=subprocess.check_output(['git','-C',str(source),'archive','HEAD'])
+            consumer=root/'consumer';consumer.mkdir()
+            subprocess.run(['git','init','-q',str(consumer)],check=True)
+            subprocess.run(['git','-C',str(consumer),'-c','user.name=Fixture','-c',
+                            'user.email=fixture@example.invalid','commit','--allow-empty','-qm','Consumer fixture'],check=True)
+            exported=consumer/'library';exported.mkdir()
+            with tarfile.open(fileobj=io.BytesIO(archive)) as tar:
+                # Only the two known fixture files are extracted; Python 3.10 compatible.
+                for name in ['REVISION','.gitattributes']:
+                    (exported/name).write_bytes(tar.extractfile(name).read())
+            self.assertEqual((exported/'REVISION').read_text().strip(),revision)
+            with patch.object(c,'ROOT',exported):
+                self.assertEqual(c.source_revision(),revision)
+                (exported/'REVISION').write_bytes((ROOT/'REVISION').read_bytes())
+                self.assertEqual(c.source_revision(),'exported-tree')
+                (exported/'REVISION').unlink()
+                self.assertEqual(c.source_revision(),'exported-tree')

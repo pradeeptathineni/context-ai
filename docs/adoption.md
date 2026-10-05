@@ -1,6 +1,38 @@
 # Adopt the library in Codex
 
-The Git repository is the canonical hierarchy. Put a checkout or pointer at `~/.ai/context-ai` on each host that should use it. This library's `models/routing.yaml` is the durable route policy, not a command that changes a running model. Keep any separate local model-routing proposal outside the canonical hierarchy until an implemented router replaces it.
+Use Context for one repository by reading relevant guidance from an exact checkout or archive, or by applying a pinned project loadout. Both routes work without changing user-level instructions or global skill setup. The Git repository remains the canonical hierarchy.
+
+## Use it in one repository
+
+For one maintenance task, start with the consuming repository's instructions and read only the Context files that help the change. Supply an explicit source path, for example:
+
+> Use Context AI at /absolute/context-source for this repository's maintenance task. Preserve the project's instructions, read only relevant guidance, complete the change, and run the project's checks. Report the files you read and the checks you ran.
+
+A direct read needs no installation, Python environment or receipt file. For a documentation change, [writing guidance](../overlays/writing.md) may be enough. A linked file is loaded only when the agent reads it.
+
+For recurring use in one repository, follow the [context-loadout procedure](../skills/context-loadout/SKILL.md) and [command contract](loadouts.md). Run these commands **from the Context source directory**, using Python 3.10+ and a source-local environment; `--project` names the consuming repository's absolute directory:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install --require-hashes -r requirements.txt
+.venv/bin/python scripts/context_ai.py explain standard
+.venv/bin/python scripts/context_ai.py plan standard --project /absolute/project --provider codex
+```
+
+Choose the [loadout](../README.md#use-it-for-a-task) that fits the project and review the plan before applying it. Then, from the same source directory:
+
+```sh
+.venv/bin/python scripts/context_ai.py apply standard --project /absolute/project --provider codex
+.venv/bin/python scripts/context_ai.py verify --project /absolute/project
+```
+
+Application copies selected resources into the project's `.context-ai/`, creates selected `.agents/skills/context-*` routers, and appends one managed block to its root `AGENTS.md`. It protects existing instructions and edited managed files, and preserves user/global settings and the existing `standard` skill. `verify` checks installation integrity and required runtime probes; it does not run the project's tests. Run the relevant task checks **from the consuming repository**, then inspect its diff. [Refresh and undo](loadouts.md#commands) support later changes and removal while preserving user edits.
+
+Restart the Codex run after changing project instructions. Installed routers do not prove discovery in an active desktop chat; read the current stage's pinned resources explicitly when discovery has not refreshed. Report explicit reads separately from observed native skill discovery or invocation. See the [Codex adapter](../providers/openai/codex.md#project-delivery) for discovery limits.
+
+## Optional setup across repositories
+
+For a user-level route across repositories, put a checkout or pointer at `~/.ai/context-ai` on each host that should use it. The remaining global guidance is opt-in. This library's `models/routing.yaml` is the durable route policy, not a command that changes a running model. Keep any separate local model-routing proposal outside the canonical hierarchy until an implemented router replaces it.
 
 ## Loading layers
 
@@ -19,7 +51,7 @@ A file named in `AGENTS.md` is a pointer, not an automatic import. Read the smal
 
 ## Wear the standard backpack
 
-The [`standard` skill](../.agents/skills/standard/SKILL.md) is the first concrete backpack. In this repository Codex discovers it from `.agents/skills`. To make the Git-owned skill available in local Codex work across repositories, link that folder into `~/.agents/skills/standard`. A symlink keeps the checkout canonical. In a new CLI or IDE session, use `$standard` explicitly for a substantial tooling or workflow choice; Codex may also select it when the task matches its description. Verify discovery in a fresh session before relying on implicit selection.
+The [`standard` skill](../.agents/skills/standard/SKILL.md) is the first concrete backpack. In this repository Codex discovers it from `.agents/skills`. Optionally, to make the Git-owned skill available in local Codex work across repositories, link that folder into `~/.agents/skills/standard`. A symlink keeps the checkout canonical. In a new CLI or IDE session, use `$standard` explicitly for a substantial tooling or workflow choice; Codex may also select it when the task matches its description. Verify discovery in a fresh session before relying on implicit selection.
 
 The skill routes to relevant `overlays/` files and checks matching concepts, shared signals, and OpenAI signals for the job at hand. It does not load every house file, install plugins, change model settings, or enforce the quality of a decision. `AGENTS.md` is the first-touch instruction mechanism; an Agent Skill is a discoverable procedure. Codex `.rules` can restrict exact command prefixes, hooks can inspect supported tool events, and CI or a linter can enforce repository rules. None is a universal filesystem boundary. A judgment such as “this tool fits the requirement” still needs evidence and review.
 
@@ -49,4 +81,4 @@ Use native Codex controls for model and reasoning choices. A semantic prompt tag
 
 From a fresh Codex session in a small test repository, ask which instruction files loaded and which context files it would read for the [usage cases](../evals/usage-cases.md). Verify `$standard` can be loaded, a simple edit does not require the whole library, and a substantial workflow choice checks the relevant native feature. Inspect the actual transcript, selected files, final artifact, tokens, and any rework. If the directory is unavailable on a remote host, clone the repository or use a project-local copy; do not claim the global pointer worked.
 
-This guide is an adoption contract. The Git checkout remains the source of truth; global instructions are a short router into it.
+This guide is an adoption contract. The Git checkout remains the source of truth; project loadouts pin selected resources, and optional global instructions provide a short router into the hierarchy.
