@@ -60,6 +60,7 @@ REQUIRED = %w[
   schemas/lock.schema.json
   schemas/installation.schema.json
   schemas/evidence-bundle-v1.schema.json
+  resources.yaml
   capabilities.yaml
   sources.lock.json
   requirements.txt

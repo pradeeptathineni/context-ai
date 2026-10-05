@@ -16,139 +16,15 @@ capabilities:
     - sourced/impeccable/design/LICENSE
     - sourced/impeccable/design/instruction.md
     - sourced/impeccable/design/NOTICE.md
-    - sourced/impeccable/design/reference/document.md
-    - sourced/impeccable/design/reference/distill.md
-    - sourced/impeccable/design/reference/routing.md
-    - sourced/impeccable/design/reference/craft-floor.md
-    - sourced/impeccable/design/reference/shape.md
-    - sourced/impeccable/design/reference/adapt.md
-    - sourced/impeccable/design/reference/live.md
-    - sourced/impeccable/design/reference/operate.md
-    - sourced/impeccable/design/reference/bolder.md
-    - sourced/impeccable/design/reference/harden.md
-    - sourced/impeccable/design/reference/new-work.md
-    - sourced/impeccable/design/reference/mode-operate.md
-    - sourced/impeccable/design/reference/region-map.md
-    - sourced/impeccable/design/reference/android.md
-    - sourced/impeccable/design/reference/mode-persuade.md
-    - sourced/impeccable/design/reference/extract.md
-    - sourced/impeccable/design/reference/doctor.md
-    - sourced/impeccable/design/reference/polish.md
-    - sourced/impeccable/design/reference/adapt.native.md
-    - sourced/impeccable/design/reference/mode-read.md
-    - sourced/impeccable/design/reference/typeset.md
-    - sourced/impeccable/design/reference/component-review.md
-    - sourced/impeccable/design/reference/quieter.md
-    - sourced/impeccable/design/reference/critique.md
-    - sourced/impeccable/design/reference/live-setup.md
-    - sourced/impeccable/design/reference/colorize.md
-    - sourced/impeccable/design/reference/init.md
-    - sourced/impeccable/design/reference/audit.md
-    - sourced/impeccable/design/reference/craft.md
-    - sourced/impeccable/design/reference/clarify.md
-    - sourced/impeccable/design/reference/generate.md
-    - sourced/impeccable/design/reference/onboard.md
-    - sourced/impeccable/design/reference/optimize.md
-    - sourced/impeccable/design/reference/animate.md
-    - sourced/impeccable/design/reference/hooks.md
-    - sourced/impeccable/design/reference/overdrive.md
-    - sourced/impeccable/design/reference/ios.md
-    - sourced/impeccable/design/reference/audit.native.md
-    - sourced/impeccable/design/reference/visualize.md
-    - sourced/impeccable/design/reference/delight.md
-    - sourced/impeccable/design/reference/layout.md
-    - sourced/impeccable/design/reference/degraded/documenter.md
-    - sourced/impeccable/design/reference/degraded/manual-edit-applier.md
-    - sourced/impeccable/design/reference/degraded/finish-reviewer.md
-    - sourced/impeccable/design/reference/degraded/asset-producer.md
-    - sourced/anthropic/design/instruction.md
-    - sourced/anthropic/design/LICENSE.txt
     boundary: No binaries/hooks; one primary procedure; brand and project authority
       override tastes.
   context-react-review:
     kind: resource
-    path: sourced/vercel/react/instruction.md
+    path: procedures/react-review.md
     description: Read targeted Vercel React rules when the actual project uses React.
     files:
-    - sourced/vercel/react/upstream-README.md
-    - sourced/vercel/react/instruction.md
-    - sourced/vercel/react/README.md
     - sourced/vercel/react/compiled-guide.md
-    - sourced/vercel/react/rules/js-cache-storage.md
-    - sourced/vercel/react/rules/bundle-conditional.md
-    - sourced/vercel/react/rules/bundle-preload.md
-    - sourced/vercel/react/rules/rerender-memo-with-default-value.md
-    - sourced/vercel/react/rules/js-request-idle-callback.md
-    - sourced/vercel/react/rules/js-combine-iterations.md
-    - sourced/vercel/react/rules/server-no-shared-module-state.md
-    - sourced/vercel/react/rules/advanced-use-latest.md
-    - sourced/vercel/react/rules/js-length-check-first.md
-    - sourced/vercel/react/rules/_template.md
-    - sourced/vercel/react/rules/rerender-derived-state-no-effect.md
-    - sourced/vercel/react/rules/rerender-derived-state.md
-    - sourced/vercel/react/rules/async-cheap-condition-before-await.md
-    - sourced/vercel/react/rules/async-defer-await.md
-    - sourced/vercel/react/rules/async-suspense-boundaries.md
-    - sourced/vercel/react/rules/rerender-no-inline-components.md
-    - sourced/vercel/react/rules/rendering-resource-hints.md
-    - sourced/vercel/react/rules/rendering-activity.md
-    - sourced/vercel/react/rules/server-dedup-props.md
-    - sourced/vercel/react/rules/rendering-script-defer-async.md
-    - sourced/vercel/react/rules/rerender-move-effect-to-event.md
-    - sourced/vercel/react/rules/rerender-defer-reads.md
-    - sourced/vercel/react/rules/async-api-routes.md
-    - sourced/vercel/react/rules/rerender-use-deferred-value.md
-    - sourced/vercel/react/rules/rendering-hydration-suppress-warning.md
-    - sourced/vercel/react/rules/rerender-dependencies.md
-    - sourced/vercel/react/rules/js-set-map-lookups.md
-    - sourced/vercel/react/rules/bundle-defer-third-party.md
-    - sourced/vercel/react/rules/server-hoist-static-io.md
-    - sourced/vercel/react/rules/rendering-hoist-jsx.md
-    - sourced/vercel/react/rules/async-dependencies.md
-    - sourced/vercel/react/rules/rerender-use-ref-transient-values.md
-    - sourced/vercel/react/rules/js-min-max-loop.md
-    - sourced/vercel/react/rules/js-cache-property-access.md
-    - sourced/vercel/react/rules/rendering-animate-svg-wrapper.md
-    - sourced/vercel/react/rules/js-early-exit.md
-    - sourced/vercel/react/rules/js-flatmap-filter.md
-    - sourced/vercel/react/rules/js-index-maps.md
-    - sourced/vercel/react/rules/server-parallel-fetching.md
-    - sourced/vercel/react/rules/server-cache-lru.md
-    - sourced/vercel/react/rules/client-passive-event-listeners.md
-    - sourced/vercel/react/rules/rendering-usetransition-loading.md
-    - sourced/vercel/react/rules/server-parallel-nested-fetching.md
-    - sourced/vercel/react/rules/rerender-functional-setstate.md
-    - sourced/vercel/react/rules/rerender-lazy-state-init.md
-    - sourced/vercel/react/rules/advanced-event-handler-refs.md
-    - sourced/vercel/react/rules/server-after-nonblocking.md
-    - sourced/vercel/react/rules/client-event-listeners.md
-    - sourced/vercel/react/rules/rerender-transitions.md
-    - sourced/vercel/react/rules/js-tosorted-immutable.md
-    - sourced/vercel/react/rules/_sections.md
-    - sourced/vercel/react/rules/client-swr-dedup.md
-    - sourced/vercel/react/rules/server-cache-react.md
-    - sourced/vercel/react/rules/bundle-dynamic-imports.md
-    - sourced/vercel/react/rules/rendering-hydration-no-flicker.md
-    - sourced/vercel/react/rules/server-serialization.md
-    - sourced/vercel/react/rules/rendering-svg-precision.md
-    - sourced/vercel/react/rules/rerender-memo.md
-    - sourced/vercel/react/rules/advanced-init-once.md
-    - sourced/vercel/react/rules/rendering-content-visibility.md
-    - sourced/vercel/react/rules/bundle-analyzable-paths.md
-    - sourced/vercel/react/rules/async-parallel.md
-    - sourced/vercel/react/rules/rerender-split-combined-hooks.md
-    - sourced/vercel/react/rules/js-batch-dom-css.md
-    - sourced/vercel/react/rules/server-auth-actions.md
-    - sourced/vercel/react/rules/js-cache-function-results.md
-    - sourced/vercel/react/rules/js-hoist-regexp.md
-    - sourced/vercel/react/rules/advanced-effect-event-deps.md
-    - sourced/vercel/react/rules/rendering-conditional-render.md
-    - sourced/vercel/react/rules/client-localstorage-schema.md
-    - sourced/vercel/react/rules/bundle-barrel-imports.md
-    - sourced/vercel/react/rules/rerender-simple-expression-in-memo.md
-    - sourced/vercel/web/upstream-README.md
-    - sourced/vercel/web/instruction.md
-    - sourced/vercel/react/compiled-guide.upstream.txt
+    - sourced/vercel/react/upstream-README.md
     boundary: Match framework/version; no forced Next or Vercel hosting.
   context-web-audit:
     kind: resource
@@ -175,3 +51,9 @@ capabilities:
     kind: command
     command: aws
     boundary: Optional for source planning; no apply/deployment authorization.
+  context-pact-hrr:
+    kind: resource
+    path: skills/pact-hrr/SKILL.md
+    description: Reconsider a consequential responsibility using prior art and actual
+      use.
+    boundary: Instruction-only procedure; existing task authority governs effects.

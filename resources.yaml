@@ -1,0 +1,57 @@
+schema_version: 1
+dependencies:
+  core/prior-art.md:
+  - core/engineering.md
+  - core/research.md
+  overlays/prior-art.md:
+  - core/prior-art.md
+  - core/engineering.md
+  - core/research.md
+  overlays/patterns.md:
+  - core/engineering.md
+  - core/development.md
+  overlays/code-comments.md:
+  - core/code-comments.md
+  overlays/context-efficiency.md:
+  - core/context.md
+  - core/compression.md
+  - core/benchmarking.md
+  overlays/writing.md:
+  - overlays/project-intent.md
+  - overlays/evidence-claims.md
+  overlays/project-intent.md:
+  - core/engineering.md
+  overlays/evidence-claims.md:
+  - core/research.md
+  - core/testing.md
+  overlays/delivery.md:
+  - core/development.md
+  - core/testing.md
+  - core/review.md
+  - core/versioning.md
+  - core/version-control.md
+  skills/pact-hrr/SKILL.md:
+  - core/prior-art.md
+  skills/context-loadout/SKILL.md:
+  - docs/loadouts.md
+  domains/web/design.md:
+  - procedures/web-design.md
+  domains/service/api.md:
+  - core/development.md
+  - core/testing.md
+  domains/infrastructure/aws.md:
+  - core/testing.md
+  - core/version-control.md
+  procedures/web-design.md:
+  - sourced/impeccable/design/reference/new-work.md
+  - sourced/impeccable/design/reference/shape.md
+  - sourced/impeccable/design/reference/craft-floor.md
+  - sourced/impeccable/design/reference/critique.md
+  - sourced/impeccable/design/reference/audit.md
+  - sourced/impeccable/design/reference/polish.md
+  - sourced/impeccable/design/reference/document.md
+  - sourced/impeccable/design/reference/degraded/documenter.md
+  domains/web/react.md:
+  - procedures/react-review.md
+  procedures/react-review.md:
+  - sourced/vercel/react/compiled-guide.md

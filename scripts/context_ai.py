@@ -86,30 +86,56 @@ def current_decisions():
                 raise Invalid('invalid decision successor')
     return {id: max((v for (k,_),v in decisions.items() if k==id), key=lambda d:d['revision']) for id,_ in decisions}
 
+def resource_path(root, name):
+    path = inside(root, name)
+    if path.name.casefold() in ('agents.md', 'agents.override.md', 'claude.md', 'gemini.md') or any(part.casefold() in ('.agents', '.codex') for part in path.parts):
+        raise Invalid('untrusted instruction activation: '+name)
+    return path
+
 def resources(names):
-    output = {}
-    pending = list(names)
-    while pending:
-        name = pending.pop(0)
+    registry = read_yaml(ROOT/'resources.yaml') if (ROOT/'resources.yaml').exists() else {'dependencies': {}}
+    dependencies = registry['dependencies']
+    output, active = {}, set()
+    def visit(name):
+        if name in active:
+            raise Invalid('resource dependency cycle: '+name)
         if name in output:
-            continue
-        p = inside(ROOT, name)
+            return
+        p = resource_path(ROOT, name)
         if not p.is_file():
             raise Invalid('missing resource: '+name)
-        data = p.read_bytes()
-        output[name] = data
-        if p.suffix == '.md':
-            for link in re.findall(r'!?\[[^\]]*\]\(([^\s)]+)(?:\s+[^)]*)?\)', data.decode('utf-8')):
-                if urlparse(link).scheme or link.startswith('#'):
-                    continue
-                rel = unquote(link.split('#')[0].split('?')[0].strip('<>'))
-                dest = Path(os.path.normpath(str(Path(name).parent/rel)))
-                dep = inside(ROOT, dest.as_posix())
-                if dep.is_dir():
-                    pending.extend(x.relative_to(ROOT).as_posix() for x in sorted(dep.rglob('*')) if x.is_file())
-                    continue
-                pending.append(dest.as_posix())
+        active.add(name)
+        for dep in dependencies.get(name, []):
+            visit(dep)
+        active.remove(name)
+        output[name] = p.read_bytes()
+    for name in names:
+        visit(name)
     return output
+
+def source_notices(files):
+    if not (ROOT/'sources.lock.json').exists():
+        return {}
+    result = {}
+    covered = set()
+    for source in json.loads((ROOT/'sources.lock.json').read_text())['sources']:
+        selected = set(files) & set(source['files'])
+        if not selected:
+            continue
+        covered.update(selected)
+        notices = {p for p in source['files'] if Path(p).name in ('LICENSE','LICENSE.txt','NOTICE.md')}
+        # Preserve the attributed upstream README when a snapshot has no separate notice.
+        if not notices:
+            notices = {p for p in source['files'] if p.endswith('upstream-README.md')}
+        for path in selected | notices:
+            data = inside(ROOT,path).read_bytes()
+            if digest(data) != source['files'][path]:
+                raise Invalid('pinned upstream drift: '+path)
+            if path in notices:
+                result[path] = data
+    if any(p.startswith('sourced/') and p not in covered for p in files):
+        raise Invalid('unregistered sourced resource')
+    return result
 
 def capability_states(selected, registry):
     states = {}
@@ -132,11 +158,6 @@ def resolve(ids, project, provider, options=None):
     if provider != 'codex':
         raise Invalid('supported adapter is codex')
     all_loads = catalogue()
-    if (ROOT/'sources.lock.json').exists():
-        for source in json.loads((ROOT/'sources.lock.json').read_text())['sources']:
-            for path,sha in source['files'].items():
-                if digest(inside(ROOT,path).read_bytes())!=sha:
-                    raise Invalid('pinned upstream drift: '+path)
     ordered, active = [], set()
     def visit(id):
         if id in active:
@@ -188,8 +209,7 @@ def resolve(ids, project, provider, options=None):
             files.update(resources([registry[c]['path']]))
             for extra in registry[c].get('files',[]):
                 files.update(resources([extra]))
-    for p in ['requirements.txt','capabilities.yaml']+[p.relative_to(ROOT).as_posix() for p in sorted((ROOT/'decisions').glob('*.yaml'))]+(['sources.lock.json'] if (ROOT/'sources.lock.json').exists() else []):
-        files[p] = inside(ROOT,p).read_bytes()
+    files.update(source_notices(files))
     for id in ordered:
         files['loadouts/'+id+'.yaml'] = (ROOT/'loadouts'/ (id+'.yaml')).read_bytes()
     file_hashes = {name:digest(data) for name,data in sorted(files.items())}

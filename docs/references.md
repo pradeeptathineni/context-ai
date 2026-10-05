@@ -318,3 +318,9 @@ Pinned upstream text retains its original whitespace, including Markdown hard br
 ## Responsibility reconsideration
 
 `core/prior-art.md` and `skills/pact-hrr/SKILL.md` adapt the maintainer-supplied PACT/HRR playbook, reviewed 2026-10-05. The canonical workflow owns comparison, use and revision; the skill is a router. [Agent Skills](https://agentskills.io/specification) and [OpenAI skill documentation](https://learn.chatgpt.com/docs/build-skills) support metadata-first, on-demand procedures, reviewed 2026-10-05. This is direct source inspection, not native discovery or evidence of efficiency.
+
+`resources.yaml` declares runtime prerequisites independently of informational Markdown navigation. `tests/test_resources.py` demonstrates the former implicit instruction inclusion and the corrected closure, including dependency cycles, missing files, path escape and notice retention. Reviewed 2026-10-05; installed bytes and actual loaded input remain separate measurements.
+
+`procedures/react-review.md` adapts pinned Vercel navigation to the installed compiled guide; framework-specific advice remains conditional. The focused closure review identified and corrected Mac filename casing and missing React/design routes. Reviewed 2026-10-05.
+
+`decisions/composition.yaml` records measured closure choices, including the precise supported packaging/React claims in the verified Signals successor at `ee4aea154c461aaa8f9f0cbb770240c28c19dde7`. Those source claims do not prove local efficiency.

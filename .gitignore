@@ -3,6 +3,6 @@ __pycache__/
 .context-ai/
 node_modules/
 .examples-output/
-.agents/skills/context-loadout/
+.agents/skills/context-*/
 examples/web/.agents/
 examples/web/AGENTS.md

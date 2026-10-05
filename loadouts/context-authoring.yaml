@@ -1,9 +1,11 @@
 schema_version: 1
 skills:
 - context-loadout
+- context-pact-hrr
 capabilities:
   python-runtime: required
   git: required
+  context-pact-hrr: required
 options: {}
 decisions:
 - D-001
@@ -13,6 +15,7 @@ decisions:
 - D-005
 - D-006
 - D-012
+- D-018
 compose: []
 id: context-authoring
 description: Maintain concise coherent context with retained requirements and provenance.
