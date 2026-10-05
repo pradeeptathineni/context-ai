@@ -7,12 +7,13 @@ Reusable AI context engineering.
 ## What lives where
 
 - [`core/`](core/) contains provider-independent behavioral context. Load only the files relevant to the task.
-- [`custom/`](custom/) contains opt-in, opinionated project standards that compose and specialize the canonical core.
+- [`custom/`](custom/) contains opinionated house standards that compose and specialize the canonical core; a user-level entry point can route relevant files across projects.
 - [`models/routing.yaml`](models/routing.yaml) is a machine-readable policy for selecting a model profile and reasoning level from task attributes.
 - [`providers/`](providers/) contains product-specific adapters: discovery, scope, precedence, configuration, and consumption guidance.
 - [`evals/`](evals/) defines how context quality can be compared without putting nondeterministic model calls in CI.
 - A nested `sourced/` directory may hold a pinned, redistributable upstream artifact when a local snapshot has clear value. None are included in v0.2.0.
 - [`docs/references.md`](docs/references.md) maps maintained artifacts to the sources that materially shaped them.
+- [`docs/adoption.md`](docs/adoption.md) gives a staged Codex user-level entry point and explains how the hierarchy can serve other repositories.
 
 Markdown is used for instructions people and models should read naturally. YAML is used where consumers need stable fields, validation, and routing logic. Provider adapters reference canonical context instead of copying it.
 
@@ -38,7 +39,9 @@ An integration can evaluate task attributes against `models/routing.yaml`, selec
 
 See [`providers/openai/codex.md`](providers/openai/codex.md) for Codex-specific instruction discovery and configuration behavior.
 
-Projects that adopt the opinionated layer should select from [`custom/README.md`](custom/README.md), not load the directory wholesale. For example, an AI implementation may add `custom/ai-implementation.md`; add `custom/delivery.md` when the task needs the full implementation-to-integration loop or includes publication or release.
+A personal entry point or project that adopts the house layer should select from [`custom/README.md`](custom/README.md), not load the directory wholesale. For example, an AI implementation may add `custom/ai-implementation.md`; add `custom/delivery.md` when the task needs the full implementation-to-integration loop or includes publication or release.
+
+For substantial new tooling or custom capabilities, begin with [`custom/prior-art.md`](custom/prior-art.md) and the relevant project contract. The house layer also covers agent orchestration, model and reasoning choices, writing, code comments, design patterns, and evidence claims. The [usage cases](evals/usage-cases.md) show how different tasks select different files.
 
 ## Design
 
@@ -54,9 +57,9 @@ The five layers have different change pressures:
 
 This separation lets model and provider facts evolve without rewriting the behavioral library.
 
-## v0.2.0 scope
+## Release and current scope
 
-This release adds five custom contexts for project intent, technical design, AI implementation, context efficiency, and complete delivery, plus a small router for selective use. The nine canonical core contexts, OpenAI model-routing policy, Codex adapter, provenance map, deterministic validation, and evaluation protocol remain intact. Custom guidance stays a delta from canonical context and composes references rather than copying content. Additional providers, Agent Skills packaging, `llms.txt`, and automated model-graded evals wait for a real consumer or evidence that they improve outcomes.
+The v0.2.0 release added five custom contexts for project intent, technical design, AI implementation, context efficiency, and complete delivery. The current checkout extends that layer with the practices above and a Codex adoption guide. The nine canonical core contexts, model-routing policy, Codex adapter, provenance map, deterministic validation, and evaluation protocol remain in place. Custom guidance stays a delta from canonical context and composes references rather than copying content. Additional providers, Agent Skills packaging, `llms.txt`, and automated model-graded evals wait for a real consumer or evidence that they improve outcomes.
 
 Run validation with:
 

@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- Task-specific house guidance for prior-art decisions, pattern selection, orchestration, model effort, writing, code comments, and evidence claims.
+- Staged Codex user-level adoption guide and contrasting usage cases.
+
+### Changed
+
+- Extended the root and custom routers, source map, and validator for the new hierarchy.
+- Refreshed model bindings, removed retired Codex-Spark, and corrected the value profile after checking current model positioning.
+
 ## [0.2.0] - 2026-09-13
 
 ### Added

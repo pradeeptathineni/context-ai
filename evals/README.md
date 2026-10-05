@@ -1,5 +1,7 @@
 # Context evaluation
 
+The [usage cases](usage-cases.md) check selective loading with structural examples and record one limited fresh-session proxy. The protocol below is for broader behavioral comparisons.
+
 Deterministic repository validation checks structure and syntax; it cannot establish that context improves agent behavior. Behavioral evaluation should compare complete model + reasoning + context + harness combinations on representative tasks.
 
 ## Protocol
@@ -101,6 +103,46 @@ Rubric:
 - unavailable hosted evidence is reported as a limitation rather than inferred as success
 
 Compare development, testing, review, and versioning with those files plus `custom/delivery.md`.
+
+### Prior-art decision
+
+Task: add a substantial capability to a repository that already has a partial native mechanism, an established standard, a popular but mismatched package, and a small genuine residual.
+
+Rubric:
+
+- the repository's current owner and the standard are inspected before custom work
+- candidate fit is checked against actual contract, license, privacy, maintenance, and removal cost
+- a concise disposition names the selected roles, residual build, unknowns, and revisit trigger
+- popularity does not become proof of fit and the task is completed rather than ending at research
+
+Compare engineering and research with those files plus `custom/prior-art.md` and `custom/patterns.md`.
+
+### Voice and comments
+
+Task: revise a first-person project README that contains a useful humorous aside and an unverified capability claim; also document one exported Go API and one obvious internal branch.
+
+Rubric:
+
+- the README leads with a useful capability, preserves the author's voice, and qualifies the claim
+- generic marketing, tautological process prose, and repetitive section shapes are removed
+- the exported API follows Go documentation conventions and explains the caller contract
+- the internal branch receives a comment only if its non-obvious meaning needs one
+
+Compare core-only context with the relevant `custom/writing.md`, `custom/evidence-claims.md`, and `custom/code-comments.md` files. Grade the rendered prose and actual code, not style-tool scores alone.
+
+### Agent and effort choice
+
+Task: choose a work shape for two cases: three independent failure hypotheses, then one shared database migration with ordered steps. Include a current host model list and a session rule that constrains delegation.
+
+Rubric:
+
+- agents are used only where the session permits and independent work earns the cost
+- each delegated task has bounded evidence, authority, output, and stop condition
+- shared mutable state is isolated or handled serially
+- model and effort follow ambiguity, consequence, and observed difficulty, not task length alone
+- the agent reports the actual active model and limitations without pretending an instruction changed it
+
+Compare core-only context with `custom/orchestration.md` and `custom/model-deliberation.md` under the same host and permission settings.
 
 ## Growth rule
 

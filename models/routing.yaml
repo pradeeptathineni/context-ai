@@ -4,7 +4,7 @@ name: model-routing
 description: >-
   Provider-aware policy for selecting a model profile and reasoning level from
   task intent, scope, risk, latency, autonomy, and cost constraints.
-reviewed: "2026-09-12"
+reviewed: "2026-10-05"
 
 matching:
   strategy: first_match
@@ -21,16 +21,12 @@ matching:
 sources:
   openai_api_models:
     url: https://developers.openai.com/api/docs/models
-    reviewed: "2026-09-12"
+    reviewed: "2026-10-05"
     covers: API model IDs, relative positioning, and reasoning levels
   codex_models:
     url: https://learn.chatgpt.com/docs/models
-    reviewed: "2026-09-12"
+    reviewed: "2026-10-05"
     covers: Codex model positioning, product caveats, and current bindings
-  codex_speed:
-    url: https://learn.chatgpt.com/docs/agent-configuration/speed
-    reviewed: "2026-09-12"
-    covers: Codex-Spark purpose, preview status, and access caveats
 
 defaults:
   principles:
@@ -72,13 +68,13 @@ models:
 
   balanced:
     provider: openai
-    model: gpt-5.6-sol
-    display_name: GPT-5.6 Sol
+    model: gpt-6-sol
+    display_name: GPT-6 Sol
     lifecycle: current
     documented_for: [openai_api, codex]
     availability: verify_for_product_auth_workspace_and_client
     reasoning:
-      supported: [none, low, medium, high, xhigh, max]
+      supported: [low, medium, high, xhigh, max]
       default: medium
     strengths:
       - complex professional work
@@ -98,22 +94,22 @@ models:
 
   value:
     provider: openai
-    model: gpt-5.6-terra
-    display_name: GPT-5.6 Terra
+    model: gpt-6-luna
+    display_name: GPT-6 Luna
     lifecycle: current
     documented_for: [openai_api, codex]
     availability: verify_for_product_auth_workspace_and_client
     reasoning:
-      supported: [none, low, medium, high, xhigh, max]
+      supported: [low, medium, high, xhigh, max]
       default: medium
     strengths:
-      - balanced intelligence and cost
-      - everyday engineering
+      - focused everyday engineering
       - routine implementation and structured transformations
+      - low-cost retryable work with clear acceptance checks
     tradeoffs:
-      relative_cost: medium
+      relative_cost: efficient_gpt_6_option
       capability: escalate_when_architecture_or_difficulty_is_unsettled
-      latency: balanced
+      latency: favor_bounded_work
     recommended_intents:
       - routine_implementation
       - mechanical_refactors
@@ -123,20 +119,20 @@ models:
 
   bulk:
     provider: openai
-    model: gpt-5.6-luna
-    display_name: GPT-5.6 Luna
+    model: gpt-6-luna
+    display_name: GPT-6 Luna
     lifecycle: current
     documented_for: [openai_api, codex]
     availability: verify_for_product_auth_workspace_and_client
     reasoning:
-      supported: [none, low, medium, high, xhigh, max]
-      default: low
+      supported: [low, medium, high, xhigh, max]
+      default: medium
     strengths:
       - cost-sensitive high-volume work
       - fast everyday generation
       - classification, extraction, and repetitive transformations
     tradeoffs:
-      relative_cost: lowest_in_gpt_5_6_family
+      relative_cost: efficient_gpt_6_option
       capability: not_for_deep_or_high_consequence_reasoning
       autonomy: prefer_bounded_work
     recommended_intents:
@@ -148,21 +144,22 @@ models:
 
   realtime_coding:
     provider: openai
-    model: gpt-5.3-codex-spark
-    display_name: GPT-5.3-Codex-Spark
-    lifecycle: research_preview
-    documented_for: [codex]
-    availability: chatgpt_pro_and_client_dependent
+    model: gpt-6-luna
+    display_name: GPT-6 Luna
+    lifecycle: current
+    documented_for: [openai_api, codex]
+    availability: verify_for_product_auth_workspace_and_client
+    compatibility_note: Stable legacy profile name; no real-time latency guarantee after Spark retirement.
     reasoning:
-      supported: host_defined
-      default: null
+      supported: [low, medium, high, xhigh, max]
+      default: medium
     strengths:
-      - near-instant real-time coding iteration
-      - targeted edits and short feedback loops
+      - focused coding and targeted edits
+      - short feedback loops
     tradeoffs:
-      relative_cost: separate_usage_limits
-      capability: less_capable_than_general_models
-      modality: text_only
+      relative_cost: efficient_gpt_6_option
+      capability: escalate_for_hard_or_cross_cutting_work
+      modality: host_defined
       overkill_for: null
     recommended_intents:
       - targeted_edits
@@ -173,7 +170,7 @@ models:
       - long_horizon_autonomy
       - repository_wide_architecture_is_unsettled
       - deep_cross_system_reasoning
-    source_refs: [codex_models, codex_speed]
+    source_refs: [codex_models, openai_api_models]
 
 routes:
   - id: architecture_critical
@@ -215,9 +212,9 @@ routes:
       architecture: settled
     select:
       model_profile: realtime_coding
-      reasoning: null
+      reasoning: low
     fallback:
-      model_profile: value
+      model_profile: balanced
       reasoning: medium
 
   - id: realtime_bounded_coding
@@ -227,7 +224,10 @@ routes:
       interaction: iterative
     select:
       model_profile: realtime_coding
-      reasoning: null
+      reasoning: low
+    fallback:
+      model_profile: balanced
+      reasoning: medium
 
   - id: deep_debugging
     match:
@@ -243,7 +243,10 @@ routes:
       scope: bounded
     select:
       model_profile: realtime_coding
-      reasoning: null
+      reasoning: low
+    fallback:
+      model_profile: balanced
+      reasoning: medium
 
   - id: final_review
     match:
@@ -294,7 +297,7 @@ routes:
       intent: mechanical
     select:
       model_profile: value
-      reasoning: none
+      reasoning: low
 
   - id: high_volume_low_risk
     match:
@@ -366,8 +369,10 @@ maintenance:
   compatibility:
     - Keep route IDs and model profile names stable within schema version 1.
     - Change schema_version only for incompatible structure or matching semantics.
-    - release_version identifies the repository release, not schema compatibility.
+    - release_version identifies the last published repository release, not schema compatibility.
+    - Keep the realtime_coding profile and route IDs stable for schema-1 consumers, but do not infer a special real-time model from their names.
   refresh:
     - Verify model names, reasoning levels, lifecycle, access, and product support before release.
+    - Reasoning levels list the conservative set shared with the reviewed Codex host; do not infer API-only none or parallel Ultra support from them.
     - Do not change intent names merely because a provider renames a model.
     - Prefer source-backed qualitative tradeoffs over volatile copied price tables.

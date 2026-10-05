@@ -28,10 +28,19 @@ REQUIRED = %w[
   custom/ai-implementation.md
   custom/context-efficiency.md
   custom/delivery.md
+  custom/prior-art.md
+  custom/patterns.md
+  custom/orchestration.md
+  custom/model-deliberation.md
+  custom/writing.md
+  custom/code-comments.md
+  custom/evidence-claims.md
   models/routing.yaml
   providers/openai/codex.md
+  docs/adoption.md
   docs/references.md
   evals/README.md
+  evals/usage-cases.md
   scripts/validate.rb
   .github/workflows/validate.yml
 ].freeze
