@@ -51,7 +51,7 @@
   "action": "validated",
   "capability": "context-web-design",
   "revision": "ece38d9904b8a619b3f77cab476eacad09c4fb11",
-  "asset_bytes": 11549,
+  "asset_bytes": 11619,
   "asset_budget": 24000,
   "commands": [
     "npm run build:web",
@@ -61,11 +61,13 @@
     "method": "self-review under the instruction-only adapter",
     "observations": [
       "Divided catalogue rows support comparison; primary heading/action and context remain legible in both palettes.",
-      "320px header wrapped the palette control onto a third row; the wordmark used an unrelated Unicode glyph."
+      "320px header wrapped the palette control onto a third row; the wordmark used an unrelated Unicode glyph.",
+      "Hosted Linux Chromium exposed 320px concern-control overflow under its system font metrics."
     ],
     "revisions": [
       "Replaced decorative glyph with authored SVG route mark.",
-      "Tightened small-screen navigation spacing/button type and intro spacing."
+      "Tightened small-screen navigation spacing/button type and intro spacing.",
+      "Allowed fieldset wrapping/minimum sizing and removed inherited input padding from radio controls; kept the overflow assertion and added offender diagnostics."
     ],
     "limits": [
       "No native Impeccable binary/detector/hooks or dual-agent critique command ran. This is an adapted instruction-led self-review.",
@@ -73,13 +75,18 @@
     ]
   },
   "screenshots": {
-    "expressive-1440.png": "0c33a0de7dbc91be6eb09c101f2e9c801a75860db761b5678ae1673ff28ce486",
-    "expressive-320.png": "a1d5a45eced426720df517332417f7bb8eddadab22983359ffc7506a0a8e6657",
-    "expressive-390.png": "ac4ed4e3a2dcfe116fab6d5e65318ab28ed6a5633db549c9a4355ccad382550d",
-    "expressive-768.png": "94e79d2351ece687db11b774d975c0c2e6822c4ca83689ef52645a9b2ea4aad8",
-    "quiet-1440.png": "e02e9d4568aefb3c0feb3bffb261c9a50074197c9bd78a7331c46fe7902a6ba5",
-    "quiet-320.png": "aaf9958f44ce84b080ed82f90a03464058c3b403ee1f6d3596d9069574a484e6",
-    "quiet-390.png": "a72248bf63afbce0785719425f991da1298a356aa15695da97550cd0129c4f9f",
-    "quiet-768.png": "ca269b2b1cbcc1c8bc23ef37829a81d37c4bb0db9480ba5bf486608f34744669"
+    "expressive-1440.png": "c6f5d2826ad52edd1ff3b8292ed0b1a8cb73c390fc09b3cdfb011987083485c9",
+    "expressive-320.png": "d8be490248da07062de86fb966059dc1b3b50c266a453afaa2785c513e0b6e21",
+    "expressive-390.png": "5ad40adc92342b4f4ef561131b893fdd6e5663645cc276b9ccad7b4d65f1f5ed",
+    "expressive-768.png": "1ac6634430b3a8e3cb2f85c45b4633e27825473480d69d02606c87a04289a6f8",
+    "quiet-1440.png": "7ce22f103997792ae7a4b3184404b2c7888b95de6c765ee0fed180a4512c781e",
+    "quiet-320.png": "76ec2268e6494f2b37f5223120a8cac895b15c2e32bdc4590eb4419c0aa1c814",
+    "quiet-390.png": "ea2fe98c7c85d17d8bdbd0aa539a410ac034699425a536433dd75305527f3ff1",
+    "quiet-768.png": "33309e57a85b1f49d91e8d2ce719abb37535c25827ae7ca87b0de2b267ac83bf"
+  },
+  "asset_sha256": {
+    "app.js": "566ce0aedd9c4fa708eb3f3834de95772347cc426b49720d40c7c5fb634fdc72",
+    "index.html": "aabee380f6f3a92f5e43836f6fbc72247d86505a277bfa62d19ade56421f79dd",
+    "style.css": "c31aa1efb86ca9c809747d94d1b1fc38c20ac24f40d14e97f67341d2ba262a22"
   }
 }

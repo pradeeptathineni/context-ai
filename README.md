@@ -65,6 +65,6 @@ npm run test:web
 git diff --check
 ```
 
-The browser gate requires the pinned Playwright Chromium runtime: `node node_modules/playwright/cli.js install chromium`. CI also preserves its screenshots and results.
+The browser gate uses Node 24 in CI (Node 20+ required) and the pinned Playwright Chromium runtime: `node node_modules/playwright/cli.js install chromium`. CI also preserves its screenshots and results.
 
 Library releases use immutable annotated tags and [CHANGELOG](CHANGELOG.md). Schema versions remain independent. Repository-owned content is [MIT](LICENSE); upstream snapshots retain their own declared licences and notices.

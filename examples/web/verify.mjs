@@ -26,7 +26,8 @@ try {
     page.on('requestfailed',r=>errors.push(r.url()));
     await page.goto(base);await page.locator('.loadout').last().waitFor();
     assert.equal(await page.locator('.loadout').count(),8);
-    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'horizontal overflow at '+width);
+    const overflow=await page.evaluate(()=>({present:document.documentElement.scrollWidth>innerWidth,offenders:[...document.querySelectorAll('body *')].filter(el=>el.getBoundingClientRect().right>innerWidth+.5).map(el=>({tag:el.tagName,id:el.id,class:el.className,width:el.getBoundingClientRect().width}))}));
+    assert(!overflow.present,'horizontal overflow at '+width+': '+JSON.stringify(overflow.offenders));
     await page.screenshot({path:out+`quiet-${width}.png`,fullPage:true});
     const quiet=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
     assert.deepEqual(quiet.violations,[],JSON.stringify(quiet.violations));
