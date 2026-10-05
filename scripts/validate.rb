@@ -2,6 +2,7 @@
 # frozen_string_literal: true
 
 require "pathname"
+require "date"
 require "uri"
 require "yaml"
 
@@ -13,6 +14,10 @@ REQUIRED = %w[
   README.md
   CHANGELOG.md
   LICENSE
+  concepts.yaml
+  sources.yaml
+  signals/common.yaml
+  providers/openai/signals.yaml
   .agents/skills/standard/SKILL.md
   core/engineering.md
   core/context.md
@@ -39,9 +44,11 @@ REQUIRED = %w[
   models/routing.yaml
   providers/openai/codex.md
   docs/adoption.md
+  docs/concepts-and-signals.md
   docs/references.md
   evals/README.md
   evals/usage-cases.md
+  scripts/lookup.rb
   scripts/validate.rb
   .github/workflows/validate.yml
 ].freeze
@@ -134,8 +141,25 @@ end
 
 yaml_files = text_files.select { |path| %w[.yaml .yml].include?(File.extname(path).downcase) }
 yaml_documents = {}
+
+def check_duplicate_yaml_keys(node, path)
+  if node.is_a?(Psych::Nodes::Mapping)
+    seen = []
+    node.children.each_slice(2) do |key, value|
+      if key.is_a?(Psych::Nodes::Scalar)
+        error("duplicate YAML key in #{path}: #{key.value}") if seen.include?(key.value)
+        seen << key.value
+      end
+      check_duplicate_yaml_keys(value, path)
+    end
+  else
+    Array(node.children).each { |child| check_duplicate_yaml_keys(child, path) }
+  end
+end
+
 yaml_files.each do |file|
   begin
+    check_duplicate_yaml_keys(Psych.parse_stream(File.read(file)), relative(file))
     yaml_documents[relative(file)] = YAML.safe_load(
       File.read(file),
       permitted_classes: [],
@@ -146,6 +170,107 @@ yaml_files.each do |file|
   rescue Psych::Exception => e
     error("invalid YAML in #{relative(file)}: #{e.message.lines.first.strip}")
   end
+end
+
+def valid_review_date?(value)
+  return false unless value.is_a?(String) && value.match?(/\A\d{4}-\d{2}-\d{2}\z/)
+
+  Date.iso8601(value)
+  true
+rescue ArgumentError
+  false
+end
+
+concept_document = yaml_documents["concepts.yaml"]
+concepts = concept_document.is_a?(Hash) ? concept_document["concepts"] : nil
+error("concepts.yaml schema_version must be 1") unless concept_document.is_a?(Hash) && concept_document["schema_version"] == 1
+error("concepts.yaml concepts must be a non-empty map") unless concepts.is_a?(Hash) && !concepts.empty?
+if concepts.is_a?(Hash)
+  concepts.each do |id, description|
+    error("invalid concept id: #{id}") unless id.is_a?(String) && id.match?(/\A[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+\z/)
+    error("concept #{id} needs a one-line description") unless description.is_a?(String) && !description.strip.empty? && !description.include?("\n")
+  end
+end
+
+source_document = yaml_documents["sources.yaml"]
+sources = source_document.is_a?(Hash) ? source_document["sources"] : nil
+error("sources.yaml schema_version must be 1") unless source_document.is_a?(Hash) && source_document["schema_version"] == 1
+error("sources.yaml sources must be a non-empty map") unless sources.is_a?(Hash) && !sources.empty?
+if sources.is_a?(Hash)
+  sources.each do |id, source|
+    error("invalid source id: #{id}") unless id.is_a?(String) && id.match?(/\A[a-z][a-z0-9-]*\z/)
+    unless source.is_a?(Hash)
+      error("source #{id} must be a map")
+      next
+    end
+    %w[title publisher].each do |field|
+      error("source #{id} needs #{field}") unless source[field].is_a?(String) && !source[field].strip.empty?
+    end
+    begin
+      url = URI.parse(source["url"].to_s)
+      error("source #{id} needs an HTTPS URL") unless url.is_a?(URI::HTTPS) && url.host
+    rescue URI::InvalidURIError
+      error("source #{id} needs an HTTPS URL")
+    end
+    error("source #{id} needs a valid YYYY-MM-DD review date") unless valid_review_date?(source["reviewed_on"])
+  end
+end
+
+signal_ids = []
+signal_paths = yaml_documents.keys.grep(%r{\A(?:signals/|providers/[^/]+/signals\.yaml\z)}).sort
+error("signals/common.yaml is required") unless signal_paths.include?("signals/common.yaml")
+signal_paths.each do |path|
+  document = yaml_documents[path]
+  unless document.is_a?(Hash) && document["schema_version"] == 1 && document["signals"].is_a?(Hash) && !document["signals"].empty?
+    error("#{path} needs schema_version 1 and a non-empty signals map")
+    next
+  end
+  if path == "signals/common.yaml"
+    error("#{path} must declare scope: common") unless document["scope"] == "common"
+  else
+    provider = path.split("/")[1]
+    error("#{path} must declare provider: #{provider}") unless document["provider"] == provider
+    error("#{path} needs a valid review date") unless valid_review_date?(document["reviewed_on"])
+  end
+  document["signals"].each do |concept_id, entries|
+    error("#{path} uses unknown concept #{concept_id}") unless concepts.is_a?(Hash) && concepts.key?(concept_id)
+    unless entries.is_a?(Array) && !entries.empty?
+      error("#{path} concept #{concept_id} needs a non-empty signal list")
+      next
+    end
+    entries.each do |signal|
+      unless signal.is_a?(Hash)
+        error("#{path} concept #{concept_id} has a non-map signal")
+        next
+      end
+      id = signal["id"]
+      error("#{path} has an invalid signal id: #{id}") unless id.is_a?(String) && id.match?(/\A[a-z][a-z0-9-]*\z/)
+      signal_ids << id if id.is_a?(String)
+      error("signal #{id} has an invalid type") unless %w[standard practice native_capability tool].include?(signal["type"])
+      %w[name use_when boundary].each do |field|
+        error("signal #{id} needs #{field}") unless signal[field].is_a?(String) && !signal[field].strip.empty?
+      end
+      refs = signal["source_refs"]
+      unless refs.is_a?(Array) && !refs.empty? && refs.uniq.length == refs.length
+        error("signal #{id} needs unique source_refs")
+      end
+      Array(refs).each do |ref|
+        error("signal #{id} uses unknown source #{ref}") unless sources.is_a?(Hash) && sources.key?(ref)
+      end
+      if path == "signals/common.yaml"
+        error("signal #{id} in common cannot be a native capability") if signal["type"] == "native_capability"
+        error("signal #{id} in common must not declare products") if signal.key?("products")
+      else
+        products = signal["products"]
+        unless products.is_a?(Array) && !products.empty? && products.all? { |product| product.is_a?(String) && product.match?(/\A[a-z][a-z0-9-]*\z/) } && products.uniq.length == products.length
+          error("signal #{id} needs unique product names")
+        end
+      end
+    end
+  end
+end
+signal_ids.group_by(&:itself).each do |id, ids|
+  error("duplicate signal id: #{id}") if ids.length > 1
 end
 
 references = ROOT.join("docs/references.md")

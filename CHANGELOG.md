@@ -8,12 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Provider-neutral concept index, shared prior-art signals, OpenAI product signals, and original-source registry.
+- Concepts-and-signals guide and referential validation for concept IDs, signal IDs, provider scope, and source links.
+- Dependency-free lookup for one concept's matching signals and original references.
 - Task-specific house guidance for prior-art decisions, pattern selection, orchestration, model effort, writing, code comments, and evidence claims.
 - Staged Codex user-level adoption guide and contrasting usage cases.
 - `standard` Codex skill for native-capability and prior-art checks on substantial development and workflow decisions.
 
 ### Changed
 
+- Routed the `standard` skill and adoption guidance through matching concepts and sourced signals.
 - Extended the root and custom routers, source map, and validator for the new hierarchy.
 - Added a local skill adoption path without activating global `AGENTS.md` guidance.
 - Refreshed model bindings, removed retired Codex-Spark, and corrected the value profile after checking current model positioning.

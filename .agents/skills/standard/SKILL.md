@@ -11,19 +11,9 @@ Use the current task, repository instructions, and actual environment as the aut
 
 For a substantial new capability, dependency, service, protocol, agent workflow, or development tool, **check prior art before building**. Name the job and its observable contract. Inspect the repository's current owner and decisions, then the relevant standard, native facility, maintained implementation, and smallest custom remainder. Read [prior-art](../../../custom/prior-art.md); use [patterns](../../../custom/patterns.md) when deciding ownership or architecture. A small edit within an established path needs no landscape review.
 
-For Codex or ChatGPT workflow decisions, check the relevant native owner on the **active surface** before inventing a wrapper:
+For an unfamiliar or consequential choice, use the [lookup script](../../../scripts/lookup.rb) from the context-ai checkout. Search a word such as `ruby scripts/lookup.rb --search "review"`, then retrieve a single ID such as `ruby scripts/lookup.rb quality.review --provider openai --product codex`. The command reads [concepts](../../../concepts.yaml), matching [common signals](../../../signals/common.yaml) and [OpenAI signals](../../../providers/openai/signals.yaml), and resolves [sources](../../../sources.yaml). Read the original source for the deciding claim. Do not open the full YAML files when the lookup supplies the relevant entries. The index is a candidate list, not a required stack; if no signal covers the job, research directly.
 
-| Job | First native option to inspect |
-| --- | --- |
-| Durable repository or personal instructions | Codex scoped `AGENTS.md`; ChatGPT Personalization or project instructions on a supported surface. Memory is recall, not a required-rule store |
-| Repeatable task procedure or role | Agent Skill; Record & Replay when capturing a demonstrated workflow; plugin when cross-surface distribution is needed |
-| External application, account, or data | Installed plugin or MCP connection and its actual permissions |
-| Command restriction or file invariant | `.rules` for exact command prefixes, a hook for covered tool events, CI for repository gates, or sandbox/OS permissions for a filesystem boundary; test the selected coverage |
-| Model and reasoning level | Native model/effort controls and current availability |
-| Independent parallel work | Native subagent/task and worktree facilities, when allowed and worthwhile |
-| Review, diff, status, or scheduled work | Built-in command or automation for that surface |
-
-Inspect only the categories relevant to the task. Verify availability and behavior in the current app, CLI, or host; an installed capability is not proof of access or fit. Use first-party documentation for volatile product behavior. Do not add a hook, plugin, agent, or custom runtime merely because it exists.
+For Codex or ChatGPT, verify the chosen capability on the **active surface**, including model and reasoning controls, instruction discovery, skill or plugin availability, MCP permissions, hook coverage, command behavior, and worktree or subagent support when relevant. Installed or documented does not mean available or fitting in this host. Use first-party documentation for volatile product behavior. Do not add a hook, plugin, agent, or custom runtime merely because it exists.
 
 ## Make and finish the choice
 

@@ -21,6 +21,7 @@ An override replaces the regular file in the same directory; it does not supplem
 - Keep the consuming project's `AGENTS.md` short and route tasks to the relevant `core/` files.
 - Make referenced context available inside the workspace through copied files, a submodule, or another explicit retrieval mechanism the project controls.
 - Load provider-independent files for the task first. Load this adapter only when Codex discovery or configuration affects the work.
+- For a tooling decision, use [`../../concepts.yaml`](../../concepts.yaml) to find the job, then inspect matching [shared signals](../../signals/common.yaml) and [OpenAI signals](signals.yaml). Follow source IDs in [`../../sources.yaml`](../../sources.yaml); signals nominate candidates and do not activate capabilities.
 - Use nested `AGENTS.md` files only for genuinely narrower path-specific guidance; do not copy the root instructions into them.
 - Restart the run after changing instruction files when the active session must receive the new chain.
 - For a user-level entry point across repositories, use the short candidate router in [`../../docs/adoption.md`](../../docs/adoption.md). Keep the canonical hierarchy in the Git repository; a local `~/.ai/context-ai` checkout or pointer can make it reachable without copying its contents into each project.

@@ -13,6 +13,8 @@ The table contains routing and judgment probes, not measured model outcomes. A d
 | Investigate three independent failure hypotheses | `custom/orchestration.md`, `custom/model-deliberation.md`, current session rules | Use separate bounded investigations only if allowed and useful; assign distinct evidence, then reconcile. One shared database or edit path requires isolation or serial work. |
 | Choose a reasoning level for a clear but long edit | `custom/model-deliberation.md`, current model availability | Start from task ambiguity and consequence, not length alone; use medium or lower if a strong specification and checks exist, then escalate on observed difficulty. |
 | Choose Codex mechanisms for shared guidance, reusable review, and a receipt guard | `$standard`, relevant `custom/` files, current Codex capability docs | Use `AGENTS.md` for durable guidance and a skill for optional review; distinguish command rules, hooks, and filesystem boundaries by actual coverage. |
+| Choose a repeatable procedure format for Codex | `context.skills` from `concepts.yaml`, matching shared and OpenAI signals, original sources | Consider Agent Skills and verify Codex discovery and tools; do not infer that a skill activates a missing capability. |
+| Edit a personal README without generic phrasing | `custom/writing.md`, `communication.anti_slop` shared signal, the current draft | Use the editorial source as a reference; preserve the writer's voice and verify project claims. |
 
 ## Structural dry-run review, 2026-10-05
 
@@ -21,6 +23,12 @@ The table contains routing and judgment probes, not measured model outcomes. A d
 3. **Expected contrasts:** the hashing case favors a standard and verified library; the open-ended research case leaves semantic judgment to a bounded model; the Go comment case distinguishes formal API docs from sparse internal comments. These are policy expectations, not empirical agent results.
 
 The YAML route check selected `gpt-6-astra/xhigh` for consequential architecture, `gpt-6-luna/low` for coding from a settled specification and mechanical work, and `gpt-6-sol/medium` for the wildcard fallback. It verified route order and supported effort without making a model call. It did not establish task success, model availability on every Codex surface, or a better outcome than another route.
+
+## Registry lookup check, 2026-10-05
+
+The local lookup command found `models.reasoning` by search, returned both the Agent Skills specification and Codex capability for `context.skills` with original-source URLs, and selected ChatGPT-specific entries for `context.instructions --provider openai --product chatgpt`. `communication.anti_slop` returned the pinned editorial reference. `data.retention` returned its concept definition and an explicit absence of indexed signals. A disposable copy of the repository confirmed that validation rejects an unknown concept, unknown source, wrong provider, invalid review date, and duplicate signal ID. All 32 source URLs returned HTTP 200 during this check. These are structural checks; they do not show that a provider capability is available in every client or that a signal improves a task outcome.
+
+Two fresh, read-only `codex exec` probes used CLI 0.160.0, GPT-6 Luna at low effort, the same explicit `$standard` prompt, and disposable directories. The task asked how to implement a repeatable Codex review procedure while considering a new plugin and shell hook. The first trace used the lookup for six concepts but also read the full concept and signal files; it recommended built-in review plus a repository skill. After the skill named the search and single-concept lookup commands and discouraged full-catalog reads, the second trace used `--search "review"` and a `quality.review` lookup without opening the full YAML files. It recommended built-in review first and left the plugin and hook conditional on a demonstrated need. Both runs consulted OpenAI review documentation; neither ran a review, installed a tool, or established the team's active-surface capability. The second run shows a narrower retrieval trace, not a measured improvement in answer quality.
 
 ## Fresh-session proxy, 2026-10-05
 

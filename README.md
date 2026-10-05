@@ -8,9 +8,11 @@ Reusable AI context engineering.
 
 - [`core/`](core/) contains provider-independent behavioral context. Load only the files relevant to the task.
 - [`custom/`](custom/) contains opinionated house standards that compose and specialize the canonical core; a user-level entry point can route relevant files across projects.
+- [`concepts.yaml`](concepts.yaml) names the decision areas this library should recognize. [`signals/common.yaml`](signals/common.yaml) records provider-neutral standards and practice worth checking for some of them.
+- [`sources.yaml`](sources.yaml) links each signal to its original publisher and records when it was reviewed.
 - [`.agents/skills/standard/`](.agents/skills/standard/) is the first usable backpack: a Codex skill that checks relevant native capabilities and prior art before substantial development or workflow choices.
 - [`models/routing.yaml`](models/routing.yaml) is a machine-readable policy for selecting a model profile and reasoning level from task attributes.
-- [`providers/`](providers/) contains product-specific adapters: discovery, scope, precedence, configuration, and consumption guidance.
+- [`providers/`](providers/) contains product-specific adapters and sourced signals, including [`providers/openai/signals.yaml`](providers/openai/signals.yaml) for Codex and ChatGPT capabilities.
 - [`evals/`](evals/) defines how context quality can be compared without putting nondeterministic model calls in CI.
 - A nested `sourced/` directory may hold a pinned, redistributable upstream artifact when a local snapshot has clear value. None are included in v0.2.0.
 - [`docs/references.md`](docs/references.md) maps maintained artifacts to the sources that materially shaped them.
@@ -42,7 +44,9 @@ See [`providers/openai/codex.md`](providers/openai/codex.md) for Codex-specific 
 
 A personal entry point or project that adopts the house layer should select from [`custom/README.md`](custom/README.md), not load the directory wholesale. For example, an AI implementation may add `custom/ai-implementation.md`; add `custom/delivery.md` when the task needs the full implementation-to-integration loop or includes publication or release.
 
-For substantial new tooling or custom capabilities, begin with [`custom/prior-art.md`](custom/prior-art.md) and the relevant project contract. The house layer also covers agent orchestration, model and reasoning choices, writing, code comments, design patterns, and evidence claims. The [usage cases](evals/usage-cases.md) show how different tasks select different files.
+For substantial new tooling or custom capabilities, begin with [`custom/prior-art.md`](custom/prior-art.md) and the relevant project contract. Find the matching concept and signals for a sourced shortlist; the [concepts and signals guide](docs/concepts-and-signals.md) explains that lookup. The house layer also covers agent orchestration, model and reasoning choices, writing, code comments, design patterns, and evidence claims. The [usage cases](evals/usage-cases.md) show how different tasks select different files.
+
+For a narrow lookup, run `ruby scripts/lookup.rb --search "reasoning"`, then `ruby scripts/lookup.rb models.reasoning --provider openai --product codex`. The command prints matching candidates and original-source links without loading the whole index.
 
 In Codex, invoke `$standard` for a substantial tooling or workflow decision. Codex can also select the skill when the task matches its description. The [adoption guide](docs/adoption.md) explains how to make this Git-owned skill available across local repositories; a skill does not itself change model settings or guarantee that a tool is active.
 
@@ -50,19 +54,20 @@ In Codex, invoke `$standard` for a substantial tooling or workflow decision. Cod
 
 Context is a finite attention budget. Start with small, always-relevant instructions; retrieve task-specific context just in time; and load provider guidance only for that provider. Preserve project facts, decisions, and non-obvious constraints. Avoid repeating generic knowledge a capable model already has.
 
-The five layers have different change pressures:
+The layers have different change pressures:
 
 1. Canonical context changes when durable guidance improves.
 2. Custom context changes when repeated project practice justifies an opinionated specialization.
-3. Structured configuration changes when a machine-readable contract or binding changes.
-4. Provider adapters change with product behavior.
-5. References and evaluations show why an artifact exists and whether it still works.
+3. The concept index changes when a distinct decision area is needed; signals change when sourced prior art or product capabilities warrant inclusion.
+4. Structured model configuration changes when a machine-readable route or binding changes.
+5. Provider adapters change with product behavior.
+6. References and evaluations show why an artifact exists and whether it still works.
 
 This separation lets model and provider facts evolve without rewriting the behavioral library.
 
 ## Release and current scope
 
-The v0.2.0 release added five custom contexts for project intent, technical design, AI implementation, context efficiency, and complete delivery. The current checkout extends that layer with the practices above, a Codex adoption guide, and the `standard` skill requested for real development use. The nine canonical core contexts, model-routing policy, Codex adapter, provenance map, deterministic validation, and evaluation protocol remain in place. Custom guidance stays a delta from canonical context and composes references rather than copying content. Additional providers, speculative backpacks, `llms.txt`, and automated model-graded evals wait for a real consumer or evidence that they improve outcomes.
+The v0.2.0 release added five custom contexts for project intent, technical design, AI implementation, context efficiency, and complete delivery. The current checkout extends that layer with the practices above, a Codex adoption guide, the `standard` skill, and a provider-neutral concept index with shared and OpenAI-specific sourced signals. The nine canonical core contexts, model-routing policy, Codex adapter, provenance map, deterministic validation, and evaluation protocol remain in place. Custom guidance stays a delta from canonical context and composes references rather than copying content. Additional provider adapters and backpacks should follow actual use.
 
 Run validation with:
 

@@ -1,0 +1,171 @@
+# OpenAI product signals. Check the active product, host, permissions, and current documentation.
+schema_version: 1
+provider: openai
+reviewed_on: "2026-10-05"
+signals:
+  context.instructions:
+    - id: codex-scoped-agents
+      name: Codex scoped AGENTS.md
+      type: native_capability
+      products: [codex]
+      use_when: Repository or user-level instructions must be available at run start.
+      boundary: Follow discovery and precedence; references are read only when explicitly opened.
+      source_refs: [codex-agents]
+    - id: chatgpt-personalization
+      name: ChatGPT personalization
+      type: native_capability
+      products: [chatgpt]
+      use_when: A supported ChatGPT surface needs durable user preferences.
+      boundary: Verify surface support and keep project contracts in the project.
+      source_refs: [chatgpt-personalize]
+    - id: chatgpt-project-instructions
+      name: ChatGPT project instructions
+      type: native_capability
+      products: [chatgpt]
+      use_when: Related chats need shared project-specific guidance and files.
+      boundary: Verify which chats and tools can access the project context.
+      source_refs: [chatgpt-projects]
+  context.memory:
+    - id: openai-memories
+      name: OpenAI memories
+      type: native_capability
+      products: [codex, chatgpt]
+      use_when: Past work may supply useful preferences or project history.
+      boundary: Recall can be missing or stale; verify facts and keep required rules in instructions.
+      source_refs: [codex-memory]
+  context.retrieval:
+    - id: openai-docs-mcp
+      name: OpenAI documentation MCP server
+      type: native_capability
+      products: [codex]
+      use_when: A connected Codex host needs current OpenAI documentation in its tool context.
+      boundary: Configure and verify the server; it is read-only documentation access.
+      source_refs: [codex-docs-mcp]
+  context.skills:
+    - id: codex-agent-skills
+      name: Codex Agent Skills
+      type: native_capability
+      products: [codex]
+      use_when: A repeatable procedure benefits from metadata-first discovery and on-demand instructions.
+      boundary: A skill can guide tool use but cannot activate an unavailable tool or setting.
+      source_refs: [codex-skills, agent-skills]
+  context.compression:
+    - id: codex-compact
+      name: Codex /compact
+      type: native_capability
+      products: [codex]
+      use_when: A long interactive chat needs room while retaining active decisions.
+      boundary: Inspect retained constraints after compaction when correctness depends on them.
+      source_refs: [codex-commands]
+  models.selection:
+    - id: codex-model-control
+      name: Codex model selection
+      type: native_capability
+      products: [codex]
+      use_when: A task needs a different supported model or cost profile.
+      boundary: Availability depends on account, workspace, client, and rollout.
+      source_refs: [codex-models, codex-commands]
+  models.reasoning:
+    - id: codex-reasoning-control
+      name: Codex reasoning effort control
+      type: native_capability
+      products: [codex]
+      use_when: Task difficulty justifies changing deliberation effort.
+      boundary: Use supported native settings; a prompt tag does not reconfigure the run.
+      source_refs: [codex-config, codex-commands]
+  agents.delegation:
+    - id: codex-subagents
+      name: Codex subagents
+      type: native_capability
+      products: [codex]
+      use_when: Authorized, independent work can run in parallel with a clear return contract.
+      boundary: Parallel agents spend additional tokens and simultaneous edits can conflict.
+      source_refs: [codex-subagents]
+  agents.isolation:
+    - id: codex-worktrees
+      name: Codex managed Git worktrees
+      type: native_capability
+      products: [codex]
+      use_when: Branch work needs an isolated checkout on a supported host.
+      boundary: Worktrees isolate files, not shared external services or credentials.
+      source_refs: [codex-worktrees]
+  integration.mcp:
+    - id: codex-mcp-client
+      name: Codex MCP client
+      type: native_capability
+      products: [codex]
+      use_when: An available server already exposes the required tools or context.
+      boundary: Check server configuration, enabled tools, authentication, and permissions.
+      source_refs: [codex-mcp]
+  integration.plugins:
+    - id: openai-plugins
+      name: OpenAI plugins
+      type: native_capability
+      products: [codex, chatgpt]
+      use_when: A supported surface needs a packaged skill, app, MCP server, or hook.
+      boundary: Installed does not mean connected, permitted, or supported on every surface.
+      source_refs: [codex-plugins]
+  integration.hooks:
+    - id: codex-hooks
+      name: Codex hooks
+      type: native_capability
+      products: [codex]
+      use_when: A check must run at a documented lifecycle or tool event.
+      boundary: Confirm event and tool coverage; use CI for repository-wide gates.
+      source_refs: [codex-hooks]
+  integration.commands:
+    - id: codex-developer-commands
+      name: Codex developer commands
+      type: native_capability
+      products: [codex]
+      use_when: The job is already covered by a documented command such as diff, status, or review.
+      boundary: Command availability differs across app, CLI, IDE, and web surfaces.
+      source_refs: [codex-commands]
+  integration.workflow_capture:
+    - id: codex-record-replay
+      name: Record and Replay
+      type: native_capability
+      products: [codex, chatgpt]
+      use_when: A stable Mac workflow is easier to demonstrate than specify.
+      boundary: Requires supported macOS and Computer Use; inspect and refine the resulting skill.
+      source_refs: [codex-record-replay]
+  security.policy:
+    - id: codex-rules
+      name: Codex command rules
+      type: native_capability
+      products: [codex]
+      use_when: An exact command-prefix policy must constrain covered shell actions.
+      boundary: Parser and prefix coverage are limited; test the intended commands and bypasses.
+      source_refs: [codex-rules]
+  security.permissions:
+    - id: codex-permission-profiles
+      name: Codex permission profiles
+      type: native_capability
+      products: [codex]
+      use_when: Local command execution needs a selected sandbox and approval boundary.
+      boundary: Connector-backed actions use their own service and tool permissions.
+      source_refs: [codex-permissions]
+  quality.review:
+    - id: codex-review
+      name: Codex built-in code review
+      type: native_capability
+      products: [codex]
+      use_when: A branch, commit, or working tree diff needs an independent review pass.
+      boundary: Review findings need verification; review does not replace tests or human acceptance.
+      source_refs: [codex-review, codex-commands]
+  delivery.git:
+    - id: codex-diff
+      name: Codex diff and review pane
+      type: native_capability
+      products: [codex]
+      use_when: A change needs inspection before commit or publication.
+      boundary: Select the right scope; the working tree may include changes from other actors.
+      source_refs: [codex-review, codex-commands]
+  operations.scheduling:
+    - id: openai-scheduled-tasks
+      name: OpenAI scheduled tasks
+      type: native_capability
+      products: [codex, chatgpt]
+      use_when: A requested check or follow-up must recur or run later.
+      boundary: Inspect environment, project scope, and notification behavior before scheduling.
+      source_refs: [codex-automations]

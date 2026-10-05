@@ -17,5 +17,7 @@ jobs:
         run: ruby --version
       - name: Validate repository
         run: ruby scripts/validate.rb
+      - name: Check concept lookup
+        run: ruby scripts/lookup.rb context.skills --provider openai --product codex > /dev/null
       - name: Check whitespace
         run: git diff --check "$(git hash-object -t tree /dev/null)" HEAD

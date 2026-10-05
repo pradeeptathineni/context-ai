@@ -10,6 +10,12 @@ All external sources below were reviewed on **2026-09-12** unless another date i
 
 ## Repository context and configuration map
 
+- [`concepts.yaml`](../concepts.yaml) names provider-neutral decision areas drawn from this library's existing core and custom contexts, ShouldaUsedThat's decision contract, and Maestro AI's reuse register. The breadth of the index is this repository's synthesis; a listed concept is not a sourced claim that one tool owns it. Reviewed 2026-10-05.
+- [`signals/common.yaml`](../signals/common.yaml) holds only standards and practice with directly supporting originals: [AGENTS.md](https://agents.md/), [Agent Skills](https://agentskills.io/specification), [MCP](https://modelcontextprotocol.io/specification/2026-07-28), [JSON Schema](https://json-schema.org/specification), [OpenAPI](https://spec.openapis.org/oas/v3.2.1.html), [OpenTelemetry](https://opentelemetry.io/docs/specs/otel/), [Semantic Versioning](https://semver.org/spec/v2.0.0.html), [SLSA](https://slsa.dev/spec/v1.2/), pinned [No AI slop](https://github.com/petergyang/no-ai-slop/blob/000650b156983f5159695b441477f4e63b25dc85/skills/no-ai-slop/SKILL.md), and pinned [ShouldaUsedThat](https://github.com/pradeeptathineni/shoulda-used-that/blob/6edaff07d582a2d2d2d06145643f22dbfee3ca0e/docs/architecture/product-contract.md) and [Maestro AI](https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/docs/architecture/reuse-register.md) artifacts. Reviewed 2026-10-05.
+- [`providers/openai/signals.yaml`](../providers/openai/signals.yaml) indexes supported Codex and ChatGPT capabilities against their original [OpenAI documentation](https://learn.chatgpt.com/docs/customization/overview). Each entry's `source_refs` resolves to a specific page in `sources.yaml`; capability access and product surfaces must be checked at use time. Reviewed 2026-10-05.
+- [`sources.yaml`](../sources.yaml) is the original-source registry for signal entries, with publisher, URL, and review date. It complements this artifact-level influence map and the model-binding sources kept in `models/routing.yaml`. Reviewed 2026-10-05.
+- [`docs/concepts-and-signals.md`](concepts-and-signals.md) records this repository's layer and loading decisions, based on the original sources above and the existing context hierarchy. Reviewed 2026-10-05.
+
 - [`.agents/skills/standard/SKILL.md`](../.agents/skills/standard/SKILL.md)
   - [OpenAI: Build skills](https://learn.chatgpt.com/docs/build-skills) establishes metadata-first discovery, repository and user skill paths, symlink support, and explicit versus implicit invocation. Reviewed 2026-10-05.
   - [OpenAI: Plugins](https://learn.chatgpt.com/docs/plugins) distinguishes local skills from cross-surface plugin distribution; [Hooks](https://learn.chatgpt.com/docs/hooks) documents event checks and tool-coverage limits; [Rules](https://learn.chatgpt.com/docs/agent-configuration/rules) documents command-prefix policies and their matching limits. Reviewed 2026-10-05.
@@ -103,6 +109,7 @@ The additional house files below were reviewed on **2026-10-05**. They distill p
   - The initial scenarios implement the behavioral risks this repository is intended to reduce.
 - [`evals/usage-cases.md`](../evals/usage-cases.md) exercises the routes as deterministic expectation cases and records one small fresh-session proxy. The proxy showed file loading and different decision detail, without establishing an improvement.
 
+- [`scripts/lookup.rb`](../scripts/lookup.rb) reads the validated registry and resolves concept-specific signal sources without a new dependency; its output does not assert runtime capability. Reviewed 2026-10-05.
 - [`scripts/validate.rb`](../scripts/validate.rb) and [`.github/workflows/validate.yml`](../.github/workflows/validate.yml)
   - [GitHub Actions quickstart](https://docs.github.com/en/actions/get-started/quickstart) supplied the minimal push and pull-request workflow convention.
   - Validation rules come directly from the repository's v0.2.0 integrity contract; no third-party validation framework is used.
