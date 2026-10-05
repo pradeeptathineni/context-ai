@@ -6,15 +6,23 @@ import concepts
 import context_ai as c
 
 class ConceptNeeds(unittest.TestCase):
-    def test_generated_needs_cover_actual_ids_once_and_preserve_uncertainty(self):
+    def test_generated_needs_are_bounded_and_keep_exact_bindings(self):
         result = concepts.generate()
+        self.assertEqual(result['schema_version'], 2)
         ids = [entry['id'] for group in result['questions'] for entry in group['concepts']]
-        self.assertEqual(set(ids), set(concepts.catalog()))
+        self.assertLess(len(ids), len(concepts.catalog()))
         self.assertEqual(len(ids), len(set(ids)))
-        self.assertEqual({x['id'] for x in result['coverage']}, set(ids))
-        for item in result['coverage']:
+        self.assertEqual({x['id'] for x in concepts.coverage()}, set(concepts.catalog()))
+        self.assertNotIn('options', result)
+        for group in result['questions']:
+            self.assertTrue(group['question'])
+            self.assertGreater(len(group['concepts']), 1)
+        for item in concepts.coverage():
             if item['disposition'] == 'unresolved':
                 self.assertTrue(item['next_action'])
+        for group in result['questions']:
+            for item in group['concepts']:
+                self.assertEqual(item['disposition'], concepts.catalog()[item['id']]['coverage']['disposition'])
         self.assertTrue(result['constraints'])
         self.assertLess(len(result['questions']), len(ids))
 

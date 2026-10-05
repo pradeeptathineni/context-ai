@@ -9,7 +9,7 @@
 | Location | Role |
 | --- | --- |
 | `core/*.md` | Concise, durable behavior shared across providers. It is selective, not an exhaustive encyclopedia. |
-| `overlays/*.md` | The maintainer's optional house practice, also provider neutral. Old `custom/` paths are compatibility routers. |
+| `overlays/*.md` | The maintainer's optional house practice, also provider neutral. |
 | `concepts.yaml` | Stable names for decision areas. It carries no executable or behavioral instruction. |
 | `signals/common.yaml` | Provider-neutral standards, tools, and practices worth considering for a named concept. |
 | `providers/<provider>/signals.yaml` | Provider-specific candidates, each scoped to the products it applies to. |
@@ -37,4 +37,4 @@ For example, `context.skills` points to the open Agent Skills specification and 
 
 ## Research needs and coverage
 
-`concepts.yaml` schema 2 is the canonical catalog. Each row defines its job and applicable modules; shared defaults mark unassessed concepts as gaps. Claims bind the exact producer bundle and original sources. Run `.venv/bin/python scripts/concepts.py needs` for grouped questions, `coverage` for every disposition, and `definitions` for the earlier string map. Views are generated rather than maintained as parallel tables.
+`concepts.yaml` is the catalog of distinct decisions. Claims bind exact producer bundles and original sources. Run `.venv/bin/python scripts/concepts.py needs` for a bounded set of high-leverage research questions, `coverage` for every disposition, and `options` for candidate signals. The needs view is curated from exact catalog IDs; it is not a request to research every row. Needs schema 2 uses `group` and exact concept, source, claim and decision bindings; schema 1's all-catalog `family`, top-level `coverage` and `options` remain in older source commits.

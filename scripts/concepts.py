@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 """Generate research needs and coverage from the canonical concept catalog."""
 import argparse
-from collections import defaultdict
 import subprocess
 import copy
-from context_ai import ROOT, read_yaml, encoded, inside, Invalid
+from context_ai import ROOT, read_yaml, encoded, inside, Invalid, current_decisions
 
 CONSTRAINTS = [
     'Provider-independent Markdown behavior; exact contracts remain structured data.',
@@ -14,10 +13,30 @@ CONSTRAINTS = [
     'Group source acquisition; bind claims precisely; a generic reference is not coverage.',
     'Existing web resources and user visual intent remain supported; no neon1 implementation.',
 ]
-PRIORITY = {'context.instructions', 'context.loadouts', 'context.skills', 'context.injection',
-            'context.budget', 'context.compression', 'architecture.portability',
-            'research.prior_art', 'research.confidence', 'research.provenance',
-            'quality.review', 'quality.strategy', 'delivery.git', 'communication.clarity'}
+RESEARCH_GROUPS = [
+    ('agent-work', 'When does delegation improve a real development task, and what isolation, handoff and review keep its cost below the benefit?',
+     ['agents.decomposition', 'agents.orchestration', 'agents.delegation', 'agents.isolation', 'agents.handoff']),
+    ('model-choice', 'How should task difficulty, available models and measured outcomes guide model and reasoning effort without a brittle task classifier?',
+     ['models.selection', 'models.reasoning', 'models.routing', 'models.cost_latency', 'models.eval']),
+    ('context-use', 'Which retrieval and compression practices improve task outcomes and total cost on current coding agents?',
+     ['context.project_knowledge', 'context.retrieval', 'context.compression', 'context.budget', 'context.sync']),
+    ('repository-understanding', 'What small procedures help a new agent locate canonical ownership, contracts and relevant prior work in an unfamiliar repository?',
+     ['architecture.boundaries', 'architecture.composition', 'implementation.reuse', 'research.prior_art']),
+    ('evidence-to-decision', 'How should development research select credible sources, calibrate claim strength and turn evidence into a revisitable choice?',
+     ['research.discovery', 'research.credibility', 'research.confidence', 'research.decision']),
+    ('implementation-and-debugging', 'Which practices improve architectural choices, fault localization and refactoring on real code without adding ceremony?',
+     ['architecture.patterns', 'architecture.interfaces', 'implementation.errors', 'implementation.debugging', 'implementation.refactoring']),
+    ('verification-and-review', 'Which test, evaluation and review methods find material defects beyond a capable baseline agent, at acceptable cost?',
+     ['quality.strategy', 'quality.integration_tests', 'quality.end_to_end', 'quality.evaluations', 'quality.review']),
+    ('delivery-and-maintenance', 'What VCS, CI, documentation and maintenance procedures preserve useful work while keeping small changes proportional?',
+     ['delivery.git', 'delivery.ci', 'delivery.documentation', 'product.lifecycle']),
+    ('web-experience', 'For a real website, which design, responsive, accessibility and browser checks improve user outcomes beyond a static build?',
+     ['web.product', 'web.design', 'web.responsive', 'quality.accessibility', 'quality.visual']),
+    ('security-and-operations', 'Which bounded supply-chain, trust and debugging checks should development agents run, and when?',
+     ['security.trust', 'security.supply_chain', 'security.vulnerabilities', 'operations.observability']),
+    ('skills-and-writing', 'When do on-demand skills or captured procedures change behavior, and which writing checks remove unsupported or generic prose?',
+     ['context.skills', 'integration.workflow_capture', 'communication.anti_slop', 'communication.clarity']),
+]
 
 def catalog():
     doc = read_yaml(ROOT/'concepts.yaml')
@@ -71,35 +90,45 @@ def offered_options():
     return options
 
 
+def coverage():
+    return [{'id': id, **entry['coverage']} for id, entry in catalog().items()]
+
+
 def generate():
     entries = catalog()
-    groups = defaultdict(list)
-    coverage = []
-    for id, entry in entries.items():
-        family = id.split('.')[0]
-        groups[family].append({'id': id, 'definition': entry['definition'],
-                               'scope': entry['scope'], 'modules': entry['modules'],
-                               'priority': 'high' if id in PRIORITY else 'normal'})
-        coverage.append({'id': id, **entry.get('coverage', {
-            'disposition': 'unresolved',
-            'rationale': 'Module routing is available; broad decision pointers do not establish concept-specific support.',
-            'source_refs': [],
-            'next_action': 'Assess the precise claim against primary evidence and applicable consumer constraints.',
-        })})
+    decisions_by_concept = {}
+    for decision in current_decisions().values():
+        decisions_by_concept.setdefault(decision['concept'], []).append(decision['id'])
+    seen = set()
+    questions = []
+    for group, question, ids in RESEARCH_GROUPS:
+        concepts = []
+        for id in ids:
+            if id not in entries or id in seen:
+                raise Invalid('unknown or repeated research concept: '+id)
+            seen.add(id)
+            entry = entries[id]
+            concepts.append({'id': id, 'definition': entry['definition'],
+                             'disposition': entry['coverage']['disposition'],
+                             'uncertainty': entry['coverage']['uncertainty'],
+                             'source_refs': entry['coverage']['source_refs'],
+                             'claim_refs': entry['coverage']['claim_refs'],
+                             'decision_refs': sorted(set(entry['coverage']['decisions'] + decisions_by_concept.get(id, [])))})
+        questions.append({'group': group, 'question': question, 'concepts': concepts})
     try:
         revision = subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],text=True).strip()
     except subprocess.CalledProcessError:
         revision = (ROOT/'REVISION').read_text().strip() if (ROOT/'REVISION').exists() else 'exported-tree'
-    return {'schema_version': 1, 'kind': 'concept-needs', 'repository': 'pradeeptathineni/context-ai',
+    return {'schema_version': 2, 'kind': 'concept-needs', 'repository': 'pradeeptathineni/context-ai',
             'catalog_revision': revision, 'constraints': CONSTRAINTS,
-            'questions': [{'family': family,
-                           'question': 'Which practices or mechanisms address these distinct decisions, under which conditions, and what remains unsupported?',
-                           'concepts': concepts} for family, concepts in groups.items()],
-            'coverage': coverage, 'options': offered_options()}
+            'questions': questions}
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('view', choices=['needs','coverage','definitions','options'], default='needs', nargs='?')
     args = p.parse_args()
-    artifact = generate()
-    print(encoded(artifact if args.view == 'needs' else (offered_options() if args.view == 'options' else ({id:entry['definition'] for id,entry in catalog().items()} if args.view == 'definitions' else artifact['coverage']))).decode(), end='')
+    artifact = generate() if args.view == 'needs' else (
+        offered_options() if args.view == 'options' else (
+            {id: entry['definition'] for id, entry in catalog().items()}
+            if args.view == 'definitions' else coverage()))
+    print(encoded(artifact).decode(), end='')

@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Made one-task reads and recurring loadouts clear to first-time maintainers; mapped each active layer to its job.
+- Removed unused pre-1 `custom/` routers and decision-concept aliases; exact older Git commits still retain them.
+- Made `plan` and `refresh` disclose owned files that a changed selection would remove.
+- Curated research needs to eleven bounded question groups with exact catalog, source, claim and current-decision bindings.
+
 - Preserved source commit identity in native Git archives and prevented an exported library from inheriting a surrounding consumer repository commit.
 
 - Clarified single-project adoption without global setup and the supported Node prerequisite for full library development tests.
