@@ -6,11 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-05
+
 ### Added
 
 - Eight composable project loadouts, safe plan/apply/verify/undo/proposed-refresh tooling, owned instruction routers, and exact resource/source locks.
 - Core and domain guidance, compatibility overlay routers, appended adoption decisions, and pinned instruction-only Impeccable/Anthropic/Vercel resources with provenance.
-- Read-only frozen Signals evidence consumer, negative contract tests, real lifecycle checks, and a built/browser-tested web exercise.
+- Read-only frozen Signals evidence consumer, a real agent-assisted producer/consumer roundtrip, negative contract tests, real lifecycle checks, and a built/browser-tested web exercise.
 - Bootstrap dogfood/use receipts, independent review findings and bounded private website preparation.
 - Provider-neutral concept index, shared prior-art signals, OpenAI product signals, and original-source registry.
 - Concepts-and-signals guide and referential validation for concept IDs, signal IDs, provider scope, and source links.
@@ -25,6 +27,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Extended the root and custom routers, source map, and validator for the new hierarchy.
 - Added a local skill adoption path without activating global `AGENTS.md` guidance.
 - Refreshed model bindings, removed retired Codex-Spark, and corrected the value profile after checking current model positioning.
+- Fixed mobile concern-control reflow exposed by Linux browser CI; declared the supported Node runtime.
+- Retained immutable decision predecessors and verified a proposed D-005 successor leaves the installed old pin unchanged.
 
 ## [0.2.0] - 2026-09-13
 
@@ -50,6 +54,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Refined the existing model-routing policy into a documented schema with current OpenAI bindings, explicit matching semantics, and source review metadata.
 - Expanded the public README around progressive disclosure, layer boundaries, usage, and release scope.
 
-[Unreleased]: https://github.com/pradeeptathineni/context-ai/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/pradeeptathineni/context-ai/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.2.0...v1.0.0
 [0.2.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pradeeptathineni/context-ai/tree/v0.1.0
