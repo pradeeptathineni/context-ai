@@ -6,7 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [0.4.0] - 2026-10-05
+- Made direct task reads the first-use path for small settled work; project loadouts remain optional for recurring selections, and ordinary task results replace mandatory receipt files.
+- Fixed explanation to resolve inherited loadouts, effective design/brand options, stage routes and suggested checks through the same composition owner as installation.
+- Made installation verification report executed runtime probes, missing optional boundaries and project checks not run.
+- Added a derived current decision view, source-local setup/consumer-check boundaries, and shared foundation policy; removed private-kit requirements and stable-consumer wording from active choices.
+
+## [0.4.0] - prepared, not published
 
 - Added bounded project brand intent and explicit guided/lightweight design selection; only the chosen primary resources ship, with unchanged browser acceptance.
 - Corrected proposed refresh to retain applicable options when changing selections and reject explicit inapplicable overrides.
@@ -72,8 +77,8 @@ The premature v1.0.0 release/tag at `a0b6a3bbd2e1dc2c58629f6ea462e180bd12ce93` w
 - Refined the existing model-routing policy into a documented schema with current OpenAI bindings, explicit matching semantics, and source review metadata.
 - Expanded the public README around progressive disclosure, layer boundaries, usage, and release scope.
 
-[Unreleased]: https://github.com/pradeeptathineni/context-ai/compare/v0.4.0...HEAD
-[0.4.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.3.0...v0.4.0
+[Unreleased]: https://github.com/pradeeptathineni/context-ai/compare/v0.3.0...HEAD
+[0.4.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.3.0...3f5acec9e4297fe34c645b1ca37ecbd70221a1c3
 [0.3.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pradeeptathineni/context-ai/tree/v0.1.0

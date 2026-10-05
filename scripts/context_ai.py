@@ -78,7 +78,12 @@ def catalogue():
 def current_decisions():
     decisions = {}
     for p in sorted((ROOT/'decisions').glob('*.yaml')):
-        for d in read_yaml(p)['decisions']:
+        document=read_yaml(p)
+        defaults=document.get('defaults',{})
+        if set(defaults)-{'applicability','unknowns','validation','rollback'}:
+            raise Invalid('unsupported decision default')
+        for record in document['decisions']:
+            d={**defaults,**record}
             key = (d['id'],d['revision'])
             if key in decisions:
                 raise Invalid('duplicate decision revision')
@@ -158,9 +163,8 @@ def capability_states(selected, registry):
             raise Invalid('missing required capability: '+key)
     return states
 
-def resolve(ids, project, provider, options=None):
-    if provider != 'codex':
-        raise Invalid('supported adapter is codex')
+def selection(ids, options=None):
+    """Compose the same declarations for explanation and materialization."""
     all_loads = catalogue()
     ordered, active = [], set()
     def visit(id):
@@ -207,25 +211,54 @@ def resolve(ids, project, provider, options=None):
         if key not in ('brand','design_procedure'):
             raise Invalid('unsupported option '+key)
         resolved_options[key] = value
+    return {'loadouts':ordered,'stages':stages,'skills':skills,'capabilities':capabilities,
+            'checks':checks,'decisions':decisions,'options':resolved_options}
+
+def selected_decisions(ids):
     current = current_decisions()
-    for d in decisions:
-        if d not in current:
-            raise Invalid('unknown decision '+d)
+    for id in ids:
+        if id not in current:
+            raise Invalid('unknown decision '+id)
+    return {id:current[id] for id in ids}
+
+def capability_definitions(options):
     registry = read_yaml(ROOT/'capabilities.yaml')['capabilities']
-    if resolved_options.get('design_procedure')=='lightweight':
+    if options.get('design_procedure')=='lightweight':
         registry['context-web-design']={**registry['context-web-design'],
             'path':'procedures/web-design-lightweight.md',
             'description':'Use concise frontend design guidance for bounded web changes.',
             'files':['sourced/anthropic/design/instruction.md','sourced/anthropic/design/LICENSE.txt']}
-    states = capability_states(capabilities,registry)
-    files = resources([p for paths in stages.values() for p in paths]+['skills/context-loadout/SKILL.md','providers/openai/codex.md','LICENSE'])
-    for c in capabilities:
+    return registry
+
+def explain(ids, options=None):
+    selected=selection(ids,options)
+    registry=capability_definitions(selected['options'])
+    loads=catalogue()
+    for id in selected['capabilities']:
+        if id not in registry:
+            raise Invalid('unknown capability: '+id)
+    return {'loadouts':{id:loads[id] for id in selected['loadouts']},
+            'composition':selected['loadouts'],'stages':selected['stages'],
+            'options':selected['options'],'checks':selected['checks'],
+            'decisions':selected_decisions(selected['decisions']),
+            'capabilities':{id:registry[id] for id in selected['capabilities']},
+            'capability_requirements':selected['capabilities']}
+
+def resolve(ids, project, provider, options=None):
+    if provider != 'codex':
+        raise Invalid('supported adapter is codex')
+    selected=selection(ids,options)
+    decisions=selected_decisions(selected['decisions'])
+    registry=capability_definitions(selected['options'])
+    states = capability_states(selected['capabilities'],registry)
+    files = resources([p for paths in selected['stages'].values() for p in paths]+['skills/context-loadout/SKILL.md','providers/openai/codex.md','LICENSE'])
+    for c in selected['capabilities']:
         if registry[c]['kind']=='resource':
             files.update(resources([registry[c]['path']]))
             for extra in registry[c].get('files',[]):
                 files.update(resources([extra]))
     files.update(source_notices(files))
-    for id in ordered:
+    for id in selected['loadouts']:
         files['loadouts/'+id+'.yaml'] = (ROOT/'loadouts'/ (id+'.yaml')).read_bytes()
     file_hashes = {name:digest(data) for name,data in sorted(files.items())}
     tree_hash = digest(encoded(file_hashes))
@@ -233,17 +266,16 @@ def resolve(ids, project, provider, options=None):
         revision = subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],stderr=subprocess.DEVNULL,text=True).strip()
     except subprocess.CalledProcessError:
         revision = (ROOT/'REVISION').read_text().strip() if (ROOT/'REVISION').is_file() else 'exported-tree'
-    lock = {'schema_version':2,'provider':provider,'project':'.','library_revision':revision,
-            'source_tree_sha256':tree_hash,'loadouts':ordered,'stages':stages,'skills':skills,
-            'capabilities':states,'options':resolved_options,'checks':checks,
-            'decisions':{d:current[d] for d in decisions},'resources':file_hashes}
+    lock = {**selected,'schema_version':2,'provider':provider,'project':'.','library_revision':revision,
+            'source_tree_sha256':tree_hash,'capabilities':states,
+            'decisions':decisions,'resources':file_hashes}
     validate_schema('lock',lock)
     return lock,files
 
 def router(lock):
     lines = [BEGIN,'## Context AI project loadout',
              'Project instructions and explicit task authority take precedence. Use the pinned `.context-ai/lock.json`.',
-             'Read `.context-ai/resources/skills/context-loadout/SKILL.md` for selection and use receipts.',
+             'Read `.context-ai/resources/skills/context-loadout/SKILL.md` when changing the selection; report actual reads and checks in the task result.',
              'Load only the modules for the current stage:']
     for stage, paths in lock['stages'].items():
         lines.append('- '+stage+': '+', '.join('`.context-ai/resources/'+p+'`' for p in paths))
@@ -424,18 +456,25 @@ def verify(project, allow_rebind=False):
     if instruction_block(inside(project,'AGENTS.md').read_text()) != state['routing_block']:
         raise Invalid('routing block drift')
     resolution=state['resolution']
+    probes, optional_unavailable = [], []
     for key,entry in resolution['capabilities'].items():
         definition=entry['definition']
         if definition['kind']=='command':
             available=shutil.which(definition['command']) is not None
             if entry['requirement']=='required' and available:
                 probe_command(definition['command'])
+                probes.append(definition['command']+' --version')
         else:
             path=inside(project,'.context-ai/resources/'+definition['path'])
             available=path.is_file() and digest(path.read_bytes())==resolution['resources'].get(definition['path'])
         if entry['requirement']=='required' and not available:
             raise Invalid('installed required capability unavailable: '+key)
-    return {'verified':resolution['loadouts'],'owned_files':len(state['owned'])}
+        if entry['requirement']=='optional' and not available:
+            optional_unavailable.append({'id':key,'boundary':definition['boundary']})
+    return {'verified':resolution['loadouts'],'owned_files':len(state['owned']),
+            'scope':'installation integrity and required runtime probes',
+            'required_command_probes':probes,'optional_unavailable':optional_unavailable,
+            'project_checks':'not_run','suggested_checks':resolution['checks']}
 
 def probe_command(command):
     probes={'python3':['python3','--version'],'git':['git','--version'],'node':['node','--version']}
@@ -528,7 +567,7 @@ def undo(project):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=['list','explain','plan','apply','verify','undo','refresh','export','rebind','recover'])
+    parser.add_argument('command',choices=['list','explain','decisions','plan','apply','verify','undo','refresh','export','rebind','recover'])
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
     parser.add_argument('--lock',type=Path,help='Apply an exact portable lock against this source checkout')
@@ -536,15 +575,20 @@ def main():
     parser.add_argument('--brand',help='Project visual intent, 1-2000 characters')
     parser.add_argument('--design-procedure',choices=['guided','lightweight'])
     args=parser.parse_args()
-    if args.command in ('list','explain'):
+    if args.command in ('list','explain','decisions'):
         loads=catalogue()
         if args.command=='list':
             result={id:{'description':d['description'],'characteristics':d['characteristics']} for id,d in sorted(loads.items())}
+        elif args.command=='decisions':
+            if args.brand is not None or args.design_procedure is not None or args.lock:
+                raise Invalid('decisions accepts only optional loadout selections')
+            result=selected_decisions(selection(args.loadouts)['decisions']) if args.loadouts else current_decisions()
         else:
-            selected={id:loads[id] for id in args.loadouts}
-            current=current_decisions()
-            registry=read_yaml(ROOT/'capabilities.yaml')['capabilities']
-            result={'loadouts':selected,'decisions':{id:current[id] for d in selected.values() for id in d['decisions']},'capabilities':{id:registry[id] for d in selected.values() for id in d['capabilities']}}
+            if args.provider!='codex':raise Invalid('supported adapter is codex')
+            options={}
+            if args.brand is not None:options['brand']=args.brand
+            if args.design_procedure is not None:options['design_procedure']=args.design_procedure
+            result=explain(args.loadouts,options)
     else:
         if not args.project or not Path(args.project).is_absolute() or not Path(args.project).is_dir() or Path(args.project).is_symlink():
             raise Invalid('an existing absolute project directory is required')

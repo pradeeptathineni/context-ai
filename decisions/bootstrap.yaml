@@ -5,276 +5,240 @@ decisions:
   concept: agent-instruction-entrypoint
   action: adopt
   selection: AGENTS.md
-  rationale: Use the cross-agent repository instruction convention as the small routing
-    entry point.
-  revisit_when: Provider discovery semantics materially change or a better interoperable
-    convention wins.
+  rationale: Use the cross-agent repository instruction convention as the small routing entry point.
+  revisit_when: Provider discovery semantics materially change or a better interoperable convention wins.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - https://agents.md/
+  - AGENTS.md
+  - tests/test_loadouts.py
+  applicability: Repository instruction entrypoint and managed project router.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Project-specific instruction conventions
+  - Small interoperable AGENTS router
 - id: D-002
   concept: progressive-procedure-packaging
   action: adopt
   selection: Agent Skills / SKILL.md
-  rationale: Use skills for on-demand procedures and references rather than expanding
-    always-loaded instructions.
-  revisit_when: A target agent cannot consume the format or measured discovery/activation
-    fails.
+  rationale: Use skills for on-demand procedures and references rather than expanding always-loaded instructions.
+  revisit_when: A target agent cannot consume the format or measured discovery/activation fails.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - https://agentskills.io/specification
+  - providers/openai/codex.md
+  - skills/context-loadout/SKILL.md
+  applicability: On-demand procedures; native discovery depends on the active client.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Always-loaded procedure text
+  - On-demand SKILL.md or explicit resource reads
 - id: D-003
   concept: canonical-behavior-format
   action: adopt
   selection: Markdown context modules
   rationale: Keep durable human/LLM-readable behavioral guidance diffable and provider-neutral.
-  revisit_when: A machine-readable contract is needed instead of natural-language
-    guidance.
+  revisit_when: A machine-readable contract is needed instead of natural-language guidance.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - core/context.md
+  - core/compression.md
+  - scripts/validate.rb
+  applicability: Provider-independent behavioral guidance; configuration stays structured.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Prose modules
+  - Structured data for executable/configuration contracts
 - id: D-004
   concept: loadout-definition
   action: adopt
   selection: declarative YAML manifests
-  rationale: Compose references to context, skills, capabilities and checks without
-    inventing an executable DSL.
-  revisit_when: Repeated real consumers require semantics YAML cannot express safely
-    and clearly.
+  rationale: Compose references to context, skills, capabilities and checks without inventing an executable
+    DSL.
+  revisit_when: Repeated real consumers require semantics YAML cannot express safely and clearly.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - loadouts/standard.yaml
+  - schemas/loadout.schema.json
+  - tests/test_loadouts.py
+  applicability: Recurring project selections only.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Direct task reads
+  - Declarative YAML composition
+  - Executable installer DSL
 - id: D-005
   concept: evidence-decision-separation
   action: adopt
   selection: Signals evidence -> Context decision -> project lock -> use receipt
-  rationale: Preserve the difference between what sources support, what a project
-    adopts, what is installed, and what actually worked.
+  rationale: Preserve the difference between what sources support, what a project adopts, what is installed,
+    and what actually worked.
   revisit_when: Never collapse these states; only refine their contracts.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - core/prior-art.md
+  - schemas/evidence-bundle-v1.schema.json
+  - tests/test_evidence.py
+  applicability: Advisory evidence admission; superseded by the pinned peer checkpoint.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Treat recommendations as activation
+  - Separate supported claims, adoption, installation and use
 - id: D-006
   concept: context-runtime-boundary
   action: adopt
   selection: no general agent runtime in context-ai
-  rationale: Context AI equips existing agents; it should not duplicate orchestration/execution
-    runtimes.
-  revisit_when: Multiple real consumers demonstrate a missing capability that cannot
-    live in an existing runtime.
+  rationale: Context AI equips existing agents; it should not duplicate orchestration/execution runtimes.
+  revisit_when: Multiple real consumers demonstrate a missing capability that cannot live in an existing
+    runtime.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - core/engineering.md
+  - core/prior-art.md
+  - scripts/context_ai.py
+  applicability: Context delivery; the consumer owns execution.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Existing agent host
+  - Custom orchestration runtime
 - id: D-007
   concept: web-design-workflow
   action: trial
   selection: Impeccable
-  rationale: Strong existing workflow for product truth, design shaping, critique,
-    audit and browser iteration; trial before broad endorsement.
-  revisit_when: Compatibility, hooks, maintenance cost, or real-task output is worse
-    than simpler alternatives.
+  rationale: Strong existing workflow for product truth, design shaping, critique, audit and browser iteration;
+    trial before broad endorsement.
+  revisit_when: Compatibility, hooks, maintenance cost, or real-task output is worse than simpler alternatives.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - sources.lock.json
+  - https://github.com/pbakaus/impeccable
+  - procedures/web-experience.md
+  applicability: Web guidance; superseded by the instruction-only adapter decision.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Concise design reference
+  - Guided design procedure
 - id: D-008
   concept: frontend-design-reference
   action: adopt
   selection: Anthropic frontend-design skill as reference/fallback
-  rationale: Strong concise design guidance and a useful upstream source for visual
-    design behavior.
-  revisit_when: The upstream skill changes materially or a more suitable general reference
-    is demonstrated.
+  rationale: Strong concise design guidance and a useful upstream source for visual design behavior.
+  revisit_when: The upstream skill changes materially or a more suitable general reference is demonstrated.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - sources.lock.json
+  - https://github.com/anthropics/skills/tree/main/skills/frontend-design
+  - procedures/web-design-lightweight.md
+  applicability: Bounded web changes through the explicitly selected lightweight procedure.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Guided Impeccable flow
+  - Concise Anthropic reference
 - id: D-009
   concept: react-web-guidance
   action: adopt
   selection: Vercel agent skills where stack-relevant
-  rationale: Use targeted React/web review guidance rather than impose a framework
-    migration.
-  revisit_when: Consumer stack differs or guidance conflicts with measured project
-    needs.
+  rationale: Use targeted React/web review guidance rather than impose a framework migration.
+  revisit_when: Consumer stack differs or guidance conflicts with measured project needs.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - sources.lock.json
+  - https://github.com/vercel-labs/agent-skills
+  - procedures/react-review.md
+  applicability: Actual React consumers only; no framework migration.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Framework-neutral web checks
+  - Stack-matched React rules
 - id: D-010
   concept: browser-accessibility-validation
   action: adopt
   selection: Playwright + axe + human/agent screenshot critique
-  rationale: Combine deterministic browser/a11y checks with actual visual inspection;
-    neither alone proves UX quality.
-  revisit_when: Consumer environment cannot support the tools or a stronger compatible
-    mechanism is measured.
+  rationale: Combine deterministic browser/a11y checks with actual visual inspection; neither alone proves
+    UX quality.
+  revisit_when: Consumer environment cannot support the tools or a stronger compatible mechanism is measured.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - https://playwright.dev/docs/intro
+  - https://github.com/dequelabs/axe-core
+  - examples/web/verify.mjs
+  applicability: Web acceptance; automated accessibility checks do not establish all UX quality.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Static checks alone
+  - Browser interactions plus axe and screenshot judgment
 - id: D-011
   concept: signals-foundation
   action: adopt
-  selection: preserve existing Signals TypeScript/PostgreSQL/research architecture
-    unless evidence shows a real gap
+  selection: preserve existing Signals TypeScript/PostgreSQL/research architecture unless evidence shows
+    a real gap
   rationale: Reuse proven repository mechanisms before adding replacement systems.
-  revisit_when: An existing mechanism demonstrably blocks v1 requirements.
+  revisit_when: A completed pinned peer interface cannot satisfy a real read-only consumer need.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - core/prior-art.md
+  - decisions/peer.yaml
+  applicability: Producer-specific provenance only; no authority to change the peer or require its stack
+    in Context.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Retain producer mechanisms
+  - Replace the producer architecture
 - id: D-012
   concept: source-selection-policy
   action: adopt
-  selection: authoritative specs -> first-party docs/repos -> maintained adopted OSS
-    -> strong engineering publications -> project synthesis
-  rationale: Keep decisions evidence-backed without requiring unrealistic popularity
-    or corroboration thresholds for low-risk trials.
+  selection: authoritative specs -> first-party docs/repos -> maintained adopted OSS -> strong engineering
+    publications -> project synthesis
+  rationale: Keep decisions evidence-backed without requiring unrealistic popularity or corroboration
+    thresholds for low-risk trials.
   revisit_when: Domain-specific evidence requires a different hierarchy.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - core/research.md
+  - docs/references.md
+  applicability: Source selection; a supported interface does not prove contextual benefit.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Popularity-led selection
+  - Primary sources and bounded contextual trials
 - id: D-013
   concept: version-control-guidance
   action: adopt
   selection: dedicated canonical VCS context grounded in Git and selected commit conventions
-  rationale: Commit/history safety and reviewability recur across every software project
-    and should not remain buried in delivery prose.
+  rationale: Commit/history safety and reviewability recur across every software project and should not
+    remain buried in delivery prose.
   revisit_when: Core guidance proves redundant or overly prescriptive in real consumers.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - core/version-control.md
+  - https://git-scm.com/docs/git
+  - tests/test_loadouts.py
+  applicability: Software tasks involving working trees, commits or publication.
   alternatives:
-  - existing repository guidance
-  unknowns:
-  - Comparative benefit is not measured.
-  validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Embed history safety in delivery prose
+  - Dedicated canonical VCS context
 - id: D-014
   concept: code-commenting-guidance
   action: adopt
-  selection: dedicated canonical code-comment context grounded in language/platform
-    engineering guidance
-  rationale: Comments should preserve intent, invariants and non-obvious constraints
-    without narrating obvious code.
-  revisit_when: Language-specific rules need a scoped domain overlay rather than changing
-    the universal core.
+  selection: dedicated canonical code-comment context grounded in language/platform engineering guidance
+  rationale: Comments should preserve intent, invariants and non-obvious constraints without narrating
+    obvious code.
+  revisit_when: Language-specific rules need a scoped domain overlay rather than changing the universal
+    core.
   revision: 1
   supersedes: null
   evidence:
-  - kit:04-BOOTSTRAP-DECISIONS.yaml
-  applicability: Context AI v1 consumers
+  - core/code-comments.md
+  - overlays/code-comments.md
+  applicability: Code changes; language-specific constraints remain scoped.
   alternatives:
-  - existing repository guidance
+  - Narrate implementation
+  - Explain non-obvious intent, invariants and constraints
+defaults:
   unknowns:
-  - Comparative benefit is not measured.
+  - No comparative or human usefulness claim follows from this policy.
+  rollback: Keep earlier source pins; undo unchanged owned materialization and preserve user edits.
   validation:
-  - Source review and bounded consumer tests before release.
-  rollback: Undo unchanged owned materialization; retain old pins.
+  - Accountable owner and supporting source are listed above; retained contract tests verify materialization,
+    not comparative usefulness.

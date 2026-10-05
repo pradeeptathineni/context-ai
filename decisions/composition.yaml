@@ -151,3 +151,34 @@ decisions:
   rollback: Remove the dev-only gate and exact dependency; retain all product tests.
   revisit_when: Duplicated validation or runtime burden demonstrates that a small consolidation preserves
     discriminating checks.
+- id: D-004
+  revision: 2
+  supersedes: 1
+  concept: context.loadouts
+  action: adapt
+  selection: Direct task reads; declarative pinned loadouts for recurring project selections
+  rationale: The ordinary README probe installed standard and a separate use receipt although project
+    instructions already determined the edit and checks. Keep direct reading first for settled tasks.
+    Explanation and materialization share one composition owner so inherited routes and options agree.
+  evidence:
+  - core/context.md
+  - core/prior-art.md
+  - skills/context-loadout/SKILL.md
+  - docs/loadouts.md
+  - tests/test_consumer_path.py
+  applicability: Ordinary task guidance and reusable Codex project selections; project authority wins.
+  alternatives:
+  - Install standard and require a receipt for every task
+  - Add a classifier or installer wrapper
+  - Use selective direct reads and correct the existing command interface
+  unknowns:
+  - A small disposable maintenance probe is diagnostic; it proves neither token savings nor human benefit.
+  validation:
+  - Baseline README task completed without a guidance-driven API decision or defect catch;
+    installation and receipt lookup were additional steps.
+  - Reproduced explain react-web omitting inherited web guidance and ignoring lightweight;
+    shared composition now agrees with plan and retains one primary procedure.
+  - Verify reports installation scope, executed runtime probes and project checks not run.
+  rollback: Keep earlier source pins; undo unchanged owned files. Direct reads leave no materialization.
+  revisit_when: A real task needs durable selection or exposes missing guidance, misleading verification,
+    or a direct-read path that cannot preserve project constraints.

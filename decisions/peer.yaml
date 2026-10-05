@@ -15,7 +15,7 @@ decisions:
   - evals/signals-evidence.bundle.json
   - sha256:62e5cb9a6d825a1d5194a28035640b248ee05e344bb41fd816355c1a378cb8da
   - evals/signals-roundtrip.json
-  applicability: Context AI v1 consumers
+  applicability: Read-only Context evidence consumers; adoption remains advisory.
   alternatives:
   - Continue fixtures only
   - Admit a pinned real peer checkpoint as advisory evidence

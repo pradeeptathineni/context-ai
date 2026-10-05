@@ -84,7 +84,7 @@ decisions:
   supersedes: 1
   evidence:
   - sources.lock.json
-  applicability: Context AI v1 consumers
+  applicability: Context consumers using the declared model profiles
   alternatives:
   - existing repository guidance
   unknowns:

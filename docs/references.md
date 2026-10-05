@@ -6,7 +6,7 @@ Prefer authoritative specifications, then first-party product documentation, the
 
 External material is summarized and linked unless a pinned local copy has clear maintenance value and redistribution is permitted. A vendored artifact must record its local path, upstream URL, revision or tag, license, and review date, and must remain distinct from canonical adaptations. Volatile provider and model facts are reviewed against the product surface that consumes them.
 
-All external sources below were reviewed on **2026-09-12** unless another date is shown. No upstream artifacts are vendored in v0.2.0, so no `sourced/` directory exists.
+All external sources below were reviewed on **2026-09-12** unless another date is shown. The v0.2.0 source had no vendored artifacts. Current inactive snapshots, exact revisions and licence/notice hashes are recorded in `sources.lock.json`.
 
 ## Repository context and configuration map
 
@@ -334,3 +334,9 @@ Schema-2 ownership in `schemas/lock.schema.json`, `schemas/installation.schema.j
 `procedures/design-selection.md` and `procedures/web-design-lightweight.md` adapt existing pinned Impeccable/Anthropic resources into contextual options. Brand intent is project-owned text; the typed procedure choice changes the selected resource closure. Existing source notices remain required. Reviewed 2026-10-05.
 
 CI uses the explicit Ubuntu 24.04 image. GitHub reported hosted-runner acquisition failure without test execution for the catalog checkpoint; changing the label preserves the checks and avoids an unreviewed `ubuntu-latest` image migration. This is an operational correction, not evidence of a source defect. Reviewed 2026-10-05.
+
+## Task-use consolidation (reviewed 2026-10-05)
+
+`core/context.md` owns selective reading and one canonical owner; `core/prior-art.md` owns PACT/HRR and proportional evidence. The first-use path and D-004 revision 2 apply those existing rules to an ordinary digest-helper README task. The baseline completed the task but installed a broad selection and searched for a receipt schema; no API decision or defect catch was attributed to Context. Small maintenance probes are diagnostic, with private raw evidence retained locally.
+
+`scripts/context_ai.py` owns composition for both explanation and materialization, installation integrity verification, and the derived current decision view. `docs/loadouts.md` owns that command contract; `docs/compatibility.md` owns pin/recovery and output compatibility. Foundation records now share reporting defaults and cite their actual modules/original sources. Exact older source commits retain earlier records; installed locks remain independent of the current registry. This consolidation does not change lock schemas, upstream snapshots, or publication state.
