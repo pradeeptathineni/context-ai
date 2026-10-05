@@ -76,7 +76,7 @@ The additional house files below were reviewed on **2026-10-05**. They distill p
 
 - [`models/routing.yaml`](../models/routing.yaml)
   - [OpenAI API models](https://developers.openai.com/api/docs/models) and [Codex models](https://learn.chatgpt.com/docs/models) were refreshed on 2026-10-05 for current IDs, effort levels, and retirement notices. Codex-Spark retired on 2026-09-14, so the stable `realtime_coding` route now binds to a current focused-work model without promising Spark latency or universal access.
-  - The selected GPT-6 Sol binding reflects the Codex app task model list on this host on 2026-10-05. GPT-6.1 Sol has a separate rollout. Recheck product, authentication, workspace, client, and rollout at use time; the CLI probe in [`evals/usage-cases.md`](../evals/usage-cases.md) demonstrated that a listed app model may still be refused on another surface.
+  - The selected GPT-6 Sol binding reflects the Codex app task model list on this host on 2026-10-05. GPT-6.1 Sol has a separate rollout. Recheck product, authentication, workspace, client, and rollout at use time; the dated CLI checks in [`evals/usage-cases.md`](../evals/usage-cases.md) record a rejection on 0.147.0 and successful low-effort runs after updating to 0.160.0.
   - The first-match task taxonomy and logical profiles preserve the repository's original routing design; source metadata and runtime availability checks isolate its volatile bindings.
 
 - [`providers/openai/codex.md`](../providers/openai/codex.md)

@@ -27,6 +27,12 @@ Two ephemeral, read-only Codex CLI sessions used GPT-5.6 Sol at low effort on co
 
 The house session visibly read both pointed-to files. Both answers preferred RFC 8785 canonical JSON, rejected simple key sorting, and called for cross-language vectors and migration checks. The house answer also named the status quo and bespoke canonicalization, specified a narrow protocol owner, and cited the guidance. The baseline answer proposed centralizing digest generation as another option and suggested randomized equivalence tests. The CLI reported 7,104 tokens for the house run and 4,341 for baseline. This one proxy establishes loading and a different decision record; it does **not** establish better task success or cost effectiveness. The fixture README itself preferred a maintained standard, so both runs had a strong cue.
 
-The same CLI, version 0.147.0, rejected GPT-6 Luna before the probe and GPT-6 Sol in a separate one-line startup check for this ChatGPT login. That is an observed access limit on this CLI, not a claim about other Codex surfaces. The static route policy therefore remains advisory until the active host confirms its binding; the successful comparison used GPT-5.6 Sol on both sides.
+The then-installed CLI, version 0.147.0, rejected GPT-6 Luna before the probe and GPT-6 Sol in a separate one-line startup check for this ChatGPT login. The successful comparison above used GPT-5.6 Sol on both sides.
+
+### Repeat after standalone CLI update
+
+After updating the standalone CLI to 0.160.0 on 2026-10-05, read-only, low-effort one-line runs completed with both GPT-6 Luna and GPT-6 Sol using the same ChatGPT login. A sequential repeat of the receipt-digest fixture with GPT-6 Luna at low effort again showed the house session reading both pointed-to files. Both answers selected RFC 8785 conditionally on suitable libraries. The house answer explicitly compared the status quo, built-in key sorting, maintained JCS libraries, and a custom fallback, and named licensing and a revisit trigger. The baseline also stated a conditional standard choice and cross-language checks. The CLI reported 7,215 tokens for the house run and 4,175 for baseline. This supports file loading and different decision detail, not a demonstrated quality or cost improvement.
+
+The earlier rejection was resolved after the update on this installation. Model bindings still require an active-host check because product access can differ by client, account, and time.
 
 A future fresh-session comparison should run no-context, core-only, and relevant custom-file variants on the same task and tool set. Record actual artifacts and failures, not merely whether the agent says it used a file.
