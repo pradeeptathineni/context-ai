@@ -1,0 +1,27 @@
+schema_version: 1
+decisions:
+- id: D-005
+  concept: evidence-decision-separation
+  action: adopt
+  selection: Signals evidence -> Context decision -> project lock -> use receipt
+  rationale: The real agent-assisted Signals checkpoint passed exact-byte and semantic admission.
+    Advice maps to Context decisions; source references, adoption, materialization and actual
+    use remain separate.
+  revisit_when: Producer schema/privacy/provenance changes or claim support fails a targeted
+    review.
+  revision: 2
+  supersedes: 1
+  evidence:
+  - evals/signals-evidence.bundle.json
+  - sha256:62e5cb9a6d825a1d5194a28035640b248ee05e344bb41fd816355c1a378cb8da
+  - evals/signals-roundtrip.json
+  applicability: Context AI v1 consumers
+  alternatives:
+  - Continue fixtures only
+  - Admit a pinned real peer checkpoint as advisory evidence
+  unknowns:
+  - No configured model-led runtime or independent comparative tool benefit was established.
+  validation:
+  - Actual producer 4ab32a1d7ae09ae0ebb6102b4b2d7571291c5c97 -> Context read-only consumer;
+    10 candidates mapped with activation false.
+  rollback: Undo unchanged owned materialization; retain old pins.

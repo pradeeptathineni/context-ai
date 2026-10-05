@@ -1,0 +1,439 @@
+{
+  "schema_version": 1,
+  "bundle_id": "signals-web-foundation-2026-10-05",
+  "mode": "agent-assisted",
+  "created_at": "2026-10-05T15:47:15Z",
+  "producer": {
+    "repository": "pradeeptathineni/signals-ai",
+    "commit": "4ab32a1d7ae09ae0ebb6102b4b2d7571291c5c97",
+    "protocol": "signals-evidence-v1"
+  },
+  "need": {
+    "query": "Equip Context AI and a React/Vite/Fastify product with evidence-bound skills, design critique, accessibility and browser verification.",
+    "constraints": [
+      "Local-first; no framework migration.",
+      "No autonomous candidate installation or execution.",
+      "Resolve exact artifact redistribution rights before copying."
+    ]
+  },
+  "sources": [
+    {
+      "id": "skills",
+      "uri": "https://agentskills.io/specification",
+      "title": "Agent Skills specification",
+      "source_class": "first-party",
+      "observed_at": "2026-10-05T15:47:15Z",
+      "revision": null,
+      "independence_group": "agentskills-spec"
+    },
+    {
+      "id": "agents",
+      "uri": "https://learn.chatgpt.com/docs/agent-configuration/agents-md",
+      "title": "Codex repository instructions",
+      "source_class": "first-party",
+      "observed_at": "2026-10-05T15:47:15Z",
+      "revision": null,
+      "independence_group": "openai-docs"
+    },
+    {
+      "id": "impeccable",
+      "uri": "https://github.com/pbakaus/impeccable",
+      "title": "Impeccable design workflow",
+      "source_class": "first-party",
+      "observed_at": "2026-10-05T15:47:15Z",
+      "revision": "ece38d9904b8a619b3f77cab476eacad09c4fb11",
+      "independence_group": "impeccable-upstream"
+    },
+    {
+      "id": "react",
+      "uri": "https://github.com/vercel-labs/agent-skills",
+      "title": "Vercel React guidance",
+      "source_class": "first-party",
+      "observed_at": "2026-10-05T15:47:15Z",
+      "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+      "independence_group": "vercel-upstream"
+    },
+    {
+      "id": "axe",
+      "uri": "https://playwright.dev/docs/accessibility-testing",
+      "title": "Playwright accessibility testing",
+      "source_class": "first-party",
+      "observed_at": "2026-10-05T15:47:15Z",
+      "revision": null,
+      "independence_group": "playwright-docs"
+    },
+    {
+      "id": "wcag",
+      "uri": "https://www.w3.org/TR/WCAG22/",
+      "title": "WCAG 2.2",
+      "source_class": "first-party",
+      "observed_at": "2026-10-05T15:47:15Z",
+      "revision": null,
+      "independence_group": "w3c"
+    },
+    {
+      "id": "vitals",
+      "uri": "https://web.dev/articles/vitals",
+      "title": "Core Web Vitals",
+      "source_class": "first-party",
+      "observed_at": "2026-10-05T15:47:15Z",
+      "revision": null,
+      "independence_group": "google-webdev"
+    },
+    {
+      "id": "frontend",
+      "uri": "https://github.com/anthropics/skills/tree/683bc88e56f3e09ba94f7055977f3d3aa499f202/skills/frontend-design",
+      "title": "Anthropic frontend design reference",
+      "source_class": "first-party",
+      "observed_at": "2026-10-05T15:47:15Z",
+      "revision": "683bc88e56f3e09ba94f7055977f3d3aa499f202",
+      "independence_group": "anthropic-skills"
+    },
+    {
+      "id": "binding",
+      "uri": "https://learn.chatgpt.com/docs/config-file/config-reference",
+      "title": "Codex model configuration",
+      "source_class": "first-party",
+      "observed_at": "2026-10-05T15:47:15Z",
+      "revision": null,
+      "independence_group": "openai-docs"
+    },
+    {
+      "id": "context-pack",
+      "uri": "https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/scripts/run-context-pack.mjs",
+      "title": "Signals repository context pack",
+      "source_class": "local-observed",
+      "observed_at": "2026-10-05T15:47:15Z",
+      "revision": "f21844f12442c2fefdcf64f737c7423245959457",
+      "independence_group": "signals-local-observation"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-skills",
+      "text": "A skill packages instructions in SKILL.md and can link supporting references for progressive disclosure.",
+      "source_ids": [
+        "skills"
+      ],
+      "status": "supported"
+    },
+    {
+      "id": "claim-agents",
+      "text": "Codex discovers repository AGENTS.md guidance with scoped precedence; repository instructions are distinct from on-demand skills.",
+      "source_ids": [
+        "agents"
+      ],
+      "status": "supported"
+    },
+    {
+      "id": "claim-impeccable",
+      "text": "Impeccable supplies shape, critique, audit and polish procedures, with browser iteration and deterministic design detectors.",
+      "source_ids": [
+        "impeccable"
+      ],
+      "status": "supported"
+    },
+    {
+      "id": "claim-react",
+      "text": "Vercel packages React guidance covering waterfalls, bundle size, rendering and rerenders; its scope includes React and Next.js.",
+      "source_ids": [
+        "react"
+      ],
+      "status": "supported"
+    },
+    {
+      "id": "claim-axe",
+      "text": "Playwright documents axe integration for automated accessibility checks and recommends supplementing scans with manual assessment.",
+      "source_ids": [
+        "axe"
+      ],
+      "status": "supported"
+    },
+    {
+      "id": "claim-wcag",
+      "text": "WCAG 2.2 specifies testable accessibility criteria, including keyboard access, visible focus and responsive reflow.",
+      "source_ids": [
+        "wcag"
+      ],
+      "status": "supported"
+    },
+    {
+      "id": "claim-vitals",
+      "text": "Core Web Vitals comprise LCP, INP and CLS; good field targets are 2.5 seconds, 200 milliseconds and 0.1 at the 75th percentile.",
+      "source_ids": [
+        "vitals"
+      ],
+      "status": "supported"
+    },
+    {
+      "id": "claim-frontend",
+      "text": "Anthropic publishes a frontend-design skill as a concise aesthetic reference for intentional interface work.",
+      "source_ids": [
+        "frontend"
+      ],
+      "status": "supported"
+    },
+    {
+      "id": "claim-binding",
+      "text": "Codex configuration separates model selection and reasoning settings from repository instruction files.",
+      "source_ids": [
+        "binding"
+      ],
+      "status": "supported"
+    },
+    {
+      "id": "claim-context-pack",
+      "text": "The repository context:pack command completed on the current checkout and produced a bounded secret-scanned source map.",
+      "source_ids": [
+        "context-pack"
+      ],
+      "status": "observed"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "skills",
+      "name": "Agent Skills specification",
+      "canonical_uri": "https://agentskills.io/specification",
+      "claim_ids": [
+        "claim-skills"
+      ],
+      "disposition": "adopt",
+      "reason": "Use the specification as the procedure packaging contract.",
+      "limitations": [
+        "Provider discovery behavior must be checked separately."
+      ],
+      "signal": {
+        "evidence_confidence": "medium",
+        "project_fit": "unknown"
+      }
+    },
+    {
+      "id": "agents",
+      "name": "Codex repository instructions",
+      "canonical_uri": "https://learn.chatgpt.com/docs/agent-configuration/agents-md",
+      "claim_ids": [
+        "claim-agents"
+      ],
+      "disposition": "adopt",
+      "reason": "Use a short repository entry point and explicitly read relevant procedures.",
+      "limitations": [
+        "Reading guidance does not prove runtime discovery or hook activation."
+      ],
+      "signal": {
+        "evidence_confidence": "medium",
+        "project_fit": "unknown"
+      }
+    },
+    {
+      "id": "impeccable",
+      "name": "Impeccable design workflow",
+      "canonical_uri": "https://github.com/pbakaus/impeccable",
+      "claim_ids": [
+        "claim-impeccable"
+      ],
+      "disposition": "trial",
+      "reason": "Trial relevant instructions on the existing React product; retain Apache-2.0 attribution and notices if copied.",
+      "limitations": [
+        "No measured comparative aesthetic benefit; optional binaries and hooks have not been executed."
+      ],
+      "signal": {
+        "evidence_confidence": "medium",
+        "project_fit": "unknown"
+      }
+    },
+    {
+      "id": "react",
+      "name": "Vercel React guidance",
+      "canonical_uri": "https://github.com/vercel-labs/agent-skills",
+      "claim_ids": [
+        "claim-react"
+      ],
+      "disposition": "adopt",
+      "reason": "Read stack-relevant MIT-licensed skill rules for React/Vite; skip Next.js server guidance.",
+      "limitations": [
+        "The inspected skill frontmatter declares MIT; no measured comparative performance benefit."
+      ],
+      "signal": {
+        "evidence_confidence": "medium",
+        "project_fit": "unknown"
+      }
+    },
+    {
+      "id": "axe",
+      "name": "Playwright accessibility testing",
+      "canonical_uri": "https://playwright.dev/docs/accessibility-testing",
+      "claim_ids": [
+        "claim-axe"
+      ],
+      "disposition": "adopt",
+      "reason": "Reuse existing pinned Playwright and axe dependencies with keyboard and screenshot review.",
+      "limitations": [
+        "Automated success does not establish full accessibility conformance."
+      ],
+      "signal": {
+        "evidence_confidence": "medium",
+        "project_fit": "unknown"
+      }
+    },
+    {
+      "id": "wcag",
+      "name": "WCAG 2.2",
+      "canonical_uri": "https://www.w3.org/TR/WCAG22/",
+      "claim_ids": [
+        "claim-wcag"
+      ],
+      "disposition": "adopt",
+      "reason": "Use applicable AA criteria as the interaction review reference.",
+      "limitations": [
+        "This source is a standard, not evidence that Signals conforms."
+      ],
+      "signal": {
+        "evidence_confidence": "medium",
+        "project_fit": "unknown"
+      }
+    },
+    {
+      "id": "vitals",
+      "name": "Core Web Vitals",
+      "canonical_uri": "https://web.dev/articles/vitals",
+      "claim_ids": [
+        "claim-vitals"
+      ],
+      "disposition": "adopt",
+      "reason": "Keep field measurements separate from local build/browser proxies.",
+      "limitations": [
+        "Signals has no field page-load data; local scores cannot certify deployed performance."
+      ],
+      "signal": {
+        "evidence_confidence": "medium",
+        "project_fit": "unknown"
+      }
+    },
+    {
+      "id": "frontend",
+      "name": "Anthropic frontend design reference",
+      "canonical_uri": "https://github.com/anthropics/skills/tree/683bc88e56f3e09ba94f7055977f3d3aa499f202/skills/frontend-design",
+      "claim_ids": [
+        "claim-frontend"
+      ],
+      "disposition": "consider",
+      "reason": "Use as a fallback reference; the inspected artifact carries Apache-2.0 terms.",
+      "limitations": [
+        "No copied assets or measured superiority."
+      ],
+      "signal": {
+        "evidence_confidence": "medium",
+        "project_fit": "unknown"
+      }
+    },
+    {
+      "id": "binding",
+      "name": "Codex model configuration",
+      "canonical_uri": "https://learn.chatgpt.com/docs/config-file/config-reference",
+      "claim_ids": [
+        "claim-binding"
+      ],
+      "disposition": "adopt",
+      "reason": "Treat configured client/model settings as runtime bindings, never as a side effect of reading Markdown.",
+      "limitations": [
+        "No availability or price claim; this research did not change the active model."
+      ],
+      "signal": {
+        "evidence_confidence": "medium",
+        "project_fit": "unknown"
+      }
+    },
+    {
+      "id": "context-pack",
+      "name": "Signals repository context pack",
+      "canonical_uri": "https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/scripts/run-context-pack.mjs",
+      "claim_ids": [
+        "claim-context-pack"
+      ],
+      "disposition": "adopt",
+      "reason": "Reuse the existing map and reopen source files before editing.",
+      "limitations": [
+        "One builder observation proves command operation, not token savings or improved research quality."
+      ],
+      "signal": {
+        "evidence_confidence": "medium",
+        "project_fit": "unknown"
+      }
+    }
+  ],
+  "limitations": [
+    "Agent acquired and summarized primary sources; no configured local model ran.",
+    "Small selected web/context set, not an exhaustive landscape or universal best claim.",
+    "First-party claims establish documented interfaces, not independent benefit.",
+    "No source has been relabelled as a successful local tool use except the explicitly observed context pack."
+  ],
+  "extensions": {
+    "signals.claim-locators": {
+      "claim-skills": {
+        "uri": "https://agentskills.io/specification",
+        "revision": null,
+        "support_note": "Primary documentation inspected by the coding agent; concise paraphrase within documented scope."
+      },
+      "claim-agents": {
+        "uri": "https://learn.chatgpt.com/docs/agent-configuration/agents-md",
+        "revision": null,
+        "support_note": "Primary documentation inspected by the coding agent; concise paraphrase within documented scope."
+      },
+      "claim-impeccable": {
+        "uri": "https://github.com/pbakaus/impeccable",
+        "revision": "ece38d9904b8a619b3f77cab476eacad09c4fb11",
+        "support_note": "Primary documentation inspected by the coding agent; concise paraphrase within documented scope."
+      },
+      "claim-react": {
+        "uri": "https://github.com/vercel-labs/agent-skills",
+        "revision": "063bee94c3f4df8453406c830b0a7df0f2860278",
+        "support_note": "Primary documentation inspected by the coding agent; concise paraphrase within documented scope."
+      },
+      "claim-axe": {
+        "uri": "https://playwright.dev/docs/accessibility-testing",
+        "revision": null,
+        "support_note": "Primary documentation inspected by the coding agent; concise paraphrase within documented scope."
+      },
+      "claim-wcag": {
+        "uri": "https://www.w3.org/TR/WCAG22/",
+        "revision": null,
+        "support_note": "Primary documentation inspected by the coding agent; concise paraphrase within documented scope."
+      },
+      "claim-vitals": {
+        "uri": "https://web.dev/articles/vitals",
+        "revision": null,
+        "support_note": "Primary documentation inspected by the coding agent; concise paraphrase within documented scope."
+      },
+      "claim-frontend": {
+        "uri": "https://github.com/anthropics/skills/tree/683bc88e56f3e09ba94f7055977f3d3aa499f202/skills/frontend-design",
+        "revision": "683bc88e56f3e09ba94f7055977f3d3aa499f202",
+        "support_note": "Primary documentation inspected by the coding agent; concise paraphrase within documented scope."
+      },
+      "claim-binding": {
+        "uri": "https://learn.chatgpt.com/docs/config-file/config-reference",
+        "revision": null,
+        "support_note": "Primary documentation inspected by the coding agent; concise paraphrase within documented scope."
+      },
+      "claim-context-pack": {
+        "uri": "https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/scripts/run-context-pack.mjs",
+        "revision": "f21844f12442c2fefdcf64f737c7423245959457",
+        "support_note": "Actual context:pack output: 55 files, 29234 tokens, security check passed."
+      }
+    },
+    "signals.acquisition": {
+      "actor_category": "coding-agent",
+      "tools": [
+        "web open",
+        "authenticated GitHub metadata",
+        "repository source read"
+      ],
+      "checks": [
+        "exact revision queries",
+        "bounded primary-source summaries",
+        "schema and reference validation"
+      ],
+      "fixture": false
+    }
+  }
+}

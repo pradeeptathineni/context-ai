@@ -60,3 +60,15 @@ class Evidence(unittest.TestCase):
         with tempfile.TemporaryDirectory() as td:
             p=Path(td)/'bundle.json';p.write_text('{"schema_version":1,"schema_version":2}')
             with self.assertRaisesRegex(e.Invalid,'duplicate'):e.load_bundle(p,hashlib.sha256(p.read_bytes()).hexdigest(),allow_fixture=True,now=NOW)
+
+    def test_real_peer_export_replays_with_pinned_identity_and_no_activation(self):
+        bundle=Path(__file__).resolve().parents[1]/'evals/signals-evidence.bundle.json'
+        sha='62e5cb9a6d825a1d5194a28035640b248ee05e344bb41fd816355c1a378cb8da'
+        commit='4ab32a1d7ae09ae0ebb6102b4b2d7571291c5c97'
+        result=e.load_bundle(bundle,sha,'pradeeptathineni/signals-ai',commit,now=NOW)
+        self.assertEqual(result['mode'],'agent-assisted')
+        self.assertEqual(result['admitted_as'],'pinned-peer-evidence')
+        self.assertEqual(len(result['recommendations']),10)
+        self.assertFalse(result['activation'])
+        with self.assertRaisesRegex(e.Invalid,'identity'):
+            e.load_bundle(bundle,sha,'forged/producer',commit,now=NOW)

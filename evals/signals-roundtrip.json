@@ -1,0 +1,123 @@
+{
+  "schema_version": 1,
+  "checkpoint_id": "evidence-ready-20261005",
+  "producer": {
+    "repository": "pradeeptathineni/signals-ai",
+    "commit": "4ab32a1d7ae09ae0ebb6102b4b2d7571291c5c97",
+    "protocol": "signals-evidence-v1"
+  },
+  "mode": "agent-assisted",
+  "bundle_sha256": "62e5cb9a6d825a1d5194a28035640b248ee05e344bb41fd816355c1a378cb8da",
+  "contract_sha256": "f81d57c468d4a9179d0aaccaab1aadc0f64a065f99320dc0607ab3c8b4c22f02",
+  "status_sha256": "94751793b81826201bdb4bfec1e3707860661d8a6287a8d23d9da3314c1a4775",
+  "consumer_command": "python scripts/evidence.py --checkpoint <local-signals-owner>/status.json --producer pradeeptathineni/signals-ai",
+  "checks": [
+    "All three checkpoint artifact hashes and exact bundle sidecar verified before parsing.",
+    "Producer Git commit exists in the active checkout and repository origin names pradeeptathineni/signals-ai.",
+    "Frozen schema and unique/resolved references/public URLs/honest nonfixture mode accepted.",
+    "10 candidates map to Context decisions; no recommendation activated resources."
+  ],
+  "privacy": "Only public source URLs and maintained source summaries were retained. Namespaced metadata is non-authoritative.",
+  "activation": false,
+  "mapping": [
+    {
+      "candidate": "skills",
+      "claims": [
+        "claim-skills"
+      ],
+      "context_decision": "D-002",
+      "revision": 1,
+      "assessment": "Keep skills for on-demand procedures; discovery remains explicitly unverified."
+    },
+    {
+      "candidate": "agents",
+      "claims": [
+        "claim-agents"
+      ],
+      "context_decision": "D-001",
+      "revision": 1,
+      "assessment": "Keep scoped root routing; the ownership adapter preserves user instructions."
+    },
+    {
+      "candidate": "impeccable",
+      "claims": [
+        "claim-impeccable"
+      ],
+      "context_decision": "D-007",
+      "revision": 2,
+      "assessment": "Keep the pinned instruction-only trial; actual fixture critique is observed, detectors/hooks and comparative benefit are unmeasured."
+    },
+    {
+      "candidate": "react",
+      "claims": [
+        "claim-react"
+      ],
+      "context_decision": "D-009",
+      "revision": 1,
+      "assessment": "Use targeted rules only in a React consumer; the current static site needs no React migration."
+    },
+    {
+      "candidate": "axe",
+      "claims": [
+        "claim-axe"
+      ],
+      "context_decision": "D-010",
+      "revision": 1,
+      "assessment": "Use Playwright/axe together with screenshot and keyboard inspection; hosted Linux revealed a reflow defect missed locally."
+    },
+    {
+      "candidate": "wcag",
+      "claims": [
+        "claim-wcag"
+      ],
+      "context_decision": "D-010",
+      "revision": 1,
+      "assessment": "Use applicable AA criteria; automated scans do not establish full conformance."
+    },
+    {
+      "candidate": "vitals",
+      "claims": [
+        "claim-vitals"
+      ],
+      "context_decision": "D-010",
+      "revision": 1,
+      "assessment": "Keep field metrics separate; the fixture asset budget is a local proxy."
+    },
+    {
+      "candidate": "frontend",
+      "claims": [
+        "claim-frontend"
+      ],
+      "context_decision": "D-008",
+      "revision": 1,
+      "assessment": "Retain the licensed fallback reference; do not run two primary design procedures."
+    },
+    {
+      "candidate": "binding",
+      "claims": [
+        "claim-binding"
+      ],
+      "context_decision": "D-017",
+      "revision": 1,
+      "assessment": "Keep supported logical bindings; no global model change or API entitlement inference."
+    },
+    {
+      "candidate": "context-pack",
+      "claims": [
+        "claim-context-pack"
+      ],
+      "context_decision": "D-006",
+      "revision": 1,
+      "assessment": "Defer the larger context map in this small library; peer-reported operation is not measured savings or corroboration of Context claims."
+    }
+  ],
+  "limitations": [
+    "Agent acquired and summarized primary sources; no configured local model ran.",
+    "Small selected web/context set, not an exhaustive landscape or universal best claim.",
+    "First-party claims establish documented interfaces, not independent benefit.",
+    "No source has been relabelled as a successful local tool use except the explicitly observed context pack.",
+    "This is a real agent-assisted producer/consumer exchange, not configured model-led research or independent proof of tool benefit.",
+    "Claim/source references resolve; cited documentation and local source review establish interfaces, not calibrated confidence or universal fit.",
+    "The Context project-specific checks and licence review remain authoritative."
+  ]
+}
