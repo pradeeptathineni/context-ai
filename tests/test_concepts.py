@@ -23,7 +23,7 @@ class ConceptNeeds(unittest.TestCase):
         entries=concepts.catalog();decisions=c.current_decisions()
         concepts.validate_catalog(entries,decisions)
         id='context.loadouts'
-        for change in [lambda x:x[id]['coverage'].update(source_refs=['agent-skills']),lambda x:x[id]['coverage'].update(claim_refs=['development-r1:forged']),lambda x:x[id]['coverage'].update(disposition='confident')]:
+        for change in [lambda x:x[id]['coverage'].update(source_refs=['agent-skills']),lambda x:x[id]['coverage'].update(claim_refs=['development-r1:forged']),lambda x:x[id]['coverage'].update(disposition='confident'),lambda x:x[id]['coverage'].update(decision_refs=['D-forged'])]:
             changed=copy.deepcopy(entries);change(changed)
             with self.assertRaises(c.Invalid):concepts.validate_catalog(changed,decisions)
 

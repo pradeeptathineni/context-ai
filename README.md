@@ -11,7 +11,7 @@ Choose the guidance a project needs, pin it, and use it through the agent you al
 | standard | Proportional development, prior art, comments, tests, review and delivery |
 | context-authoring | Context compression, authority, coherence, provenance and compatibility |
 | research-evidence | Primary evidence and useful options through the Signals research method |
-| web-experience | Impeccable-led instruction-only design, UX, accessibility and browser critique |
+| web-experience | Selected instruction-only design, UX, accessibility and browser critique |
 | react-web | Web experience plus React guidance matched to the actual framework |
 | service-api | API trust/contracts, persistence, failures and isolated migrations |
 | aws-infrastructure | Existing Terraform/AWS planning, validation and hosting boundaries |
@@ -49,13 +49,15 @@ See the [command and schema contract](docs/loadouts.md), [compatibility/migratio
 
 ## Proof and limits
 
-The [bootstrap receipt](evals/bootstrap-use.json) records actual explicit reads and validator maintenance before bulk implementation. All eight loadouts have materialized consumer tests. The [web exercise](examples/web/brief.md) builds a static fixture, tests four viewport widths and two palettes with Playwright/axe, and has an inspected critique/revision pass. [Earlier execution evidence](evals/v1-acceptance.md) records outcomes and their limits; [references](docs/references.md) records influences and review dates.
+Tests cover all eight selections, explicit dependency closure, portable pins, edited-file protection and interruption recovery. The existing [web exercise](examples/web/brief.md) checks four widths, two example palettes, interactions and accessibility with Playwright/axe. [References](docs/references.md) records source influences and review dates. These are deterministic and builder checks; human usefulness and model input savings remain unmeasured.
 
 Codex is the current delivery adapter. Impeccable binaries/hooks/extensions are excluded; its selected documentation works through direct reads. This is a context library, with no agent runtime, automatic tool installation, deployment side effects or signal-scoring engine. Capability presence checks are followed by project-specific verification recipes. Fixture tests, local browser judgment and self-reported reads do not prove production behavior, human usefulness, or native skill activation. Signals evidence advice never grants installation authority.
 
 Run the deterministic gates:
 
 ```sh
+.venv/bin/python -m pip install --require-hashes -r requirements-dev.txt
+.venv/bin/ruff check scripts tests
 ruby scripts/validate.rb
 .venv/bin/python scripts/check_loadouts.py
 .venv/bin/python -m unittest discover -s tests -v

@@ -9,7 +9,7 @@ A manifest selects resources; a resolved lock pins their bytes; a use receipt re
 | standard | Proportional inspect/implement/test/review/deliver; existing tools and prior art | Project tests, actual diff, truthful completion |
 | context-authoring | Compression, authority, coherence, provenance and refresh | Metadata/links/schema, retained requirements, compatibility |
 | research-evidence | Primary evidence, comparative options, freshness, Signals exchange | Exact bytes, provenance, citations, honest mode and constraints |
-| web-experience | Impeccable instruction-only design, UX/content, accessibility and browser critique | Static build, screenshots, interactions, axe, asset budget/reduced motion |
+| web-experience | Selected instruction-only design, UX/content, accessibility and browser critique | Static build, screenshots, interactions, axe, asset budget/reduced motion |
 | react-web | React rules matched to actual framework; composes web-experience | Real version/client-server/static-export detection and browser checks |
 | service-api | API trust/contracts, persistence/failure behavior, existing stack | Real route/type/schema tests and isolated database/migration checks |
 | aws-infrastructure | Existing Terraform/AWS identity/state/hosting constraints | Safe source inspection, format/isolated validation, authorized plan/rollback |
@@ -26,8 +26,8 @@ python3 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r requirements.txt
 .venv/bin/python scripts/context_ai.py list
 .venv/bin/python scripts/context_ai.py explain react-web
-.venv/bin/python scripts/context_ai.py plan standard react-web --project /absolute/project --provider codex --brand expressive
-.venv/bin/python scripts/context_ai.py apply standard react-web --project /absolute/project --provider codex --brand expressive
+.venv/bin/python scripts/context_ai.py plan standard react-web --project /absolute/project --provider codex --brand "Warm paper, restrained ink, existing typography" --design-procedure lightweight
+.venv/bin/python scripts/context_ai.py apply standard react-web --project /absolute/project --provider codex --brand "Warm paper, restrained ink, existing typography" --design-procedure lightweight
 .venv/bin/python scripts/context_ai.py verify --project /absolute/project
 .venv/bin/python scripts/context_ai.py refresh --project /absolute/project
 .venv/bin/python scripts/context_ai.py undo --project /absolute/project
@@ -41,7 +41,7 @@ python3 -m venv .venv
 
 ## Public contracts
 
-Loadout YAML has `id`, description/characteristics, ordered composition/modules/skills, required/optional capabilities, bounded options, stage routing, check recipes and decision references. `schemas/loadout.schema.json` owns its allowed fields. Only short ordered composition is supported: depth-first parents then selection, deduplicated by ID; cycles and conflicting defaults fail. The brand option is quiet or expressive. One primary style procedure applies at a stage; project/brand intent wins over advisory taste.
+Loadout YAML has `id`, description/characteristics, ordered composition/modules/skills, required/optional capabilities, bounded options, stage routing, check recipes and decision references. `schemas/loadout.schema.json` owns its allowed fields. Only short ordered composition is supported: depth-first parents then selection, deduplicated by ID; cycles and conflicting defaults fail. Brand is bounded free-text project intent (1-2000 characters); quiet/expressive remain compatible examples. `design_procedure` is guided (selected Impeccable flow for substantial work) or lightweight (concise Anthropic reference for bounded existing-surface changes). Only the chosen primary procedure is materialized. Neither option installs tools or overrides project authority. One primary style procedure applies at a stage; project/brand intent wins over advisory taste.
 
 Schema-2 resolutions use `project: .` for portability. Schema-2 installation receipts own the local `bound_project`; current tooling verifies and migrates schema-1 receipts explicitly. A lock has its own schema and pins resource SHA-256s, library revision/tree digest, selected loadouts, stage routing, options, capability definitions/states, checks and current decision revisions. Source tree hashing excludes the lock itself. An installation receipt additionally records owned file hashes and the exact root routing block. Schemas reject unknown fields except explicitly defined optional recovery metadata. YAML safe parsing rejects duplicate/non-string keys, aliases and object tags. Approved relative paths cannot traverse or follow symlinks. `resources.yaml` declares file prerequisites. Markdown links are informational and never expand closure; directories, escapes, cycles and active instruction filenames fail. Selected upstream bytes and required notices are checked against `sources.lock.json`. Unselected upstream files cannot block unrelated work. Manifests have no executable expressions or installer authority.
 

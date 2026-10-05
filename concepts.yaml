@@ -597,6 +597,8 @@ concepts:
     - core/review.md
     coverage:
       disposition: practice-retained
+      decisions: [D-021]
+      source_refs: [ruff-linter]
       rationale: Keep project authority and deterministic safety boundaries while targeted negative tests
         challenge behavior.
       uncertainty: Independent concept-specific research remains incomplete.
@@ -923,6 +925,13 @@ concepts:
     modules:
     - domains/web/design.md
     scope: web
+    coverage:
+      disposition: context-options
+      decisions: [D-020]
+      source_refs: [impeccable-design, anthropic-design]
+      rationale: Offer guided or lightweight instructions according to scope; project visual intent governs either.
+      uncertainty: Comparative human benefit and token savings remain unmeasured.
+      next_action: Use the selected procedure on a real consumer and reconsider after browser and user outcomes.
   web.product:
     definition: Make audience, primary job and truthful content govern the experience.
     modules:

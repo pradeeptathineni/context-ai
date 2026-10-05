@@ -87,9 +87,14 @@
       "additionalProperties": false,
       "properties": {
         "brand": {
+          "maxLength": 2000,
+          "minLength": 1,
+          "type": "string"
+        },
+        "design_procedure": {
           "enum": [
-            "quiet",
-            "expressive"
+            "guided",
+            "lightweight"
           ]
         }
       },

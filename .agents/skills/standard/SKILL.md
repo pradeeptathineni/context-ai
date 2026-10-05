@@ -19,4 +19,4 @@ For Codex or ChatGPT, verify the chosen capability on the **active surface**, in
 
 Compare serious candidates on exact fit, authority, maintenance, license, privacy, cost, overlap, and removal. Use the project's existing decision artifact to record the chosen owner, tested evidence, unknowns, small residual, and revisit trigger. A repository screen supplies candidates; it is not a contextual assessment. Complete the authorized task and verify the behavior that matters.
 
-Load only the relevant house guidance from [custom/README](../../../overlays/README.md): AI mechanisms, orchestration, model deliberation, writing, comments, and evidence claims have separate files. Do not imply that reading this skill changed the active model, activated a plugin, installed a hook, or delegated work.
+Load only the relevant house guidance from [overlays/README](../../../overlays/README.md): AI mechanisms, orchestration, model deliberation, writing, comments, and evidence claims have separate files. Do not imply that reading this skill changed the active model, activated a plugin, installed a hook, or delegated work.

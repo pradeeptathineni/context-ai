@@ -35,7 +35,7 @@ dependencies:
   skills/context-loadout/SKILL.md:
   - docs/loadouts.md
   domains/web/design.md:
-  - procedures/web-design.md
+  - procedures/design-selection.md
   domains/service/api.md:
   - core/development.md
   - core/testing.md
@@ -55,3 +55,5 @@ dependencies:
   - procedures/react-review.md
   procedures/react-review.md:
   - sourced/vercel/react/compiled-guide.md
+  procedures/web-design-lightweight.md:
+  - sourced/anthropic/design/instruction.md

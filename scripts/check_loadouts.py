@@ -4,7 +4,7 @@ from pathlib import Path
 import json
 import sys
 import tempfile
-from context_ai import ROOT, catalogue, current_decisions, read_yaml, resolve, validate_schema, inside
+from context_ai import ROOT, catalogue, current_decisions, resolve, validate_schema
 from jsonschema import Draft202012Validator
 
 def check():

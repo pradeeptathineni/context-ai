@@ -11,6 +11,7 @@ capabilities:
   browser: optional
 options:
   brand: quiet
+  design_procedure: guided
 decisions:
 - D-001
 - D-002
@@ -23,6 +24,7 @@ decisions:
 - D-008
 - D-010
 - D-018
+- D-020
 compose: []
 id: web-experience
 description: Build and critique a coherent accessible responsive web experience.

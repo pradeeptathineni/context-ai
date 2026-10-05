@@ -214,3 +214,18 @@ sources:
     url: https://node.testcontainers.org/features/containers/
     reviewed_on: '2026-10-05'
     revision: null
+  ruff-linter:
+    title: Ruff linter
+    publisher: Astral
+    url: https://docs.astral.sh/ruff/linter/
+    reviewed_on: '2026-10-05'
+  impeccable-design:
+    title: Pinned Impeccable instruction-only design
+    publisher: Impeccable
+    url: https://github.com/pbakaus/impeccable/blob/ece38d9904b8a619b3f77cab476eacad09c4fb11/plugin/skills/impeccable/SKILL.md
+    reviewed_on: '2026-10-05'
+  anthropic-design:
+    title: Pinned Anthropic frontend design
+    publisher: Anthropic
+    url: https://github.com/anthropics/skills/blob/683bc88e56f3e09ba94f7055977f3d3aa499f202/skills/frontend-design/SKILL.md
+    reviewed_on: '2026-10-05'

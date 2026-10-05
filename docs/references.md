@@ -135,7 +135,7 @@ The research procedure composes `core/research.md` with the MIT-licensed Maestro
 
 ## v1 modules and selections (reviewed 2026-10-05)
 
-Canonical additions `core/code-comments.md`, `core/version-control.md`, `core/prior-art.md` label source-supported fundamentals and local choices. House guidance now lives in `overlays/`; the previous `custom/` files are compatibility routes. `concepts.yaml` keeps schema-1 string definitions and adds details with module/decision/evidence references. `decisions/adapters.yaml` records tested adapter, tooling and model choices and an immutable D-007 successor.
+Canonical additions `core/code-comments.md`, `core/version-control.md`, `core/prior-art.md` label source-supported fundamentals and local choices. House guidance now lives in `overlays/`; the previous `custom/` files are compatibility routes. `concepts.yaml` now unifies definitions and exact coverage in schema 2; the generated definitions view preserves legacy lookup consumers. `decisions/adapters.yaml` records tested adapter, tooling and model choices and an immutable D-007 successor.
 
 - `overlays/README.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
 - `overlays/ai-implementation.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
@@ -328,3 +328,9 @@ Pinned upstream text retains its original whitespace, including Markdown hard br
 The catalog schema-2 consolidation preserves all 140 IDs and replaces repeated generic evidence pointers with generated explicit gaps or precise source/claim dispositions. The nine primary-source summaries from Signals commit `3badfed8922e896e1c83d20c68654057487541ca`, bundle SHA-256 `21f90afb4a2e688f45d2e10dc2d06942b12d6b286c3c710ba93b104243d7eb34`, remain agent-assisted evidence. Context narrows their applicability; no peer recommendation enables a capability. Reviewed 2026-10-05.
 
 Schema-2 ownership in `schemas/lock.schema.json`, `schemas/installation.schema.json` and `scripts/context_ai.py` reuses the existing distributor. `tests/test_portability.py` covers clean portable application, verified legacy rebinding, failed/interrupted writes, retained edits and actual bounded command invocation. The shared schema reference removes duplicated validation fields. Reviewed 2026-10-05.
+
+`requirements-dev.txt` pins Ruff 0.16.10 from PyPI with exact artifact hashes; `ruff.toml` limits the gate to Pyflakes and syntax rules. [Ruff rule selection](https://docs.astral.sh/ruff/linter/) was reviewed 2026-10-05. The bounded local trial found four unused imports and a dead ownership variable; no comprehension or performance gain is claimed. Node/Playwright remains scoped to browser checks; Ruby retains existing Markdown/model/source checks while Python owns composition/evidence/concept semantics.
+
+`procedures/design-selection.md` and `procedures/web-design-lightweight.md` adapt existing pinned Impeccable/Anthropic resources into contextual options. Brand intent is project-owned text; the typed procedure choice changes the selected resource closure. Existing source notices remain required. Reviewed 2026-10-05.
+
+CI uses the explicit Ubuntu 24.04 image. GitHub reported hosted-runner acquisition failure without test execution for the catalog checkpoint; changing the label preserves the checks and avoids an unreviewed `ubuntu-latest` image migration. This is an operational correction, not evidence of a source defect. Reviewed 2026-10-05.

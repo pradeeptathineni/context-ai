@@ -9,7 +9,7 @@ The Git repository is the canonical hierarchy. Put a checkout or pointer at `~/.
 | User entry point | A few durable defaults and a route to this hierarchy | `~/.codex/AGENTS.md` |
 | Project contract | Commands, data boundaries, actual architecture, review risks | Repository `AGENTS.md` and scoped overrides |
 | Canonical behavior | Engineering, context, research, testing, review | Relevant `core/` file |
-| House practice | Prior art, orchestration, writing, comments, evidence, and other opinionated choices | Relevant `custom/` file |
+| House practice | Prior art, orchestration, writing, comments, evidence, and other opinionated choices | Relevant `overlays/` file |
 | Decision index | Named concepts and source-backed candidates, loaded for the current choice | `concepts.yaml`, matching `signals/` and `providers/openai/signals.yaml` entries, then `sources.yaml` |
 | Standard backpack | A reusable native-capability and prior-art check for substantial development | `.agents/skills/standard/SKILL.md`, discovered as a Codex Agent Skill |
 | Provider and model facts | Discovery, configuration, available models and reasoning | `providers/` and `models/`, checked against the active host |
@@ -21,7 +21,7 @@ A file named in `AGENTS.md` is a pointer, not an automatic import. Read the smal
 
 The [`standard` skill](../.agents/skills/standard/SKILL.md) is the first concrete backpack. In this repository Codex discovers it from `.agents/skills`. To make the Git-owned skill available in local Codex work across repositories, link that folder into `~/.agents/skills/standard`. A symlink keeps the checkout canonical. In a new CLI or IDE session, use `$standard` explicitly for a substantial tooling or workflow choice; Codex may also select it when the task matches its description. Verify discovery in a fresh session before relying on implicit selection.
 
-The skill routes to relevant `custom/` files and checks matching concepts, shared signals, and OpenAI signals for the job at hand. It does not load every house file, install plugins, change model settings, or enforce the quality of a decision. `AGENTS.md` is the first-touch instruction mechanism; an Agent Skill is a discoverable procedure. Codex `.rules` can restrict exact command prefixes, hooks can inspect supported tool events, and CI or a linter can enforce repository rules. None is a universal filesystem boundary. A judgment such as “this tool fits the requirement” still needs evidence and review.
+The skill routes to relevant `overlays/` files and checks matching concepts, shared signals, and OpenAI signals for the job at hand. It does not load every house file, install plugins, change model settings, or enforce the quality of a decision. `AGENTS.md` is the first-touch instruction mechanism; an Agent Skill is a discoverable procedure. Codex `.rules` can restrict exact command prefixes, hooks can inspect supported tool events, and CI or a linter can enforce repository rules. None is a universal filesystem boundary. A judgment such as “this tool fits the requirement” still needs evidence and review.
 
 The current backpack is available through local Codex skill discovery. A future plugin package could distribute it across supported ChatGPT surfaces after its real use justifies that packaging. Other backpacks should be created for a distinct recurring job and checked against the standard baseline, rather than multiplying role names or copying the same rules.
 
@@ -32,9 +32,9 @@ To make these house defaults first-touch across Codex projects, put the followin
 ```markdown
 # Personal development context
 
-For substantial development work, inspect the current project's instructions, code, decisions, and tooling before choosing a new approach. The portable house guide is at ~/.ai/context-ai/custom/README.md. Read only the files relevant to the task; links do not load themselves.
+For substantial development work, inspect the current project's instructions, code, decisions, and tooling before choosing a new approach. The portable house guide is at ~/.ai/context-ai/overlays/README.md. Read only the files relevant to the task; links do not load themselves.
 
-Before a substantial new capability, dependency, service, protocol, development tool, or Codex workflow, use the `standard` skill when available. If it is unavailable, read ~/.ai/context-ai/custom/prior-art.md and, when choosing the implementation shape, ~/.ai/context-ai/custom/patterns.md. Use `ruby ~/.ai/context-ai/scripts/lookup.rb --search WORDS` to find the concept, then look it up with `--provider openai --product codex` for a Codex task. Record the reuse decision in the project's existing decision format. For model or agent choices, writing, code comments, or consequential claims, use the matching route in the house guide.
+Before a substantial new capability, dependency, service, protocol, development tool, or Codex workflow, use the `standard` skill when available. If it is unavailable, read ~/.ai/context-ai/overlays/prior-art.md and, when choosing the implementation shape, ~/.ai/context-ai/overlays/patterns.md. Use `ruby ~/.ai/context-ai/scripts/lookup.rb --search WORDS` to find the concept, then look it up with `--provider openai --product codex` for a Codex task. Record the reuse decision in the project's existing decision format. For model or agent choices, writing, code comments, or consequential claims, use the matching route in the house guide.
 
 Preserve current project contracts and unrelated work. Complete authorized implementation and proportional verification, and distinguish the evidence actually observed from claims that remain untested. The user's explicit instructions and the project's scoped rules take precedence over these defaults.
 ```
@@ -43,7 +43,7 @@ Codex reads global guidance at run or session start, then project instructions f
 
 ## Model and agent settings
 
-Use native Codex controls for model and reasoning choices. A semantic prompt tag is only advisory in an active conversation; a new CLI run or product model control must select the setting. Keep a model route's meaning stable while checking current model availability and supported effort on each surface. A normal instruction file does not enforce a model, install a skill, or spawn an agent by itself. Specialist agent work follows the session's delegation rules and the task packet in `custom/orchestration.md`.
+Use native Codex controls for model and reasoning choices. A semantic prompt tag is only advisory in an active conversation; a new CLI run or product model control must select the setting. Keep a model route's meaning stable while checking current model availability and supported effort on each surface. A normal instruction file does not enforce a model, install a skill, or spawn an agent by itself. Specialist agent work follows the session's delegation rules and the task packet in `overlays/orchestration.md`.
 
 ## Activation check
 

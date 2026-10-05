@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   repository:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -17,18 +17,20 @@ jobs:
         with:
           python-version: '3.12'
       - name: Install exact contract dependencies
-        run: python -m pip install --require-hashes -r requirements.txt
+        run: python -m pip install --require-hashes -r requirements-dev.txt
       - name: Validate repository and loadouts
         run: |
           ruby scripts/validate.rb
           python scripts/check_loadouts.py
           ruby scripts/lookup.rb context.skills --provider openai --product codex > /dev/null
+      - name: Lint Python semantics
+        run: ruff check scripts tests
       - name: Test product contracts
         run: python -m unittest discover -s tests -v
       - name: Check whitespace
         run: git diff --check "$(git hash-object -t tree /dev/null)" HEAD
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v6

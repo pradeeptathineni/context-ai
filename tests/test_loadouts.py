@@ -1,6 +1,4 @@
 import copy
-import hashlib
-import importlib.util
 import json
 from pathlib import Path
 import shutil
@@ -106,3 +104,29 @@ class Loadouts(unittest.TestCase):
         p.write_bytes(original)
         self.assertTrue(c.undo(self.project)['undone'])
         c.apply(self.project,lock,files);c.verify(self.project)
+
+    def test_project_brand_intent_and_primary_procedure_change_actual_closure(self):
+        intent='Paper maps, warm ink, restrained motion; preserve the existing wordmark'
+        guided,guided_files=c.resolve(['web-experience'],self.project,'codex',{'brand':intent,'design_procedure':'guided'})
+        light,light_files=c.resolve(['web-experience'],self.project,'codex',{'brand':intent,'design_procedure':'lightweight'})
+        self.assertEqual(light['options']['brand'],intent)
+        self.assertIn('procedures/web-design-lightweight.md',light_files)
+        self.assertIn('sourced/anthropic/design/LICENSE.txt',light_files)
+        self.assertNotIn('sourced/impeccable/design/reference/new-work.md',light_files)
+        self.assertIn('sourced/impeccable/design/reference/new-work.md',guided_files)
+        self.assertLess(len(light_files),len(guided_files))
+        c.apply(self.project,light,light_files);c.verify(self.project)
+        self.assertTrue(c.undo(self.project)['undone'])
+        with self.assertRaisesRegex(c.Invalid,'does not apply'):c.resolve(['service-api'],self.project,'codex',{'brand':intent})
+
+    def test_refresh_new_selection_drops_inapplicable_inherited_options(self):
+        lock,files=c.resolve(['web-experience'],self.project,'codex',{'brand':'Project intent','design_procedure':'lightweight'})
+        c.apply(self.project,lock,files);before=(self.project/'.context-ai/lock.json').read_bytes()
+        command=[sys.executable,str(ROOT/'scripts/context_ai.py'),'refresh','service-api','--project',str(self.project)]
+        run=subprocess.run(command,capture_output=True,text=True)
+        self.assertEqual(run.returncode,0,run.stderr)
+        self.assertEqual(json.loads(run.stdout)['resolution']['options'],{})
+        self.assertEqual(before,(self.project/'.context-ai/lock.json').read_bytes())
+        rejected=subprocess.run(command+['--brand','Explicit invalid override'],capture_output=True,text=True)
+        self.assertNotEqual(rejected.returncode,0)
+        self.assertIn('does not apply',rejected.stderr)

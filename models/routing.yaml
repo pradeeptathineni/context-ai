@@ -1,5 +1,5 @@
 schema_version: 1
-release_version: "0.3.0"
+release_version: "0.4.0"
 name: model-routing
 description: >-
   Provider-aware policy for selecting a model profile and reasoning level from

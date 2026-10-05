@@ -97,3 +97,57 @@ decisions:
     snapshot when required.
   revisit_when: A real consumer needs unsupported provider distribution or fails recovery/portability
     invariants.
+- id: D-020
+  revision: 1
+  supersedes: null
+  concept: web.design
+  action: adapt
+  selection: Project brand intent and one selected primary design procedure
+  rationale: Keep the already pinned instruction-only references. Guided critique suits new surfaces;
+    a concise reference suits bounded changes within an established system. Two palette labels cannot
+    represent project intent.
+  evidence:
+  - sources.lock.json:impeccable
+  - sources.lock.json:anthropic
+  - tests/test_loadouts.py
+  applicability: Web selections only; guided default, lightweight explicit at a checkpoint; brand text
+    remains subordinate to user/project authority.
+  alternatives:
+  - One heavy procedure for every web edit
+  - Load both primary procedures
+  - Select one procedure and keep browser acceptance constant
+  unknowns:
+  - No human evaluation or model-input measurement establishes superior design outcomes.
+  validation:
+  - Both closures retain selected source notices and browser checks; lightweight excludes guided resources.
+  - Existing web fixture passes four widths, interactions and axe; screenshots inspected as builder judgment.
+  rollback: Propose and review guided on refresh; apply only at a checkpoint; undo retains user edits.
+  revisit_when: A real task shows insufficient guidance or conflicting project visual intent.
+- id: D-021
+  revision: 1
+  supersedes: null
+  concept: quality.strategy
+  action: adopt
+  selection: Exact Ruff semantic lint alongside retained contract and browser gates
+  rationale: A bounded F/E9 trial found four unused imports and a dead local. Retain Ruby for authored
+    Markdown/model/source rules, Python for exact schemas/ownership, and Node for Playwright; rewriting
+    working responsibilities would add risk without a demonstrated benefit.
+  evidence:
+  - https://docs.astral.sh/ruff/linter/
+  - ruff.toml
+  - requirements-dev.txt
+  - scripts/validate.rb
+  - scripts/check_loadouts.py
+  applicability: Development and CI only; no consumer tooling installation or format rewrite.
+  alternatives:
+  - Hand-maintain import/style checks
+  - Port all validation to one runtime
+  - Add the focused maintained linter and preserve distinct gates
+  unknowns:
+  - No measured development speedup; Python lint does not validate prose or model behavior.
+  validation:
+  - Pinned Ruff 0.16.10 F/E9 passes scripts/tests after the five trial findings were removed.
+  - Ruff cache is excluded from authored-text validation; browser and contract suites remain separate.
+  rollback: Remove the dev-only gate and exact dependency; retain all product tests.
+  revisit_when: Duplicated validation or runtime burden demonstrates that a small consolidation preserves
+    discriminating checks.

@@ -151,3 +151,24 @@ signals:
       more AI reviewers are better.
     source_refs:
     - development-review-study
+  quality.strategy:
+  - id: ruff-semantic-lint
+    name: Ruff focused Python semantic lint
+    type: tool
+    use_when: Python development needs maintained unused-import and syntax checks.
+    boundary: Project-selected rules only; neither behavioral correctness nor prose judgment.
+    source_refs:
+    - ruff-linter
+  web.design:
+  - id: guided-design
+    name: Guided instruction-only design
+    type: practice
+    use_when: A new web surface or substantial critique needs a structured design loop.
+    boundary: Select one primary procedure; project visual intent wins and browser checks remain required.
+    source_refs: [impeccable-design]
+  - id: lightweight-design
+    name: Concise frontend design reference
+    type: practice
+    use_when: A bounded change preserves an existing visual system.
+    boundary: Propose guided at a checkpoint if insufficient; no comparative human benefit is established.
+    source_refs: [anthropic-design]

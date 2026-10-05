@@ -198,7 +198,13 @@ def resolve(ids, project, provider, options=None):
         for c, state in d['capabilities'].items():
             capabilities[c] = 'required' if state=='required' or capabilities.get(c)=='required' else 'optional'
     for key, value in (options or {}).items():
-        if key != 'brand' or value not in ('quiet','expressive') or 'brand' not in resolved_options:
+        if key not in resolved_options:
+            raise Invalid('option does not apply to this selection: '+key)
+        if key=='brand' and (not isinstance(value,str) or not value.strip() or len(value)>2000):
+            raise Invalid('brand intent must be 1-2000 characters')
+        if key=='design_procedure' and value not in ('guided','lightweight'):
+            raise Invalid('unsupported design procedure')
+        if key not in ('brand','design_procedure'):
             raise Invalid('unsupported option '+key)
         resolved_options[key] = value
     current = current_decisions()
@@ -206,6 +212,11 @@ def resolve(ids, project, provider, options=None):
         if d not in current:
             raise Invalid('unknown decision '+d)
     registry = read_yaml(ROOT/'capabilities.yaml')['capabilities']
+    if resolved_options.get('design_procedure')=='lightweight':
+        registry['context-web-design']={**registry['context-web-design'],
+            'path':'procedures/web-design-lightweight.md',
+            'description':'Use concise frontend design guidance for bounded web changes.',
+            'files':['sourced/anthropic/design/instruction.md','sourced/anthropic/design/LICENSE.txt']}
     states = capability_states(capabilities,registry)
     files = resources([p for paths in stages.values() for p in paths]+['skills/context-loadout/SKILL.md','providers/openai/codex.md','LICENSE'])
     for c in capabilities:
@@ -374,7 +385,6 @@ def apply(project,lock,files):
            'routing_block':router(lock),'agents_created':previous['agents_created'] if previous else not agents.exists(),
            'agents_added_newline':previous.get('agents_added_newline',False) if previous else bool(text and not text.endswith('\n'))}
     validate_schema('installation',state)
-    statepath=inside(project,'.context-ai/lock.json')
     data=encoded(state)
     desired={**targets,'AGENTS.md':updated.encode(),'.context-ai/lock.json':data}
     desired.update({name:None for name in set(old_owned)-set(targets)})
@@ -523,7 +533,8 @@ def main():
     parser.add_argument('--project')
     parser.add_argument('--lock',type=Path,help='Apply an exact portable lock against this source checkout')
     parser.add_argument('--provider',default='codex')
-    parser.add_argument('--brand',choices=['quiet','expressive'])
+    parser.add_argument('--brand',help='Project visual intent, 1-2000 characters')
+    parser.add_argument('--design-procedure',choices=['guided','lightweight'])
     args=parser.parse_args()
     if args.command in ('list','explain'):
         loads=catalogue()
@@ -538,7 +549,7 @@ def main():
         if not args.project or not Path(args.project).is_absolute() or not Path(args.project).is_dir() or Path(args.project).is_symlink():
             raise Invalid('an existing absolute project directory is required')
         project=Path(args.project).resolve()
-        if args.lock and (args.command!='apply' or args.loadouts or args.brand):
+        if args.lock and (args.command!='apply' or args.loadouts or args.brand or args.design_procedure):
             raise Invalid('--lock is only for apply without new selections/options')
         if args.command=='recover':
             result=recover(project)
@@ -561,7 +572,12 @@ def main():
                 if not state:
                     raise Invalid('no installation to refresh')
                 ids=state['resolution']['loadouts']
-            options={'brand':args.brand} if args.brand else (state['resolution']['options'] if args.command=='refresh' and state else {})
+            options={}
+            if args.command=='refresh' and state:
+                applicable=resolve(ids,project,args.provider)[0]['options']
+                options={key:value for key,value in state['resolution']['options'].items() if key in applicable}
+            if args.brand is not None:options['brand']=args.brand
+            if args.design_procedure is not None:options['design_procedure']=args.design_procedure
             if args.lock:
                 lock=json.loads(args.lock.read_text());files=pinned_files(lock)
             else:

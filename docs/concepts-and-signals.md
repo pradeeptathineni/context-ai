@@ -9,7 +9,7 @@
 | Location | Role |
 | --- | --- |
 | `core/*.md` | Concise, durable behavior shared across providers. It is selective, not an exhaustive encyclopedia. |
-| `overlays/*.md` | The maintainer's optional house practice, also provider neutral. `custom` means project-owned specialization, not a catch-all for provider variants. |
+| `overlays/*.md` | The maintainer's optional house practice, also provider neutral. Old `custom/` paths are compatibility routers. |
 | `concepts.yaml` | Stable names for decision areas. It carries no executable or behavioral instruction. |
 | `signals/common.yaml` | Provider-neutral standards, tools, and practices worth considering for a named concept. |
 | `providers/<provider>/signals.yaml` | Provider-specific candidates, each scoped to the products it applies to. |
@@ -23,7 +23,7 @@ There is no provider copy of `core/` or `overlays/`. A provider-specific excepti
 1. Read the current task, repository contract, and the smallest relevant `core/` or `overlays/` guidance.
 2. Identify the decision in `concepts.yaml`. Use `ruby scripts/lookup.rb --search WORDS` to find an ID, then `ruby scripts/lookup.rb CONCEPT_ID --provider openai --product codex` for a Codex task. The [lookup script](../scripts/lookup.rb) prints matching common and provider signals with their source links. A missing signal means there is no endorsed candidate in this index yet.
 3. Open each relevant `source_refs` entry in `sources.yaml`, check the current product and environment, and assess fit against the project's requirements. Read the original source for detail rather than treating the short signal as complete documentation.
-4. Make the choice using [`custom/prior-art.md`](../custom/prior-art.md) when consequential. Record the selected owner, evidence, unknowns, and revisit trigger in the project's existing decision artifact.
+4. Make the choice using [`overlays/prior-art.md`](../overlays/prior-art.md) when consequential. Record the selected owner, evidence, unknowns, and revisit trigger in the project's existing decision artifact.
 
 For example, `context.skills` points to the open Agent Skills specification and Codex's implementation. This makes a skill a serious option for a repeatable procedure. The actual procedure, client support, and available tools determine whether it works. `research.prior_art` points to ShouldaUsedThat and Maestro AI decisions as useful practice; their source evidence does not turn their implementation choices into universal mandates.
 

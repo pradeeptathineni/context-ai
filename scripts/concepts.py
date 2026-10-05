@@ -46,6 +46,8 @@ def validate_catalog(entries, decisions):
         for path in entry['modules']:
             if not inside(ROOT,path).is_file():raise Invalid('broken concept module: '+path)
         coverage=entry['coverage']
+        if set(coverage) - {'disposition','rationale','source_refs','claim_refs','decisions','uncertainty','next_action'}:
+            raise Invalid('unknown coverage fields: '+id)
         if coverage['disposition'] not in dispositions or not coverage['rationale'] or not coverage['uncertainty'] or not coverage['next_action']:
             raise Invalid('incomplete concept coverage: '+id)
         if any(ref not in sources for ref in coverage['source_refs']):raise Invalid('unresolved concept source: '+id)

@@ -1,0 +1,5 @@
+# Choose design guidance
+
+Inspect the pinned `.context-ai/lock.json` resolution options. `design_procedure: guided` selects [Impeccable guidance](web-design.md) for a new surface, substantial visual change or deliberate critique loop. `lightweight` selects [concise frontend guidance](web-design-lightweight.md) for bounded work within an established visual system. Only the selected primary procedure is installed; the other link is further reading from the source checkout.
+
+Read the current project's intent and existing style first. Brand is the project's own direction, not a universal palette category. Retain intentional visual choices. Use the applicable browser/accessibility checks for either procedure; the smaller instruction set does not lower acceptance requirements. Propose a different pin at a task boundary when the selected guidance proves too broad or insufficient.

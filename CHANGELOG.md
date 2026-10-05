@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-05
+
+- Added bounded project brand intent and explicit guided/lightweight design selection; only the chosen primary resources ship, with unchanged browser acceptance.
+- Corrected proposed refresh to retain applicable options when changing selections and reject explicit inapplicable overrides.
+- Added exact dev-only Ruff semantic lint after a five-finding trial; retained the distinct authored-text, structured-contract and browser validators.
+- Updated active adoption routes and schema guidance; pinned CI to Ubuntu 24.04 after hosted-runner acquisition failures.
+
 ## [0.3.0] - 2026-10-05
 
 - Unified PACT/HRR with the canonical prior-art workflow and an instruction-only skill.
@@ -65,6 +72,8 @@ The premature v1.0.0 release/tag at `a0b6a3bbd2e1dc2c58629f6ea462e180bd12ce93` w
 - Refined the existing model-routing policy into a documented schema with current OpenAI bindings, explicit matching semantics, and source review metadata.
 - Expanded the public README around progressive disclosure, layer boundaries, usage, and release scope.
 
-[Unreleased]: https://github.com/pradeeptathineni/context-ai/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/pradeeptathineni/context-ai/compare/v0.4.0...HEAD
+[0.4.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pradeeptathineni/context-ai/tree/v0.1.0

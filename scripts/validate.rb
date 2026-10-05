@@ -68,6 +68,8 @@ REQUIRED = %w[
   capabilities.yaml
   sources.lock.json
   requirements.txt
+  requirements-dev.txt
+  ruff.toml
   .github/workflows/validate.yml
 ].freeze
 
@@ -100,7 +102,7 @@ agents = ROOT.join("AGENTS.md")
 error("AGENTS.md exceeds the 8 KiB routing budget") if agents.file? && agents.size > 8 * 1024
 
 text_files = Dir.glob(ROOT.join("**/*"), File::FNM_DOTMATCH).select do |path|
-  File.file?(path) && !path.include?("/.git/") && !relative(path).start_with?(".agents/skills/context-") && !%w[.context-ai .venv __pycache__ node_modules .examples-output].any? { |dir| Pathname.new(relative(path)).each_filename.include?(dir) }
+  File.file?(path) && !path.include?("/.git/") && !relative(path).start_with?(".agents/skills/context-") && !%w[.context-ai .venv __pycache__ node_modules .examples-output .ruff_cache].any? { |dir| Pathname.new(relative(path)).each_filename.include?(dir) }
 end
 
 text_files.each do |file|
