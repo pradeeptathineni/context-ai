@@ -21,8 +21,8 @@
 ## Boundaries
 
 - `core/` is canonical and provider-independent.
-- `overlays/` contains house standards derived from `core/`; select relevant files by task. `custom/` retains compatibility routers. Specialize by reference instead of duplicating canonical rules.
-- `domains/` contains concern-specific modules; `loadouts/` selects stages, resources and capabilities. Use `skills/context-loadout/SKILL.md` and `docs/loadouts.md` for project-local composition. Pin each work stage and record actual use separately from installation.
+- `overlays/` contains house standards derived from `core/`; select relevant files by task. Specialize by reference instead of duplicating canonical rules.
+- `domains/` contains concern-specific modules. Read a relevant file directly for a one-off task. For a recurring project selection, use `skills/context-loadout/SKILL.md` and `docs/loadouts.md` to pin resources and stage routes. Report what was actually read or invoked separately from installation.
 - `models/` is machine-readable configuration; do not turn volatile model facts into prose-only guidance.
 - `providers/` describes provider behavior without duplicating `core/`.
 - `concepts.yaml` is a provider-neutral decision index. Signal files map some concepts to sourced prior art and product capabilities; a missing signal is not a missing concept.

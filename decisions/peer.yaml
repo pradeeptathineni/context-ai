@@ -1,7 +1,7 @@
 schema_version: 1
 decisions:
 - id: D-005
-  concept: evidence-decision-separation
+  concept: research.decision
   action: adopt
   selection: Signals evidence -> Context decision -> project lock -> use receipt
   rationale: The real agent-assisted Signals checkpoint passed exact-byte and semantic admission.

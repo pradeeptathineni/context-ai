@@ -2,7 +2,7 @@ schema_version: 1
 reviewed: '2026-10-05'
 decisions:
 - id: D-001
-  concept: agent-instruction-entrypoint
+  concept: context.instructions
   action: adopt
   selection: AGENTS.md
   rationale: Use the cross-agent repository instruction convention as the small routing entry point.
@@ -18,7 +18,7 @@ decisions:
   - Project-specific instruction conventions
   - Small interoperable AGENTS router
 - id: D-002
-  concept: progressive-procedure-packaging
+  concept: context.skills
   action: adopt
   selection: Agent Skills / SKILL.md
   rationale: Use skills for on-demand procedures and references rather than expanding always-loaded instructions.
@@ -34,7 +34,7 @@ decisions:
   - Always-loaded procedure text
   - On-demand SKILL.md or explicit resource reads
 - id: D-003
-  concept: canonical-behavior-format
+  concept: context.instructions
   action: adopt
   selection: Markdown context modules
   rationale: Keep durable human/LLM-readable behavioral guidance diffable and provider-neutral.
@@ -50,7 +50,7 @@ decisions:
   - Prose modules
   - Structured data for executable/configuration contracts
 - id: D-004
-  concept: loadout-definition
+  concept: context.loadouts
   action: adopt
   selection: declarative YAML manifests
   rationale: Compose references to context, skills, capabilities and checks without inventing an executable
@@ -68,7 +68,7 @@ decisions:
   - Declarative YAML composition
   - Executable installer DSL
 - id: D-005
-  concept: evidence-decision-separation
+  concept: research.decision
   action: adopt
   selection: Signals evidence -> Context decision -> project lock -> use receipt
   rationale: Preserve the difference between what sources support, what a project adopts, what is installed,
@@ -85,7 +85,7 @@ decisions:
   - Treat recommendations as activation
   - Separate supported claims, adoption, installation and use
 - id: D-006
-  concept: context-runtime-boundary
+  concept: architecture.boundaries
   action: adopt
   selection: no general agent runtime in context-ai
   rationale: Context AI equips existing agents; it should not duplicate orchestration/execution runtimes.
@@ -102,7 +102,7 @@ decisions:
   - Existing agent host
   - Custom orchestration runtime
 - id: D-007
-  concept: web-design-workflow
+  concept: web.design
   action: trial
   selection: Impeccable
   rationale: Strong existing workflow for product truth, design shaping, critique, audit and browser iteration;
@@ -119,7 +119,7 @@ decisions:
   - Concise design reference
   - Guided design procedure
 - id: D-008
-  concept: frontend-design-reference
+  concept: web.design
   action: adopt
   selection: Anthropic frontend-design skill as reference/fallback
   rationale: Strong concise design guidance and a useful upstream source for visual design behavior.
@@ -135,7 +135,7 @@ decisions:
   - Guided Impeccable flow
   - Concise Anthropic reference
 - id: D-009
-  concept: react-web-guidance
+  concept: context.skills
   action: adopt
   selection: Vercel agent skills where stack-relevant
   rationale: Use targeted React/web review guidance rather than impose a framework migration.
@@ -151,7 +151,7 @@ decisions:
   - Framework-neutral web checks
   - Stack-matched React rules
 - id: D-010
-  concept: browser-accessibility-validation
+  concept: quality.accessibility
   action: adopt
   selection: Playwright + axe + human/agent screenshot critique
   rationale: Combine deterministic browser/a11y checks with actual visual inspection; neither alone proves
@@ -168,7 +168,7 @@ decisions:
   - Static checks alone
   - Browser interactions plus axe and screenshot judgment
 - id: D-011
-  concept: signals-foundation
+  concept: architecture.composition
   action: adopt
   selection: preserve existing Signals TypeScript/PostgreSQL/research architecture unless evidence shows
     a real gap
@@ -185,7 +185,7 @@ decisions:
   - Retain producer mechanisms
   - Replace the producer architecture
 - id: D-012
-  concept: source-selection-policy
+  concept: research.credibility
   action: adopt
   selection: authoritative specs -> first-party docs/repos -> maintained adopted OSS -> strong engineering
     publications -> project synthesis
@@ -202,7 +202,7 @@ decisions:
   - Popularity-led selection
   - Primary sources and bounded contextual trials
 - id: D-013
-  concept: version-control-guidance
+  concept: delivery.git
   action: adopt
   selection: dedicated canonical VCS context grounded in Git and selected commit conventions
   rationale: Commit/history safety and reviewability recur across every software project and should not
@@ -219,7 +219,7 @@ decisions:
   - Embed history safety in delivery prose
   - Dedicated canonical VCS context
 - id: D-014
-  concept: code-commenting-guidance
+  concept: quality.comments
   action: adopt
   selection: dedicated canonical code-comment context grounded in language/platform engineering guidance
   rationale: Comments should preserve intent, invariants and non-obvious constraints without narrating

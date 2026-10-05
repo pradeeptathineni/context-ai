@@ -1,20 +1,25 @@
 # context-ai
 
-Evidence-backed context and project loadouts for AI-assisted development.
+Context AI is a library of guidance for AI-assisted software work. Read one relevant file for a task, or pin a selected set of files (a **loadout**) in a project that will use them repeatedly. Your agent still follows that project's instructions and runs its checks.
 
-Choose the guidance a project needs, pin it, and use it through the agent you already have. Context AI provides concise behavioral modules, a practical web design/verification procedure, and project-local Codex delivery with file ownership and undo. It keeps source evidence, adoption decisions, installed resources, and actual use separate.
+The library covers engineering, research, writing, web work, APIs, infrastructure, and evaluation. It also records where consequential guidance came from. The [project loadout tool](docs/loadouts.md) currently delivers selected files to Codex projects; it does not run an agent or install the tools those files discuss.
 
 ## Use it for a task
 
-Start with the consuming project's instructions and intended change. Context is optional guidance: read it when it can improve a decision or catch a failure.
+Start with the consuming project's instructions and the change you need to make. Then choose a route:
 
-For a small settled task, read a relevant module directly from an exact checkout or archive. No Python environment, installation or receipt file is needed. For example, a README usage change may need [writing guidance](overlays/writing.md); verify the example against the real API and run the project's own checks. Skip design, deployment and unrelated stage guidance. If the project already supplies sufficient instructions, say so and complete the task.
+| Need | Start here |
+| --- | --- |
+| One task | Read a relevant file from an exact Context checkout or archive. A README change, for example, may benefit from [writing guidance](overlays/writing.md). No setup or receipt is required. |
+| Repeated work in one project | Use the [context-loadout skill](skills/context-loadout/SKILL.md) to choose, preview, and pin a loadout. Read only the guidance for the current stage. |
+
+If the project's own guidance is enough, complete the task with that. For either route, check claims against the project and run its relevant tests.
 
 An ordinary agent request can be:
 
 > Use Context AI at SOURCE_PATH for this maintenance task. Preserve this repository's instructions, read only guidance that helps the change, implement it, and run the relevant project checks. Report what you used and what the checks showed.
 
-For a reusable project selection, use the [context-loadout skill](skills/context-loadout/SKILL.md) and the command below. Pin the selection once, then read only the current stage. Installation does not run the project tests.
+For a loadout, choose the work it must support:
 
 | Loadout | Select when |
 | --- | --- |
@@ -27,7 +32,7 @@ For a reusable project selection, use the [context-loadout skill](skills/context
 | aws-infrastructure | Existing Terraform/AWS planning or validation is involved |
 | release-review | An authorized publication needs compatibility and release checks |
 
-Selections compose; `react-web` includes `web-experience`. A bounded existing web edit can choose `--design-procedure lightweight`; substantial design work defaults to guided. Preserve the user's brand and choose one primary procedure. Backend and documentation tasks do not select the design suite.
+Selections compose; `react-web` includes `web-experience`. A bounded existing web edit can choose `--design-procedure lightweight`; substantial design work defaults to guided. The [loadout guide](docs/loadouts.md) describes options and composition.
 
 Run these commands **from the Context source directory**, using Python 3.10+ and a source-local environment. The target is the consuming project's absolute directory:
 
@@ -40,44 +45,63 @@ python3 -m venv .venv
 .venv/bin/python scripts/context_ai.py verify --project /absolute/project
 ```
 
-Review the plan before applying. It lists resources, stage routes, capabilities, options, suggested checks and owned writes. Application copies into `.context-ai/`, creates selected skill routers and appends one managed AGENTS block; existing instructions and edited files are protected. `verify` checks that installation and required runtime probes; it reports project checks as **not run**. Execute the relevant task checks from the **consumer directory** and inspect the resulting diff. Report actual reads, invocations and outcomes in the task result; a structured use receipt is optional for a comparison or audit.
+Review the plan before applying: it shows the files and project changes. Application copies selected resources into `.context-ai/`, creates skill routers and adds a managed block to the project's `AGENTS.md`. It protects existing instructions and edited files. `verify` checks the installation and required runtime probes; it reports project checks as **not run**. Run those checks from the **consumer directory** and inspect its diff. Report what you actually read, invoked, and checked; a structured use receipt is optional for a comparison or audit.
 
-`refresh` proposes a new lock/diff; `undo` removes unchanged owned files and preserves user edits. See the [command contract](docs/loadouts.md) for changing a selection, [compatibility and recovery](docs/compatibility.md) for moving or restoring it, and the [Codex adapter](providers/openai/codex.md) for discovery limits. An exported source works without Git metadata; its resource hashes still pin the selected bytes.
+`refresh` previews changes to a selection; `undo` removes unchanged owned files and preserves user edits. See the [command contract](docs/loadouts.md) for details, [compatibility and recovery](docs/compatibility.md) for moving or restoring a selection, and the [Codex adapter](providers/openai/codex.md) for discovery limits.
 
-## What lives where
+## How the parts fit
 
-- [core](core/engineering.md): canonical provider-independent behavior, including comments, version control and prior art.
-- [domains](domains/web/design.md): concern-specific web, service and infrastructure guidance.
-- [overlays](overlays/README.md): opt-in house policy; old custom paths remain compatibility routers.
-- [loadouts](loadouts/standard.yaml): authored selections for recurring project work; task use is reported separately.
-- [context-loadout skill](skills/context-loadout/SKILL.md): selection/use procedure, alongside the preserved local standard skill.
-- [concepts](concepts.yaml) and [sources](sources.yaml): decision areas and original references. Use `.venv/bin/python scripts/context_ai.py decisions` for the resolved current choices, or `explain LOADOUT` for choices applying to a selection; predecessors stay outside that reading path.
-- [source lock](sources.lock.json) and inactive sourced snapshots: exact upstream pins with licences/notices.
-- [model routing](models/routing.yaml): stable logical profiles and reviewed provider bindings; no global settings change.
+| Part | Job |
+| --- | --- |
+| [Concepts](concepts.yaml) | Name distinct decisions an agent may need to make. |
+| [Signals](signals/common.yaml) | Offer sourced options for some concepts; an option is not a selection. |
+| [Decisions](decisions/composition.yaml) | Record what Context currently chose, why, and when to reconsider. |
+| [Core](core/engineering.md) | Give short provider-independent behavior for actual work. |
+| [Overlays](overlays/README.md) and [domains](domains/web/design.md) | Add optional house practice or concern-specific guidance. |
+| [Skills](skills/context-loadout/SKILL.md) | Route a repeatable procedure when the agent discovers or explicitly reads it. |
+| [Loadouts](loadouts/standard.yaml) | Select and pin files and capabilities for repeated project work. |
+| [Provider adapter](providers/openai/codex.md) | Explain how a particular agent host receives the selected guidance. |
+| Local installation and use | Record owned files in the project; report actual reads, invocations and checks in the task result. |
 
-## Proof and limits
+A task selects the relevant guidance directly or through a loadout. [Concept lookup](scripts/lookup.rb) can surface options for a consequential choice; [model routing](models/routing.yaml) keeps volatile model bindings structured. Evidence informs a decision, and installation makes selected resources available. The agent still has to read them and do the work.
 
-Tests cover all eight selections, explicit dependency closure, portable pins, edited-file protection and interruption recovery. The existing [web exercise](examples/web/brief.md) checks four widths, two example palettes, interactions and accessibility with Playwright/axe. [References](docs/references.md) records source influences and review dates. These are deterministic and builder checks; human usefulness and model input savings remain unmeasured.
+## Change this library
 
-Codex is the current delivery adapter. Impeccable binaries/hooks/extensions are excluded; its selected documentation works through direct reads. This is a context library, with no agent runtime, automatic tool installation, deployment side effects or signal-scoring engine. Installation verification suggests project-specific checks; the working agent must execute them. Fixture tests, local browser judgment and self-reported reads do not prove production behavior, human usefulness, or native skill activation. Signals evidence advice never grants installation authority.
+Start with [repository guidance](AGENTS.md). Read the relevant `core/` and `overlays/` files for your change; a link in `AGENTS.md` is a route, not a file you have already loaded. For a docs change, check the prose against the actual command or API behavior before editing. Keep canonical rules in `core/`, put optional house practice in `overlays/`, and add a loadout or dependency only for a real consumer.
 
-For library development, use Python 3.10+, Ruby and Node 20+ (Node 24 in CI). The full Python suite materializes every loadout and probes Node, including during a docs change; a consumer selecting `standard` needs only its declared Python/Git prerequisites. The browser gate also requires the pinned Chromium runtime. Use an existing supported Node on the command PATH; these checks do not install or switch it.
-
-Run the deterministic gates:
+For a first checkout, use Python 3.10+, Ruby, and Node 20+ (CI uses Node 24). Create a source-local environment and install the development dependencies:
 
 ```sh
+python3 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r requirements-dev.txt
-.venv/bin/ruff check scripts tests
+```
+
+Run these repository checks before handing off a change:
+
+```sh
 ruby scripts/validate.rb
-.venv/bin/python scripts/check_loadouts.py
-.venv/bin/python -m unittest discover -s tests -v
-npm ci --ignore-scripts
-npm run build:web
-npm run test:web
+.venv/bin/python -m unittest discover -s tests
 git diff --check
 ```
 
-The browser gate uses Node 24 in CI (Node 20+ required) and the pinned Playwright Chromium runtime: `node node_modules/playwright/cli.js install chromium`. CI also preserves its screenshots and results.
+The Python suite materializes every loadout and probes Node, even for docs changes. For the full CI path, also run Ruff and loadout validation, then the web build and browser tests:
+
+```sh
+.venv/bin/ruff check scripts tests
+.venv/bin/python scripts/check_loadouts.py
+npm ci --ignore-scripts
+node node_modules/playwright/cli.js install chromium
+npm run build:web
+npm run test:web
+```
+
+The browser tests need the pinned Playwright Chromium runtime. Use an existing supported Node on your `PATH`; these commands do not install or switch Node. See [references](docs/references.md) for source reviews, [compatibility](docs/compatibility.md) for migrations, and [CHANGELOG](CHANGELOG.md) for releases.
+
+## Proof and limits
+
+Tests exercise all eight loadouts, portable file pins, edited-file protection and recovery from interrupted application. The [web exercise](examples/web/brief.md) includes browser, interaction and accessibility checks. These are automated and builder checks; human usefulness and model input savings remain unmeasured.
+
+Installation verification does not run consumer project tests. Fixture tests, local browser checks and reported file reads do not establish production behavior, human usefulness or native skill activation. The [loadout guide](docs/loadouts.md#evidence-discovery-and-limits) details these boundaries.
 
 Library releases use immutable annotated tags and [CHANGELOG](CHANGELOG.md). Schema versions remain independent. Repository-owned content is [MIT](LICENSE); upstream snapshots retain their own declared licences and notices.
 

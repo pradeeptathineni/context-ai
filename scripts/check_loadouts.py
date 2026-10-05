@@ -15,15 +15,8 @@ def check():
     concepts=catalog()
     validate_catalog(concepts, decisions)
     ids=set(concepts)
-    seed_aliases={
-        'agent-instruction-entrypoint':'context.instructions','progressive-procedure-packaging':'context.skills',
-        'canonical-behavior-format':'context.instructions','loadout-definition':'context.loadouts',
-        'evidence-decision-separation':'research.confidence','context-runtime-boundary':'context.loadouts',
-        'web-design-workflow':'web.design','frontend-design-reference':'web.design','react-web-guidance':'web.design',
-        'browser-accessibility-validation':'quality.accessibility','signals-foundation':'context.loadouts',
-        'source-selection-policy':'research.confidence','version-control-guidance':'delivery.git','code-commenting-guidance':'quality.comments'}
     for d in decisions.values():
-        if seed_aliases.get(d['concept'],d['concept']) not in ids:raise ValueError('unresolved decision concept')
+        if d['concept'] not in ids:raise ValueError('unresolved decision concept')
         for field in ('rationale','applicability','rollback','revisit_when'):
             if not isinstance(d[field],str) or not d[field].strip():raise ValueError('incomplete decision '+d['id'])
         for field in ('evidence','alternatives','unknowns','validation'):

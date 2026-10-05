@@ -34,19 +34,6 @@ REQUIRED = %w[
   core/review.md
   core/benchmarking.md
   core/versioning.md
-  custom/README.md
-  custom/project-intent.md
-  custom/technical-design.md
-  custom/ai-implementation.md
-  custom/context-efficiency.md
-  custom/delivery.md
-  custom/prior-art.md
-  custom/patterns.md
-  custom/orchestration.md
-  custom/model-deliberation.md
-  custom/writing.md
-  custom/code-comments.md
-  custom/evidence-claims.md
   models/routing.yaml
   providers/openai/codex.md
   docs/adoption.md
@@ -88,11 +75,10 @@ REQUIRED.each do |name|
 end
 
 core_files = Dir.glob(ROOT.join("core/*.md")).sort
-custom_files = Dir.glob(ROOT.join("custom/*.md")).sort
 skill_files = Dir.glob(ROOT.join(".agents/skills/*/SKILL.md")).reject { |path| relative(path).start_with?(".agents/skills/context-") }.sort
 overlay_files = Dir.glob(ROOT.join("overlays/*.md")).sort
 domain_files = Dir.glob(ROOT.join("domains/**/*.md")).sort
-context_files = core_files + custom_files + overlay_files + domain_files
+context_files = core_files + overlay_files + domain_files
 context_files.each do |file|
   words = File.read(file).scan(/\S+/).length
   error("context is too large (#{words} words): #{relative(file)}") if words > 1_200
@@ -300,7 +286,6 @@ references = ROOT.join("docs/references.md")
 reference_text = references.file? ? references.read : ""
 accounted_artifacts = (
   core_files +
-  custom_files +
   overlay_files +
   domain_files +
   skill_files +

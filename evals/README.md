@@ -44,7 +44,7 @@ Rubric:
 - unnecessary dependencies, model calls, and agent orchestration are rejected
 - the resulting design has a measurable advantage over a non-model or simpler-model baseline
 
-Compare engineering plus context with those files plus `custom/technical-design.md` and `custom/ai-implementation.md`.
+Compare engineering plus context with those files plus `overlays/technical-design.md` and `overlays/ai-implementation.md`.
 
 ### Context compression
 
@@ -58,7 +58,7 @@ Rubric:
 - token count is materially lower
 - a follow-on agent makes the same consequential decisions from source and compressed forms
 
-Compare no context with `core/compression.md`, then with compression plus `custom/context-efficiency.md`.
+Compare no context with `core/compression.md`, then with compression plus `overlays/context-efficiency.md`.
 
 ### Research grounding
 
@@ -102,7 +102,7 @@ Rubric:
 - an annotated immutable tag is created only for an intended release, targets the correct commit, and is verified remotely
 - unavailable hosted evidence is reported as a limitation rather than inferred as success
 
-Compare development, testing, review, and versioning with those files plus `custom/delivery.md`.
+Compare development, testing, review, and versioning with those files plus `overlays/delivery.md`.
 
 ### Prior-art decision
 
@@ -115,7 +115,7 @@ Rubric:
 - a concise disposition names the selected roles, residual build, unknowns, and revisit trigger
 - popularity does not become proof of fit and the task is completed rather than ending at research
 
-Compare engineering and research with those files plus `custom/prior-art.md` and `custom/patterns.md`.
+Compare engineering and research with those files plus `overlays/prior-art.md` and `overlays/patterns.md`.
 
 ### Native workflow choice
 
@@ -141,7 +141,7 @@ Rubric:
 - the exported API follows Go documentation conventions and explains the caller contract
 - the internal branch receives a comment only if its non-obvious meaning needs one
 
-Compare core-only context with the relevant `custom/writing.md`, `custom/evidence-claims.md`, and `custom/code-comments.md` files. Grade the rendered prose and actual code, not style-tool scores alone.
+Compare core-only context with the relevant `overlays/writing.md`, `overlays/evidence-claims.md`, and `overlays/code-comments.md` files. Grade the rendered prose and actual code, not style-tool scores alone.
 
 ### Agent and effort choice
 
@@ -155,7 +155,7 @@ Rubric:
 - model and effort follow ambiguity, consequence, and observed difficulty, not task length alone
 - the agent reports the actual active model and limitations without pretending an instruction changed it
 
-Compare core-only context with `custom/orchestration.md` and `custom/model-deliberation.md` under the same host and permission settings.
+Compare core-only context with `overlays/orchestration.md` and `overlays/model-deliberation.md` under the same host and permission settings.
 
 ## Growth rule
 

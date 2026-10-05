@@ -72,7 +72,7 @@ decisions:
   revisit_when: Official lifecycle/effort support changes or task evidence shows the current
     binding is inadequate.
 - id: D-007
-  concept: web-design-workflow
+  concept: web.design
   action: trial
   selection: Impeccable 4.5.0 pinned instruction-only trial
   rationale: Current upstream launcher includes downloads and hook effects. Keep its web documentation

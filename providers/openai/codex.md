@@ -32,7 +32,7 @@ Personal defaults live in `~/.codex/config.toml`. Trusted repositories may add s
 
 Model access depends on the Codex surface, client version, authentication method, plan or workspace controls, and rollout. Treat [`../../models/routing.yaml`](../../models/routing.yaml) as a reviewed policy, then verify that the selected binding and reasoning level are available in the active host.
 
-`model_reasoning_effort` is a native configuration setting. An instruction file or prompt tag does not change the current run's model or effort. Use the product control or start a new session with a supported configuration; follow [`../../custom/model-deliberation.md`](../../custom/model-deliberation.md) for the task-level choice.
+`model_reasoning_effort` is a native configuration setting. An instruction file or prompt tag does not change the current run's model or effort. Use the product control or start a new session with a supported configuration; follow [`../../overlays/model-deliberation.md`](../../overlays/model-deliberation.md) for the task-level choice.
 
 Do not place copied `AGENTS.md`, `AGENTS.override.md`, or other active instruction filenames under `sourced/`. Rename any qualifying archival snapshot and record its original name and provenance.
 

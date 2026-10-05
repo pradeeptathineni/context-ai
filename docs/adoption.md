@@ -1,6 +1,6 @@
 # Adopt the library in Codex
 
-Use Context for one repository by reading relevant guidance from an exact checkout or archive, or by applying a pinned project loadout. Both routes work without changing user-level instructions or global skill setup. The Git repository remains the canonical hierarchy.
+For one task, give your agent the Context source path and have it read only the guidance it needs. For repeated work in a repository, a **loadout** pins a selected set of files there. Neither route requires changing user-level instructions or global skill setup. The Git repository remains the source of the guidance.
 
 ## Use it in one repository
 
