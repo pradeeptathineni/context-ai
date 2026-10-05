@@ -14,6 +14,7 @@ decisions:
 - D-006
 - D-012
 - D-018
+- D-019
 compose: []
 id: standard
 description: Proportional development using existing project tools.

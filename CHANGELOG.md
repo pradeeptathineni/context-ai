@@ -10,7 +10,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Unified PACT/HRR with the canonical prior-art workflow and an instruction-only skill.
 - Routed version control before edits and writing guidance during implementation.
-- Generated grouped research needs from the current concept IDs and consumer constraints.
+- Preserved all 140 concept IDs in one schema-2 catalog with precise claim coverage, contextual options and explicit gaps. Generated grouped research needs and legacy definition views.
+- Separated declared runtime prerequisites from informational links; retained selected source pins/notices and fixed React/design routing after independent review.
+- Added schema-2 portable declarations, verified legacy rebind/export/apply, bounded required version probes and interrupted-write recovery that preserves later user edits.
 - Withdrew the premature stable release without changing schema or branch history; guarded stable publication.
 
 ## Withdrawn stable designation - 2026-10-05

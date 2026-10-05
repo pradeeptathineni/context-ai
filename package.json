@@ -1,7 +1,7 @@
 {
   "name": "context-ai-validation",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.3.0",
   "scripts": {
     "build:web": "node examples/web/build.mjs",
     "test:web": "node examples/web/verify.mjs"

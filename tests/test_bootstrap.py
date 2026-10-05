@@ -66,3 +66,10 @@ class ModelRoutes(unittest.TestCase):
             run=subprocess.run(['ruby',str(repo/'scripts/validate.rb')],capture_output=True,text=True)
             self.assertNotEqual(run.returncode,0)
             self.assertIn('unsupported balanced reasoning',run.stderr)
+
+class ReleaseAuthority(unittest.TestCase):
+    def test_stable_tag_ref_fails_even_with_pre_one_metadata(self):
+        import os
+        run=subprocess.run(['ruby',str(ROOT/'scripts/validate.rb')],capture_output=True,text=True,env={**os.environ,'GITHUB_REF':'refs/tags/v1.2.3'})
+        self.assertNotEqual(run.returncode,0)
+        self.assertIn('stable release tags',run.stderr)

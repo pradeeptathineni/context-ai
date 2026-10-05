@@ -1,36 +1,142 @@
 {
+  "$id": "https://context-ai.local/schemas/lock.schema.json",
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
   "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": 2
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "project": {
+            "const": "."
+          }
+        }
+      }
+    }
+  ],
   "properties": {
-    "schema_version": {
-      "const": 1
+    "capabilities": {
+      "additionalProperties": {
+        "additionalProperties": false,
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "definition": {
+            "type": "object"
+          },
+          "requirement": {
+            "enum": [
+              "required",
+              "optional"
+            ]
+          }
+        },
+        "required": [
+          "requirement",
+          "available",
+          "definition"
+        ],
+        "type": "object"
+      },
+      "type": "object"
+    },
+    "checks": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "loadout": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "recipe": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "required": [
+          "loadout",
+          "recipe"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "decisions": {
+      "type": "object"
+    },
+    "library_revision": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "loadouts": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
+      "uniqueItems": true
+    },
+    "options": {
+      "additionalProperties": false,
+      "properties": {
+        "brand": {
+          "enum": [
+            "quiet",
+            "expressive"
+          ]
+        }
+      },
+      "type": "object"
+    },
+    "project": {
+      "minLength": 1,
+      "type": "string"
     },
     "provider": {
       "const": "codex"
     },
-    "project": {
-      "type": "string",
-      "minLength": 1
-    },
-    "library_revision": {
-      "type": "string",
-      "minLength": 1
-    },
-    "source_tree_sha256": {
-      "type": "string",
-      "pattern": "^[0-9a-f]{64}$"
-    },
-    "loadouts": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "minLength": 1
+    "resources": {
+      "additionalProperties": {
+        "pattern": "^[0-9a-f]{64}$",
+        "type": "string"
       },
+      "minProperties": 1,
+      "type": "object"
+    },
+    "schema_version": {
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "skills": {
+      "items": {
+        "minLength": 1,
+        "type": "string"
+      },
+      "type": "array",
       "uniqueItems": true
     },
+    "source_tree_sha256": {
+      "pattern": "^[0-9a-f]{64}$",
+      "type": "string"
+    },
     "stages": {
-      "type": "object",
+      "additionalProperties": {
+        "items": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "type": "array",
+        "uniqueItems": true
+      },
       "minProperties": 1,
       "propertyNames": {
         "enum": [
@@ -43,92 +149,7 @@
           "deliver"
         ]
       },
-      "additionalProperties": {
-        "type": "array",
-        "items": {
-          "type": "string",
-          "minLength": 1
-        },
-        "uniqueItems": true
-      }
-    },
-    "skills": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "minLength": 1
-      },
-      "uniqueItems": true
-    },
-    "capabilities": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "requirement": {
-            "enum": [
-              "required",
-              "optional"
-            ]
-          },
-          "available": {
-            "type": "boolean"
-          },
-          "definition": {
-            "type": "object"
-          }
-        },
-        "required": [
-          "requirement",
-          "available",
-          "definition"
-        ]
-      }
-    },
-    "options": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "brand": {
-          "enum": [
-            "quiet",
-            "expressive"
-          ]
-        }
-      }
-    },
-    "checks": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "additionalProperties": false,
-        "properties": {
-          "loadout": {
-            "type": "string",
-            "minLength": 1
-          },
-          "recipe": {
-            "type": "string",
-            "minLength": 1
-          }
-        },
-        "required": [
-          "loadout",
-          "recipe"
-        ]
-      }
-    },
-    "decisions": {
       "type": "object"
-    },
-    "resources": {
-      "type": "object",
-      "minProperties": 1,
-      "additionalProperties": {
-        "type": "string",
-        "pattern": "^[0-9a-f]{64}$"
-      }
     }
   },
   "required": [
@@ -145,5 +166,6 @@
     "checks",
     "decisions",
     "resources"
-  ]
+  ],
+  "type": "object"
 }

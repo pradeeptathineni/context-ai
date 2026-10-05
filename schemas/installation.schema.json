@@ -1,180 +1,57 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "type": "object",
   "additionalProperties": false,
-  "properties": {
-    "schema_version": {
-      "const": 1
-    },
-    "resolution": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "schema_version": {
-          "const": 1
-        },
-        "provider": {
-          "const": "codex"
-        },
-        "project": {
-          "type": "string",
-          "minLength": 1
-        },
-        "library_revision": {
-          "type": "string",
-          "minLength": 1
-        },
-        "source_tree_sha256": {
-          "type": "string",
-          "pattern": "^[0-9a-f]{64}$"
-        },
-        "loadouts": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        },
-        "stages": {
-          "type": "object",
-          "minProperties": 1,
-          "propertyNames": {
-            "enum": [
-              "inspect",
-              "research",
-              "design",
-              "implement",
-              "test",
-              "review",
-              "deliver"
-            ]
-          },
-          "additionalProperties": {
-            "type": "array",
-            "items": {
-              "type": "string",
-              "minLength": 1
-            },
-            "uniqueItems": true
-          }
-        },
-        "skills": {
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1
-          },
-          "uniqueItems": true
-        },
-        "capabilities": {
-          "type": "object",
-          "additionalProperties": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "requirement": {
-                "enum": [
-                  "required",
-                  "optional"
-                ]
-              },
-              "available": {
-                "type": "boolean"
-              },
-              "definition": {
-                "type": "object"
-              }
-            },
-            "required": [
-              "requirement",
-              "available",
-              "definition"
-            ]
-          }
-        },
-        "options": {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "brand": {
-              "enum": [
-                "quiet",
-                "expressive"
-              ]
-            }
-          }
-        },
-        "checks": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "properties": {
-              "loadout": {
-                "type": "string",
-                "minLength": 1
-              },
-              "recipe": {
-                "type": "string",
-                "minLength": 1
-              }
-            },
-            "required": [
-              "loadout",
-              "recipe"
-            ]
-          }
-        },
-        "decisions": {
-          "type": "object"
-        },
-        "resources": {
-          "type": "object",
-          "minProperties": 1,
-          "additionalProperties": {
-            "type": "string",
-            "pattern": "^[0-9a-f]{64}$"
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "schema_version": {
+            "const": 2
           }
         }
       },
-      "required": [
-        "schema_version",
-        "provider",
-        "project",
-        "library_revision",
-        "source_tree_sha256",
-        "loadouts",
-        "stages",
-        "skills",
-        "capabilities",
-        "options",
-        "checks",
-        "decisions",
-        "resources"
-      ]
-    },
-    "owned": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string",
-        "pattern": "^[0-9a-f]{64}$"
+      "then": {
+        "required": [
+          "bound_project"
+        ]
       }
-    },
-    "routing_block": {
-      "type": "string",
-      "minLength": 1
+    }
+  ],
+  "properties": {
+    "agents_added_newline": {
+      "type": "boolean"
     },
     "agents_created": {
       "type": "boolean"
     },
-    "undo_pending": {
-      "type": "boolean"
+    "bound_project": {
+      "minLength": 1,
+      "type": "string"
     },
-    "agents_added_newline": {
-      "type": "boolean"
+    "owned": {
+      "additionalProperties": {
+        "pattern": "^[0-9a-f]{64}$",
+        "type": "string"
+      },
+      "type": "object"
+    },
+    "resolution": {
+      "$ref": "https://context-ai.local/schemas/lock.schema.json"
+    },
+    "routing_block": {
+      "minLength": 1,
+      "type": "string"
     },
     "routing_removed": {
+      "type": "boolean"
+    },
+    "schema_version": {
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "undo_pending": {
       "type": "boolean"
     }
   },
@@ -184,5 +61,6 @@
     "owned",
     "routing_block",
     "agents_created"
-  ]
+  ],
+  "type": "object"
 }

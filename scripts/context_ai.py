@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Pinned, project-local context composition. Manifests never execute commands."""
 import argparse
+import base64
 import hashlib
 import json
 import os
@@ -10,10 +11,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
-from urllib.parse import urlparse, unquote
 
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
+from referencing import Registry, Resource
 
 ROOT = Path(__file__).resolve().parent.parent
 BEGIN = '<!-- context-ai:begin -->'
@@ -51,6 +52,8 @@ def encoded(data):
     return (json.dumps(data, indent=2, ensure_ascii=False, sort_keys=True)+'\n').encode()
 
 def inside(root, name):
+    if not isinstance(name,str) or re.search(r'[\x00-\x1f\x7f\\]',name):
+        raise Invalid('unsafe relative path: '+str(name))
     p = Path(name)
     if not isinstance(name, str) or p.is_absolute() or not p.parts or any(x in ('.','..') for x in name.split('/')):
         raise Invalid('unsafe relative path: '+str(name))
@@ -66,7 +69,8 @@ def inside(root, name):
 
 def validate_schema(name, value):
     schema = json.loads(inside(ROOT, 'schemas/'+name+'.schema.json').read_text())
-    Draft202012Validator(schema, format_checker=FormatChecker()).validate(value)
+    registry = Registry().with_resource('https://context-ai.local/schemas/lock.schema.json', Resource.from_contents(json.loads((ROOT/'schemas/lock.schema.json').read_text())))
+    Draft202012Validator(schema, registry=registry, format_checker=FormatChecker()).validate(value)
 
 def catalogue():
     return {p.stem: read_yaml(p) for p in (ROOT/'loadouts').glob('*.yaml')}
@@ -218,7 +222,7 @@ def resolve(ids, project, provider, options=None):
         revision = subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],stderr=subprocess.DEVNULL,text=True).strip()
     except subprocess.CalledProcessError:
         revision = (ROOT/'REVISION').read_text().strip() if (ROOT/'REVISION').is_file() else 'exported-tree'
-    lock = {'schema_version':1,'provider':provider,'project':str(project),'library_revision':revision,
+    lock = {'schema_version':2,'provider':provider,'project':'.','library_revision':revision,
             'source_tree_sha256':tree_hash,'loadouts':ordered,'stages':stages,'skills':skills,
             'capabilities':states,'options':resolved_options,'checks':checks,
             'decisions':{d:current[d] for d in decisions},'resources':file_hashes}
@@ -237,11 +241,19 @@ def router(lock):
 
 def materialized(lock, files):
     output = {'.context-ai/resources/'+p:data for p,data in files.items()}
+    if len({name.casefold() for name in output}) != len(output):
+        raise Invalid('case-colliding resource paths')
     for skill in lock['skills']:
+        if not skill.startswith('context-'):
+            raise Invalid('unapproved skill router: '+skill)
         if not re.fullmatch('[a-z][a-z0-9-]{0,63}',skill):
             raise Invalid('unsafe skill id')
         path = 'skills/context-loadout/SKILL.md' if skill=='context-loadout' else lock['capabilities'][skill]['definition']['path']
-        body = ('---\nname: '+skill+'\ndescription: '+('Use pinned Context AI project loadouts.' if skill=='context-loadout' else lock['capabilities'][skill]['definition']['description'])+'\n---\n\nRead [pinned instructions](../../../.context-ai/resources/'+path+') when this procedure is relevant. Follow project instructions and user brand direction first. No tool or hook is activated by this file.\n')
+        if path not in files:
+            raise Invalid('missing selected skill instructions: '+path)
+        description = 'Use pinned Context AI project loadouts.' if skill=='context-loadout' else lock['capabilities'][skill]['definition']['description']
+        metadata = yaml.safe_dump({'name':skill,'description':description},sort_keys=False)
+        body = '---\n'+metadata+'---\n\nRead [pinned instructions](../../../.context-ai/resources/'+path+') when this procedure is relevant. Follow project instructions and user brand direction first. No tool or hook is activated by this file.\n'
         output['.agents/skills/'+skill+'/SKILL.md'] = body.encode()
     return output
 
@@ -256,7 +268,44 @@ def atomic(path,data):
         if os.path.exists(tmp):
             os.unlink(tmp)
 
-def installed(project):
+def transaction_path(project, name):
+    if name not in ('AGENTS.md','.context-ai/lock.json') and not (name.startswith('.context-ai/resources/') or re.fullmatch(r'\.agents/skills/context-[a-z0-9-]+/SKILL\.md',name)):
+        raise Invalid('unapproved recovery path: '+name)
+    return inside(project,name)
+
+def recover(project):
+    journal=inside(project,'.context-ai/pending.json')
+    if not journal.exists():return {'recovered':True,'preserved_conflicts':[]}
+    state=json.loads(journal.read_text())
+    if state.get('schema_version')!=1 or state.get('bound_project')!=str(project) or set(state.get('before',{}))!=set(state.get('after',{})):
+        raise Invalid('invalid or differently bound recovery record')
+    operations=[]
+    for name, before in state['before'].items():
+        p=transaction_path(project,name)
+        old=base64.b64decode(before,validate=True) if before is not None else None
+        expected=state['after'][name]
+        if expected is not None and not re.fullmatch('[0-9a-f]{64}',expected):raise Invalid('invalid recovery digest')
+        operations.append((name,p,old,expected))
+    conflicts=[]
+    for name,p,old,expected in operations:
+        if p.exists() and not p.is_file():
+            conflicts.append(name);continue
+        current=p.read_bytes() if p.exists() else None
+        if current==old:continue
+        current_sha=digest(current) if current is not None else None
+        if current_sha!=expected:
+            conflicts.append(name);continue
+        if old is None:
+            p.unlink()
+        else:
+            atomic(p,old)
+    if not conflicts:journal.unlink()
+    return {'recovered':not conflicts,'preserved_conflicts':conflicts}
+
+
+def installed(project, allow_rebind=False):
+    if inside(project,'.context-ai/pending.json').exists():
+        raise Invalid('incomplete application; run recover before ownership operations')
     p=inside(project,'.context-ai/lock.json')
     if not p.exists():
         return None
@@ -268,7 +317,8 @@ def installed(project):
     for name,sha in resolution['resources'].items():
         if not lock.get('undo_pending',False) and lock['owned'].get('.context-ai/resources/'+name) != sha:
             raise Invalid('ownership does not match resource pins')
-    if lock['resolution']['project'] != str(project):
+    bound = lock.get('bound_project',lock['resolution']['project'])
+    if bound != str(project) and not allow_rebind:
         raise Invalid('installation belongs to another project')
     for name in lock['owned']:
         if not (name.startswith('.context-ai/resources/') or re.fullmatch(r'\.agents/skills/[a-z][a-z0-9-]{0,63}/SKILL\.md',name)):
@@ -287,6 +337,15 @@ def instruction_block(text):
     return text[start:finish]
 
 def apply(project,lock,files):
+    validate_schema('lock',lock)
+    if {name:digest(data) for name,data in files.items()} != lock['resources'] or digest(encoded(lock['resources'])) != lock['source_tree_sha256']:
+        raise Invalid('application bytes do not match the pin')
+    for name in files:
+        resource_path(ROOT,name)
+    if any(path not in files for paths in lock['stages'].values() for path in paths):
+        raise Invalid('missing selected stage instructions')
+    if lock['schema_version']==1 and lock['project']!=str(project):
+        raise Invalid('legacy pin belongs to another project')
     previous=installed(project)
     targets=materialized(lock,files)
     if previous and previous.get('undo_pending'):
@@ -311,26 +370,39 @@ def apply(project,lock,files):
         if BEGIN in text or END in text:
             raise Invalid('unowned routing block')
         updated=text+('' if not text or text.endswith('\n') else '\n')+router(lock)
-    state={'schema_version':1,'resolution':lock,'owned':{p:digest(d) for p,d in targets.items()},
+    state={'schema_version':2,'bound_project':str(project),'resolution':lock,'owned':{p:digest(d) for p,d in targets.items()},
            'routing_block':router(lock),'agents_created':previous['agents_created'] if previous else not agents.exists(),
            'agents_added_newline':previous.get('agents_added_newline',False) if previous else bool(text and not text.endswith('\n'))}
     validate_schema('installation',state)
-    for name,data in targets.items():
-        p=inside(project,name)
-        if not p.exists() or p.read_bytes()!=data:
-            atomic(p,data)
-    for name in set(old_owned)-set(targets):
-        inside(project,name).unlink()
-    if updated!=text:
-        atomic(agents,updated.encode())
     statepath=inside(project,'.context-ai/lock.json')
     data=encoded(state)
-    if not statepath.exists() or statepath.read_bytes()!=data:
-        atomic(statepath,data)
+    desired={**targets,'AGENTS.md':updated.encode(),'.context-ai/lock.json':data}
+    desired.update({name:None for name in set(old_owned)-set(targets)})
+    before={}
+    for name in desired:
+        p=transaction_path(project,name)
+        before[name]=base64.b64encode(p.read_bytes()).decode() if p.exists() else None
+    journal=inside(project,'.context-ai/pending.json')
+    atomic(journal,encoded({'schema_version':1,'bound_project':str(project),'before':before,
+                            'after':{name:digest(value) if value is not None else None for name,value in desired.items()}}))
+    try:
+        for name,value in desired.items():
+            p=transaction_path(project,name)
+            if value is None:
+                if p.exists():p.unlink()
+            elif not p.exists() or p.read_bytes()!=value:
+                atomic(p,value)
+    except Exception:
+        try:
+            recover(project)
+        except Exception as recovery_error:
+            raise Invalid('application interrupted; recovery bytes retained in .context-ai/pending.json') from recovery_error
+        raise
+    journal.unlink()
     return {'applied':lock['loadouts'],'resource_count':len(files),'lock_sha256':digest(data)}
 
-def verify(project):
-    state=installed(project)
+def verify(project, allow_rebind=False):
+    state=installed(project, allow_rebind=allow_rebind)
     if not state:
         raise Invalid('no installation')
     if state.get('undo_pending'):
@@ -346,12 +418,66 @@ def verify(project):
         definition=entry['definition']
         if definition['kind']=='command':
             available=shutil.which(definition['command']) is not None
+            if entry['requirement']=='required' and available:
+                probe_command(definition['command'])
         else:
             path=inside(project,'.context-ai/resources/'+definition['path'])
             available=path.is_file() and digest(path.read_bytes())==resolution['resources'].get(definition['path'])
         if entry['requirement']=='required' and not available:
             raise Invalid('installed required capability unavailable: '+key)
     return {'verified':resolution['loadouts'],'owned_files':len(state['owned'])}
+
+def probe_command(command):
+    probes={'python3':['python3','--version'],'git':['git','--version'],'node':['node','--version']}
+    if command not in probes:
+        raise Invalid('no reviewed required command probe: '+command)
+    try:
+        run=subprocess.run(probes[command],capture_output=True,text=True,timeout=5,check=True)
+    except (OSError, subprocess.SubprocessError) as error:
+        raise Invalid('required command invocation failed: '+command) from error
+    output=(run.stdout+run.stderr).strip()
+    if command=='python3':
+        match=re.search(r'Python (\d+)\.(\d+)',output)
+        if not match or tuple(map(int,match.groups()))<(3,10):raise Invalid('Python 3.10+ is required')
+    elif command=='node':
+        match=re.match(r'v(\d+)',output)
+        if not match or int(match[1])<20:raise Invalid('Node 20+ is required')
+    elif not output.startswith('git version '):
+        raise Invalid('unexpected Git version response')
+    return output
+
+def rebind(project):
+    # Verify the copied installation before changing only its local ownership binding.
+    verify(project,allow_rebind=True)
+    state=installed(project,allow_rebind=True)
+    state['schema_version']=2
+    state['bound_project']=str(project)
+    state['resolution']['schema_version']=2
+    state['resolution']['project']='.'
+    validate_schema('installation',state)
+    atomic(inside(project,'.context-ai/lock.json'),encoded(state))
+    return {'rebound':True,'verified':verify(project),'portable_resolution':state['resolution']}
+
+def pinned_files(lock):
+    validate_schema('lock',lock)
+    if lock['schema_version']!=2:raise Invalid('export/rebind a legacy lock before portable apply')
+    if digest(encoded(lock['resources']))!=lock['source_tree_sha256']:
+        raise Invalid('source tree digest does not match resource pins')
+    files={}
+    for name,sha in lock['resources'].items():
+        path=resource_path(ROOT,name)
+        if not path.is_file():raise Invalid('missing pinned resource: '+name)
+        data=path.read_bytes()
+        if digest(data)!=sha:raise Invalid('pinned resource drift: '+name)
+        files[name]=data
+    expected,_=resolve(lock['loadouts'],Path.cwd(),lock['provider'],lock['options'])
+    for field in ['loadouts','stages','skills','options','checks','decisions','resources']:
+        if lock[field]!=expected[field]:raise Invalid('imported pin differs from reviewed source '+field)
+    definitions=lambda value:{key:{'requirement':entry['requirement'],'definition':entry['definition']} for key,entry in value.items()}
+    if definitions(lock['capabilities'])!=definitions(expected['capabilities']):
+        raise Invalid('imported capability definitions differ from reviewed source')
+    return files
+
 
 def undo(project):
     state=installed(project)
@@ -392,9 +518,10 @@ def undo(project):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=['list','explain','plan','apply','verify','undo','refresh'])
+    parser.add_argument('command',choices=['list','explain','plan','apply','verify','undo','refresh','export','rebind','recover'])
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
+    parser.add_argument('--lock',type=Path,help='Apply an exact portable lock against this source checkout')
     parser.add_argument('--provider',default='codex')
     parser.add_argument('--brand',choices=['quiet','expressive'])
     args=parser.parse_args()
@@ -411,7 +538,18 @@ def main():
         if not args.project or not Path(args.project).is_absolute() or not Path(args.project).is_dir() or Path(args.project).is_symlink():
             raise Invalid('an existing absolute project directory is required')
         project=Path(args.project).resolve()
-        if args.command=='verify':
+        if args.lock and (args.command!='apply' or args.loadouts or args.brand):
+            raise Invalid('--lock is only for apply without new selections/options')
+        if args.command=='recover':
+            result=recover(project)
+        elif args.command=='export':
+            state=installed(project)
+            if not state:raise Invalid('no installation to export')
+            result=state['resolution'].copy();result['schema_version']=2;result['project']='.'
+            validate_schema('lock',result)
+        elif args.command=='rebind':
+            result=rebind(project)
+        elif args.command=='verify':
             result=verify(project)
         elif args.command=='undo':
             result=undo(project)
@@ -424,7 +562,10 @@ def main():
                     raise Invalid('no installation to refresh')
                 ids=state['resolution']['loadouts']
             options={'brand':args.brand} if args.brand else (state['resolution']['options'] if args.command=='refresh' and state else {})
-            lock,files=resolve(ids,project,args.provider,options)
+            if args.lock:
+                lock=json.loads(args.lock.read_text());files=pinned_files(lock)
+            else:
+                lock,files=resolve(ids,project,args.provider,options)
             if args.command=='apply':
                 result=apply(project,lock,files)
             else:

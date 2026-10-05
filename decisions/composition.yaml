@@ -68,3 +68,32 @@ decisions:
     composition.
   revisit_when: A real selected procedure cannot reach its instructions, or a maintained
     distributor proves lower total burden with preservation/undo.
+- id: D-019
+  revision: 1
+  supersedes: null
+  concept: architecture.portability
+  action: adapt
+  selection: Portable exact declarations and verified local ownership migration
+  rationale: Retain the narrow distributor; separate source selection from machine
+    ownership, reject metadata drift, and recover interrupted writes with retained
+    backups. No surveyed replacement has proved preservation/undo with lower burden.
+  evidence:
+  - tests/test_portability.py
+  - Signals:3badfed8922e896e1c83d20c68654057487541ca:option-source-lineage:source-lineage-prov
+  applicability: Codex project-local schema-2 pins and schema-1 installations.
+  alternatives:
+  - Preserve absolute-path public locks
+  - Require manual edits to ownership
+  - Correct the current adapter with checked rebind/export and recovery
+  unknowns:
+  - Concurrent hostile filesystem writers and power-loss durability are not guaranteed.
+  validation:
+  - Copied legacy edits refuse; portable apply and safe rebind preserve instructions;
+    actual required version probes run.
+  - A real owned subprocess was killed mid-application; recovery restores the original
+    user instructions.
+  - Independent imported-metadata findings corrected and covered by negative tests.
+  rollback: Recover pending writes; undo unchanged files; use an earlier exact source
+    snapshot when required.
+  revisit_when: A real consumer needs unsupported provider distribution or fails recovery/portability
+    invariants.

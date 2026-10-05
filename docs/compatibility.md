@@ -9,3 +9,7 @@ House policies moved from custom/ to overlays/. Every old custom Markdown path r
 Codex is the current supported materialization adapter. Its project-local skill routers use unique context-prefixed names; the existing standard discovery name is untouched. Instruction-only upstream adaptations declare omitted binaries/hooks and preserve pinned documentation/notice files. A project can continue a stage on its earlier lock while the library advances; review a refresh at a checkpoint before changing the active pin.
 
 Exact snapshots remain available in Git commits and exported release/checkpoint archives. Materialization does not retrieve an old revision automatically: use the exact checkout/archive to reproduce that pin. The bootstrap checkpoint is 0.3.0-bootstrap.1, not an earlier claim to stable v1.
+
+## Portable ownership
+
+Resolution/installation schema 2 separates a relative project declaration from local `bound_project`. Existing schema-1 receipts still verify in their original directory. Copied legacy receipts refuse until `rebind` verifies every owned byte, routing block and required command, then changes only the binding. Edits cause refusal; no hand-editing or falsified ownership is required. `export` emits a portable pin; `apply --lock` verifies its resources against the selected source checkout. An active refresh remains a proposal. `recover` uses a local write journal to restore interrupted application while retaining later edits. Keep installation receipts and recovery records local.

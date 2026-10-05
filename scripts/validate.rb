@@ -9,6 +9,10 @@ require "yaml"
 ROOT = Pathname.new(__dir__).parent.expand_path
 ERRORS = []
 
+if ENV.fetch("GITHUB_REF", "").match?(%r{\Arefs/tags/v[1-9]\d*\.})
+  ERRORS << "stable release tags require a separate future approval"
+end
+
 REQUIRED = %w[
   AGENTS.md
   README.md
