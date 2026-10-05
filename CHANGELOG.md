@@ -8,6 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ### Added
 
+- Eight composable project loadouts, safe plan/apply/verify/undo/proposed-refresh tooling, owned instruction routers, and exact resource/source locks.
+- Core and domain guidance, compatibility overlay routers, appended adoption decisions, and pinned instruction-only Impeccable/Anthropic/Vercel resources with provenance.
+- Read-only frozen Signals evidence consumer, negative contract tests, real lifecycle checks, and a built/browser-tested web exercise.
+- Bootstrap dogfood/use receipts, independent review findings and bounded private website preparation.
 - Provider-neutral concept index, shared prior-art signals, OpenAI product signals, and original-source registry.
 - Concepts-and-signals guide and referential validation for concept IDs, signal IDs, provider scope, and source links.
 - Dependency-free lookup for one concept's matching signals and original references.

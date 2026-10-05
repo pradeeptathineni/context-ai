@@ -1,0 +1,85 @@
+{
+  "evidence_class": "fixture + browser builder proxy",
+  "results": [
+    {
+      "width": 320,
+      "axe_quiet": 0,
+      "axe_expressive": 0,
+      "overflow": false,
+      "states": "filter/empty/reset/details/error/success",
+      "keyboard": "skip link and Tab navigation",
+      "reduced_motion": true
+    },
+    {
+      "width": 390,
+      "axe_quiet": 0,
+      "axe_expressive": 0,
+      "overflow": false,
+      "states": "filter/empty/reset/details/error/success",
+      "keyboard": "skip link and Tab navigation",
+      "reduced_motion": true
+    },
+    {
+      "width": 768,
+      "axe_quiet": 0,
+      "axe_expressive": 0,
+      "overflow": false,
+      "states": "filter/empty/reset/details/error/success",
+      "keyboard": "skip link and Tab navigation",
+      "reduced_motion": true
+    },
+    {
+      "width": 1440,
+      "axe_quiet": 0,
+      "axe_expressive": 0,
+      "overflow": false,
+      "states": "filter/empty/reset/details/error/success",
+      "keyboard": "skip link and Tab navigation",
+      "reduced_motion": true
+    }
+  ],
+  "errors": [],
+  "limits": [
+    "No assistive-technology user test. No deployed field Web Vitals. Axe does not certify WCAG conformance."
+  ],
+  "consumer": "examples/web",
+  "loadouts": [
+    "standard",
+    "web-experience"
+  ],
+  "discovery": "explicit-read",
+  "action": "validated",
+  "capability": "context-web-design",
+  "revision": "ece38d9904b8a619b3f77cab476eacad09c4fb11",
+  "asset_bytes": 11549,
+  "asset_budget": 24000,
+  "commands": [
+    "npm run build:web",
+    "npm run test:web"
+  ],
+  "critique": {
+    "method": "self-review under the instruction-only adapter",
+    "observations": [
+      "Divided catalogue rows support comparison; primary heading/action and context remain legible in both palettes.",
+      "320px header wrapped the palette control onto a third row; the wordmark used an unrelated Unicode glyph."
+    ],
+    "revisions": [
+      "Replaced decorative glyph with authored SVG route mark.",
+      "Tightened small-screen navigation spacing/button type and intro spacing."
+    ],
+    "limits": [
+      "No native Impeccable binary/detector/hooks or dual-agent critique command ran. This is an adapted instruction-led self-review.",
+      "No beauty score, independent visual approval or human usefulness claim."
+    ]
+  },
+  "screenshots": {
+    "expressive-1440.png": "0c33a0de7dbc91be6eb09c101f2e9c801a75860db761b5678ae1673ff28ce486",
+    "expressive-320.png": "a1d5a45eced426720df517332417f7bb8eddadab22983359ffc7506a0a8e6657",
+    "expressive-390.png": "ac4ed4e3a2dcfe116fab6d5e65318ab28ed6a5633db549c9a4355ccad382550d",
+    "expressive-768.png": "94e79d2351ece687db11b774d975c0c2e6822c4ca83689ef52645a9b2ea4aad8",
+    "quiet-1440.png": "e02e9d4568aefb3c0feb3bffb261c9a50074197c9bd78a7331c46fe7902a6ba5",
+    "quiet-320.png": "aaf9958f44ce84b080ed82f90a03464058c3b403ee1f6d3596d9069574a484e6",
+    "quiet-390.png": "a72248bf63afbce0785719425f991da1298a356aa15695da97550cd0129c4f9f",
+    "quiet-768.png": "ca269b2b1cbcc1c8bc23ef37829a81d37c4bb0db9480ba5bf486608f34744669"
+  }
+}

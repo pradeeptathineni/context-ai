@@ -167,6 +167,15 @@
     },
     "agents_created": {
       "type": "boolean"
+    },
+    "undo_pending": {
+      "type": "boolean"
+    },
+    "agents_added_newline": {
+      "type": "boolean"
+    },
+    "routing_removed": {
+      "type": "boolean"
     }
   },
   "required": [

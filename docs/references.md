@@ -132,3 +132,183 @@ The research procedure composes `core/research.md` with the MIT-licensed Maestro
 [Current Codex models](https://learn.chatgpt.com/docs/models) supports the balanced profile's GPT-6.1 Sol binding and documents Spark retirement. Availability still depends on the account/client. Installed desktop tool metadata exposes that binding here; no inference probe, API entitlement claim, or global settings change was needed.
 
 `.agents/skills/context-loadout/SKILL.md` is a local generated router owned by materialization; the maintained source is `skills/context-loadout/SKILL.md`. It preserves the existing locally installed `standard` skill. `evals/bootstrap-use.json` records a builder-proxy explicit read and actual validator maintenance, not independent compliance or measured token savings.
+
+## v1 modules and selections (reviewed 2026-10-05)
+
+Canonical additions `core/code-comments.md`, `core/version-control.md`, `core/prior-art.md` label source-supported fundamentals and local choices. House guidance now lives in `overlays/`; the previous `custom/` files are compatibility routes. `concepts.yaml` keeps schema-1 string definitions and adds details with module/decision/evidence references. `decisions/adapters.yaml` records tested adapter, tooling and model choices and an immutable D-007 successor.
+
+- `overlays/README.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/ai-implementation.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/code-comments.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/context-efficiency.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/delivery.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/evidence-claims.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/model-deliberation.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/orchestration.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/patterns.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/prior-art.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/project-intent.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/technical-design.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `overlays/writing.md`: the corresponding previously reviewed house policy, moved without semantic rewrite.
+- `domains/infrastructure/aws.md`: source links and policy labels are at module level.
+- `domains/service/api.md`: source links and policy labels are at module level.
+- `domains/web/accessibility.md`: source links and policy labels are at module level.
+- `domains/web/browser-verification.md`: source links and policy labels are at module level.
+- `domains/web/design.md`: source links and policy labels are at module level.
+- `domains/web/performance.md`: source links and policy labels are at module level.
+- `domains/web/product-ux.md`: source links and policy labels are at module level.
+- `domains/web/react.md`: source links and policy labels are at module level.
+- `loadouts/aws-infrastructure.yaml`: declarative project policy selected by the v1 kit, validated with materialized consumer examples.
+- `loadouts/context-authoring.yaml`: declarative project policy selected by the v1 kit, validated with materialized consumer examples.
+- `loadouts/react-web.yaml`: declarative project policy selected by the v1 kit, validated with materialized consumer examples.
+- `loadouts/release-review.yaml`: declarative project policy selected by the v1 kit, validated with materialized consumer examples.
+- `loadouts/research-evidence.yaml`: declarative project policy selected by the v1 kit, validated with materialized consumer examples.
+- `loadouts/service-api.yaml`: declarative project policy selected by the v1 kit, validated with materialized consumer examples.
+- `loadouts/standard.yaml`: declarative project policy selected by the v1 kit, validated with materialized consumer examples.
+- `loadouts/web-experience.yaml`: declarative project policy selected by the v1 kit, validated with materialized consumer examples.
+
+`sources.lock.json` is the single authority for snapshot revision, license and exact-file hashes. `procedures/web-design.md` selects an instruction-only Impeccable adapter. Executable launchers, downloads, hooks and extensions were inspected as optional mechanisms and excluded; none was activated. MIT Vercel licensing is declared by the preserved upstream README/skill metadata; Apache notices/terms remain with Impeccable/Anthropic.
+
+Source: [impeccable](https://github.com/pbakaus/impeccable/tree/ece38d9904b8a619b3f77cab476eacad09c4fb11), revision `ece38d9904b8a619b3f77cab476eacad09c4fb11`, Apache-2.0. Inactive documentation snapshots and notices:
+
+- `sourced/impeccable/design/LICENSE`
+- `sourced/impeccable/design/NOTICE.md`
+- `sourced/impeccable/design/instruction.md`
+- `sourced/impeccable/design/reference/adapt.md`
+- `sourced/impeccable/design/reference/adapt.native.md`
+- `sourced/impeccable/design/reference/android.md`
+- `sourced/impeccable/design/reference/animate.md`
+- `sourced/impeccable/design/reference/audit.md`
+- `sourced/impeccable/design/reference/audit.native.md`
+- `sourced/impeccable/design/reference/bolder.md`
+- `sourced/impeccable/design/reference/clarify.md`
+- `sourced/impeccable/design/reference/colorize.md`
+- `sourced/impeccable/design/reference/component-review.md`
+- `sourced/impeccable/design/reference/craft-floor.md`
+- `sourced/impeccable/design/reference/craft.md`
+- `sourced/impeccable/design/reference/critique.md`
+- `sourced/impeccable/design/reference/degraded/asset-producer.md`
+- `sourced/impeccable/design/reference/degraded/documenter.md`
+- `sourced/impeccable/design/reference/degraded/finish-reviewer.md`
+- `sourced/impeccable/design/reference/degraded/manual-edit-applier.md`
+- `sourced/impeccable/design/reference/delight.md`
+- `sourced/impeccable/design/reference/distill.md`
+- `sourced/impeccable/design/reference/doctor.md`
+- `sourced/impeccable/design/reference/document.md`
+- `sourced/impeccable/design/reference/extract.md`
+- `sourced/impeccable/design/reference/generate.md`
+- `sourced/impeccable/design/reference/harden.md`
+- `sourced/impeccable/design/reference/hooks.md`
+- `sourced/impeccable/design/reference/init.md`
+- `sourced/impeccable/design/reference/ios.md`
+- `sourced/impeccable/design/reference/layout.md`
+- `sourced/impeccable/design/reference/live-setup.md`
+- `sourced/impeccable/design/reference/live.md`
+- `sourced/impeccable/design/reference/mode-operate.md`
+- `sourced/impeccable/design/reference/mode-persuade.md`
+- `sourced/impeccable/design/reference/mode-read.md`
+- `sourced/impeccable/design/reference/new-work.md`
+- `sourced/impeccable/design/reference/onboard.md`
+- `sourced/impeccable/design/reference/operate.md`
+- `sourced/impeccable/design/reference/optimize.md`
+- `sourced/impeccable/design/reference/overdrive.md`
+- `sourced/impeccable/design/reference/polish.md`
+- `sourced/impeccable/design/reference/quieter.md`
+- `sourced/impeccable/design/reference/region-map.md`
+- `sourced/impeccable/design/reference/routing.md`
+- `sourced/impeccable/design/reference/shape.md`
+- `sourced/impeccable/design/reference/typeset.md`
+- `sourced/impeccable/design/reference/visualize.md`
+
+Source: [anthropic](https://github.com/anthropics/skills/tree/683bc88e56f3e09ba94f7055977f3d3aa499f202), revision `683bc88e56f3e09ba94f7055977f3d3aa499f202`, Apache-2.0. Inactive documentation snapshots and notices:
+
+- `sourced/anthropic/design/LICENSE.txt`
+- `sourced/anthropic/design/instruction.md`
+
+Source: [vercel](https://github.com/vercel-labs/agent-skills/tree/063bee94c3f4df8453406c830b0a7df0f2860278), revision `063bee94c3f4df8453406c830b0a7df0f2860278`, MIT. Inactive documentation snapshots and notices:
+
+- `sourced/vercel/react/README.md`
+- `sourced/vercel/react/compiled-guide.md`
+- `sourced/vercel/react/compiled-guide.upstream.txt`
+- `sourced/vercel/react/instruction.md`
+- `sourced/vercel/react/rules/_sections.md`
+- `sourced/vercel/react/rules/_template.md`
+- `sourced/vercel/react/rules/advanced-effect-event-deps.md`
+- `sourced/vercel/react/rules/advanced-event-handler-refs.md`
+- `sourced/vercel/react/rules/advanced-init-once.md`
+- `sourced/vercel/react/rules/advanced-use-latest.md`
+- `sourced/vercel/react/rules/async-api-routes.md`
+- `sourced/vercel/react/rules/async-cheap-condition-before-await.md`
+- `sourced/vercel/react/rules/async-defer-await.md`
+- `sourced/vercel/react/rules/async-dependencies.md`
+- `sourced/vercel/react/rules/async-parallel.md`
+- `sourced/vercel/react/rules/async-suspense-boundaries.md`
+- `sourced/vercel/react/rules/bundle-analyzable-paths.md`
+- `sourced/vercel/react/rules/bundle-barrel-imports.md`
+- `sourced/vercel/react/rules/bundle-conditional.md`
+- `sourced/vercel/react/rules/bundle-defer-third-party.md`
+- `sourced/vercel/react/rules/bundle-dynamic-imports.md`
+- `sourced/vercel/react/rules/bundle-preload.md`
+- `sourced/vercel/react/rules/client-event-listeners.md`
+- `sourced/vercel/react/rules/client-localstorage-schema.md`
+- `sourced/vercel/react/rules/client-passive-event-listeners.md`
+- `sourced/vercel/react/rules/client-swr-dedup.md`
+- `sourced/vercel/react/rules/js-batch-dom-css.md`
+- `sourced/vercel/react/rules/js-cache-function-results.md`
+- `sourced/vercel/react/rules/js-cache-property-access.md`
+- `sourced/vercel/react/rules/js-cache-storage.md`
+- `sourced/vercel/react/rules/js-combine-iterations.md`
+- `sourced/vercel/react/rules/js-early-exit.md`
+- `sourced/vercel/react/rules/js-flatmap-filter.md`
+- `sourced/vercel/react/rules/js-hoist-regexp.md`
+- `sourced/vercel/react/rules/js-index-maps.md`
+- `sourced/vercel/react/rules/js-length-check-first.md`
+- `sourced/vercel/react/rules/js-min-max-loop.md`
+- `sourced/vercel/react/rules/js-request-idle-callback.md`
+- `sourced/vercel/react/rules/js-set-map-lookups.md`
+- `sourced/vercel/react/rules/js-tosorted-immutable.md`
+- `sourced/vercel/react/rules/rendering-activity.md`
+- `sourced/vercel/react/rules/rendering-animate-svg-wrapper.md`
+- `sourced/vercel/react/rules/rendering-conditional-render.md`
+- `sourced/vercel/react/rules/rendering-content-visibility.md`
+- `sourced/vercel/react/rules/rendering-hoist-jsx.md`
+- `sourced/vercel/react/rules/rendering-hydration-no-flicker.md`
+- `sourced/vercel/react/rules/rendering-hydration-suppress-warning.md`
+- `sourced/vercel/react/rules/rendering-resource-hints.md`
+- `sourced/vercel/react/rules/rendering-script-defer-async.md`
+- `sourced/vercel/react/rules/rendering-svg-precision.md`
+- `sourced/vercel/react/rules/rendering-usetransition-loading.md`
+- `sourced/vercel/react/rules/rerender-defer-reads.md`
+- `sourced/vercel/react/rules/rerender-dependencies.md`
+- `sourced/vercel/react/rules/rerender-derived-state-no-effect.md`
+- `sourced/vercel/react/rules/rerender-derived-state.md`
+- `sourced/vercel/react/rules/rerender-functional-setstate.md`
+- `sourced/vercel/react/rules/rerender-lazy-state-init.md`
+- `sourced/vercel/react/rules/rerender-memo-with-default-value.md`
+- `sourced/vercel/react/rules/rerender-memo.md`
+- `sourced/vercel/react/rules/rerender-move-effect-to-event.md`
+- `sourced/vercel/react/rules/rerender-no-inline-components.md`
+- `sourced/vercel/react/rules/rerender-simple-expression-in-memo.md`
+- `sourced/vercel/react/rules/rerender-split-combined-hooks.md`
+- `sourced/vercel/react/rules/rerender-transitions.md`
+- `sourced/vercel/react/rules/rerender-use-deferred-value.md`
+- `sourced/vercel/react/rules/rerender-use-ref-transient-values.md`
+- `sourced/vercel/react/rules/server-after-nonblocking.md`
+- `sourced/vercel/react/rules/server-auth-actions.md`
+- `sourced/vercel/react/rules/server-cache-lru.md`
+- `sourced/vercel/react/rules/server-cache-react.md`
+- `sourced/vercel/react/rules/server-dedup-props.md`
+- `sourced/vercel/react/rules/server-hoist-static-io.md`
+- `sourced/vercel/react/rules/server-no-shared-module-state.md`
+- `sourced/vercel/react/rules/server-parallel-fetching.md`
+- `sourced/vercel/react/rules/server-parallel-nested-fetching.md`
+- `sourced/vercel/react/rules/server-serialization.md`
+- `sourced/vercel/react/upstream-README.md`
+- `sourced/vercel/web/instruction.md`
+- `sourced/vercel/web/upstream-README.md`
+
+Ruler fit check used npm `@intellectronica/ruler@0.3.44` with install scripts disabled and `--agents codex --no-mcp --no-gitignore --no-skills --local-only`, first dry-run then apply in a disposable repository. It regenerated AGENTS and preserved the original in its generated output; the evidence/ownership remainder still belongs to Context. No multi-provider replication, general runtime or compressor was adopted.
+
+`evals/web-exercise.json`, `evals/verification-stage-use.json`, `evals/v1-acceptance.md`, and `examples/web/brief.md` record local fixture/browser observations and policy, with the source pins above. `docs/compatibility.md` documents the schema/path migration contract. PyYAML and jsonschema are explicit maintained parsing/validation dependencies; `requirements.txt` retains exact PyPI artifact hashes. Browser development dependencies and transitive integrity values are in package-lock.json. No upstream installer is executed by the delivered loadout command.
+
+Pinned upstream text retains its original whitespace, including Markdown hard breaks and blank EOF lines. `.gitattributes` exempts only `sourced/` from those two whitespace checks; authored content keeps normal checks and source hashes remain enforced.

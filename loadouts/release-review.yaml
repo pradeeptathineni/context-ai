@@ -1,0 +1,35 @@
+schema_version: 1
+skills:
+- context-loadout
+capabilities:
+  python-runtime: required
+  git: required
+options: {}
+decisions:
+- D-001
+- D-002
+- D-003
+- D-004
+- D-005
+- D-006
+- D-012
+compose: []
+id: release-review
+description: Review, test and publish an explicitly authorized immutable release.
+characteristics:
+- release
+- compatibility
+- publication
+stages:
+  review:
+  - core/review.md
+  - overlays/evidence-claims.md
+  - core/version-control.md
+  test:
+  - core/testing.md
+  deliver:
+  - core/versioning.md
+  - overlays/delivery.md
+checks:
+- Test clean checkout and distributed artifacts; review README promises/compatibility;
+  verify remote SHA/CI then immutable tag/release destination.

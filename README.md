@@ -1,83 +1,70 @@
 # context-ai
 
-Reusable AI context engineering.
+Evidence-backed context and project loadouts for AI-assisted development.
 
-`context-ai` is a small standard library of context that otherwise gets recreated across projects, agents, and providers. It favors concise, reviewable guidance over monolithic prompts and keeps durable behavior separate from model data, provider mechanics, and evidence.
+Choose the guidance a project needs, pin it, and use it through the agent you already have. Context AI provides concise behavioral modules, a practical web design/verification procedure, and project-local Codex delivery with file ownership and undo. It keeps source evidence, adoption decisions, installed resources, and actual use separate.
 
-## What lives where
+## Choose a loadout
 
-- [`core/`](core/) contains provider-independent behavioral context. Load only the files relevant to the task.
-- [`custom/`](custom/) contains opinionated house standards that compose and specialize the canonical core; a user-level entry point can route relevant files across projects.
-- [`concepts.yaml`](concepts.yaml) names the decision areas this library should recognize. [`signals/common.yaml`](signals/common.yaml) records provider-neutral standards and practice worth checking for some of them.
-- [`sources.yaml`](sources.yaml) links each signal to its original publisher and records when it was reviewed.
-- [`.agents/skills/standard/`](.agents/skills/standard/) is the first usable backpack: a Codex skill that checks relevant native capabilities and prior art before substantial development or workflow choices.
-- [`models/routing.yaml`](models/routing.yaml) is a machine-readable policy for selecting a model profile and reasoning level from task attributes.
-- [`providers/`](providers/) contains product-specific adapters and sourced signals, including [`providers/openai/signals.yaml`](providers/openai/signals.yaml) for Codex and ChatGPT capabilities.
-- [`evals/`](evals/) defines how context quality can be compared without putting nondeterministic model calls in CI.
-- A nested `sourced/` directory may hold a pinned, redistributable upstream artifact when a local snapshot has clear value. None are included in v0.2.0.
-- [`docs/references.md`](docs/references.md) maps maintained artifacts to the sources that materially shaped them.
-- [`docs/adoption.md`](docs/adoption.md) gives a staged Codex user-level entry point and explains how the hierarchy can serve other repositories.
+| Loadout | What it equips |
+| --- | --- |
+| standard | Proportional development, prior art, comments, tests, review and delivery |
+| context-authoring | Context compression, authority, coherence, provenance and compatibility |
+| research-evidence | Primary evidence and useful options through the Signals research method |
+| web-experience | Impeccable-led instruction-only design, UX, accessibility and browser critique |
+| react-web | Web experience plus React guidance matched to the actual framework |
+| service-api | API trust/contracts, persistence, failures and isolated migrations |
+| aws-infrastructure | Existing Terraform/AWS planning, validation and hosting boundaries |
+| release-review | Final review, meaningful checks and immutable publication |
 
-Markdown is used for instructions people and models should read naturally. YAML is used where consumers need stable fields, validation, and routing logic. Provider adapters reference canonical context instead of copying it.
+Selections compose: `standard + web-experience + react-web` is valid. A backend task does not select the design suite. Project instructions, user brand and authorized scope remain decisive.
 
 ## Use it
 
-Read the smallest useful set of files. For example, an engineering task might use:
+From an exact checkout or exported release archive, with Python 3.10+:
 
-```text
-core/engineering.md
-core/development.md
-core/testing.md
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install --require-hashes -r requirements.txt
+.venv/bin/python scripts/context_ai.py list
+.venv/bin/python scripts/context_ai.py plan standard react-web --project /absolute/project --provider codex
+.venv/bin/python scripts/context_ai.py apply standard react-web --project /absolute/project --provider codex
+.venv/bin/python scripts/context_ai.py verify --project /absolute/project
 ```
 
-A project using Codex can route from its `AGENTS.md` without embedding the full library:
+Review the plan before applying. The command copies selected resources/notice dependencies into `.context-ai/`, creates selected skill routers, and appends one managed AGENTS block. Existing instructions and edited files are protected. `refresh` proposes a new lock/diff; `undo` removes unchanged owned materialization and preserves user edits. Read the routed stage resources explicitly when the running client has not refreshed skill discovery.
 
-```markdown
-For substantial changes, read the project's copies of `core/engineering.md`
-and `core/context.md`. For implementation, also read `core/development.md`
-and `core/testing.md`.
-```
+See the [command and schema contract](docs/loadouts.md), [compatibility/migration guide](docs/compatibility.md), and [Codex adapter](providers/openai/codex.md). Existing direct module and concept lookup consumers remain supported.
 
-An integration can evaluate task attributes against `models/routing.yaml`, select the first matching route, and resolve its logical profile to a current provider model. Callers should depend on route and profile names rather than scattering model IDs.
+## What lives where
 
-See [`providers/openai/codex.md`](providers/openai/codex.md) for Codex-specific instruction discovery and configuration behavior.
+- [core](core/engineering.md): canonical provider-independent behavior, including comments, version control and prior art.
+- [domains](domains/web/design.md): concern-specific web, service and infrastructure guidance.
+- [overlays](overlays/README.md): opt-in house policy; old custom paths remain compatibility routers.
+- [loadouts](loadouts/standard.yaml): authored selections; resolved locks and use receipts are separate artifacts.
+- [context-loadout skill](skills/context-loadout/SKILL.md): selection/use procedure, alongside the preserved local standard skill.
+- [concepts](concepts.yaml), [sources](sources.yaml), and [decisions](decisions/bootstrap.yaml): definitions, sourced prior-art candidates and project dispositions.
+- [source lock](sources.lock.json) and inactive sourced snapshots: exact upstream pins with licences/notices.
+- [model routing](models/routing.yaml): stable logical profiles and reviewed provider bindings; no global settings change.
 
-A personal entry point or project that adopts the house layer should select from [`custom/README.md`](custom/README.md), not load the directory wholesale. For example, an AI implementation may add `custom/ai-implementation.md`; add `custom/delivery.md` when the task needs the full implementation-to-integration loop or includes publication or release.
+## Proof and limits
 
-For substantial new tooling or custom capabilities, begin with [`custom/prior-art.md`](custom/prior-art.md) and the relevant project contract. Find the matching concept and signals for a sourced shortlist; the [concepts and signals guide](docs/concepts-and-signals.md) explains that lookup. The house layer also covers agent orchestration, model and reasoning choices, writing, code comments, design patterns, and evidence claims. The [usage cases](evals/usage-cases.md) show how different tasks select different files.
+The [bootstrap receipt](evals/bootstrap-use.json) records actual explicit reads and validator maintenance before bulk implementation. All eight loadouts have materialized consumer tests. The [web exercise](examples/web/brief.md) builds a static fixture, tests four viewport widths and two palettes with Playwright/axe, and has an inspected critique/revision pass. [Release evidence](evals/v1-acceptance.md) records outcomes and their limits; [references](docs/references.md) records influences and review dates.
 
-For a narrow lookup, run `ruby scripts/lookup.rb --search "reasoning"`, then `ruby scripts/lookup.rb models.reasoning --provider openai --product codex`. The command prints matching candidates and original-source links without loading the whole index.
+Codex is the v1 delivery adapter. Impeccable binaries/hooks/extensions are excluded; its selected documentation works through direct reads. This is a context library, with no agent runtime, automatic tool installation, deployment side effects or signal-scoring engine. Capability presence checks are followed by project-specific verification recipes. Fixture tests, local browser judgment and self-reported reads do not prove production behavior, human usefulness, or native skill activation. Signals evidence advice never grants installation authority.
 
-In Codex, invoke `$standard` for a substantial tooling or workflow decision. Codex can also select the skill when the task matches its description. The [adoption guide](docs/adoption.md) explains how to make this Git-owned skill available across local repositories; a skill does not itself change model settings or guarantee that a tool is active.
-
-## Design
-
-Context is a finite attention budget. Start with small, always-relevant instructions; retrieve task-specific context just in time; and load provider guidance only for that provider. Preserve project facts, decisions, and non-obvious constraints. Avoid repeating generic knowledge a capable model already has.
-
-The layers have different change pressures:
-
-1. Canonical context changes when durable guidance improves.
-2. Custom context changes when repeated project practice justifies an opinionated specialization.
-3. The concept index changes when a distinct decision area is needed; signals change when sourced prior art or product capabilities warrant inclusion.
-4. Structured model configuration changes when a machine-readable route or binding changes.
-5. Provider adapters change with product behavior.
-6. References and evaluations show why an artifact exists and whether it still works.
-
-This separation lets model and provider facts evolve without rewriting the behavioral library.
-
-## Release and current scope
-
-The v0.2.0 release added five custom contexts for project intent, technical design, AI implementation, context efficiency, and complete delivery. The current checkout extends that layer with the practices above, a Codex adoption guide, the `standard` skill, and a provider-neutral concept index with shared and OpenAI-specific sourced signals. The nine canonical core contexts, model-routing policy, Codex adapter, provenance map, deterministic validation, and evaluation protocol remain in place. Custom guidance stays a delta from canonical context and composes references rather than copying content. Additional provider adapters and backpacks should follow actual use.
-
-Run validation with:
+Run the deterministic gates:
 
 ```sh
 ruby scripts/validate.rb
+.venv/bin/python scripts/check_loadouts.py
+.venv/bin/python -m unittest discover -s tests -v
+npm ci --ignore-scripts
+npm run build:web
+npm run test:web
 git diff --check
 ```
 
-Releases follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html); notable changes are recorded in [`CHANGELOG.md`](CHANGELOG.md). See [`docs/references.md`](docs/references.md) for the sourcing policy and review dates.
+The browser gate requires the pinned Playwright Chromium runtime: `node node_modules/playwright/cli.js install chromium`. CI also preserves its screenshots and results.
 
-## License
-
-[MIT](LICENSE)
+Library releases use immutable annotated tags and [CHANGELOG](CHANGELOG.md). Schema versions remain independent. Repository-owned content is [MIT](LICENSE); upstream snapshots retain their own declared licences and notices.

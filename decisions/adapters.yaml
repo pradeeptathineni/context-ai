@@ -1,0 +1,94 @@
+schema_version: 1
+decisions:
+- id: D-015
+  revision: 1
+  supersedes: null
+  concept: context.loadouts
+  action: adopt
+  selection: Native Codex routing plus small ownership adapter
+  evidence:
+  - docs/references.md
+  applicability: Codex project-local v1 adapter
+  rationale: Ruler 0.3.44 trial verified rule distribution, but it regenerates root AGENTS
+    and does not own evidence locks or integrity-based edited-file refusal. The smaller adapter
+    keeps Ruby validation and uses maintained PyYAML/jsonschema for the new contracts.
+  alternatives:
+  - status quo
+  - Ruler 0.3.44
+  - narrow adapter
+  unknowns:
+  - Comparative benefit and token savings remain unmeasured.
+  validation:
+  - Ruler dry-run/apply in disposable project; root regeneration observed; project ownership
+    tests.
+  rollback: Keep old lock or undo unchanged owned resources.
+  revisit_when: Consumer authority or compatibility cannot be met by this boundary.
+- id: D-016
+  revision: 1
+  supersedes: null
+  concept: security.supply_chain
+  action: adopt
+  selection: Python 3.10+ PyYAML/jsonschema contract tooling
+  evidence:
+  - docs/references.md
+  applicability: Codex project-local v1 adapter
+  rationale: Installed Python is available and maintained safe parsing/schema validation avoids
+    a homemade JSON Schema engine. Existing Ruby validator remains canonical for original
+    contracts.
+  alternatives:
+  - Ruby Psych safe parsing plus a maintained JSON Schema gem
+  - Python PyYAML/jsonschema alongside existing Ruby checks
+  - Bespoke parser/schema subset rejected
+  unknowns:
+  - Python consumer environment must supply the documented version and pinned dependencies.
+  validation:
+  - Python package versions inspected; duplicate/tag/alias rejection and Draft 2020-12 tests.
+  rollback: Use the earlier bootstrap checkout/archive; undo unchanged owned resources before
+    switching adapters.
+  revisit_when: A real consumer cannot support Python 3.10+ or the maintained libraries stop
+    meeting the contract.
+- id: D-017
+  revision: 1
+  supersedes: null
+  concept: models.selection
+  action: replace
+  selection: GPT-6.1 Sol balanced profile
+  evidence:
+  - docs/references.md
+  applicability: Stable OpenAI logical model profiles; actual product/auth access must be
+    verified separately.
+  rationale: Official model docs and desktop capability metadata expose current Sol 6.1. Preserve
+    stable logical routes; API entitlement is unverified and global settings remain user-owned.
+  alternatives:
+  - Keep the earlier supported GPT-6 Sol binding
+  - Use GPT-6.1 Sol for the existing balanced profile
+  - Use frontier only when the task warrants it
+  unknowns:
+  - API entitlement, per-workspace availability and comparative task quality remain unmeasured.
+  validation:
+  - Validator rejects retired Spark and invalid effort; no inference required.
+  rollback: Pin an earlier supported routing revision after checking its current lifecycle
+    and product availability.
+  revisit_when: Official lifecycle/effort support changes or task evidence shows the current
+    binding is inadequate.
+- id: D-007
+  concept: web-design-workflow
+  action: trial
+  selection: Impeccable 4.5.0 pinned instruction-only trial
+  rationale: Current upstream launcher includes downloads and hook effects. Keep its web documentation
+    procedure, exclude execution and use direct reads; actual browser trial required before
+    broad endorsement.
+  revisit_when: Compatibility, hooks, maintenance cost, or real-task output is worse than
+    simpler alternatives.
+  revision: 2
+  supersedes: 1
+  evidence:
+  - sources.lock.json
+  applicability: Context AI v1 consumers
+  alternatives:
+  - existing repository guidance
+  unknowns:
+  - Binary/hook behavior is not exercised or endorsed.
+  validation:
+  - Source/notice review and the v1 representative browser exercise.
+  rollback: Undo unchanged owned materialization; retain old pins.

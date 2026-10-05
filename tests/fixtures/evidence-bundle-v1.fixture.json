@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "bundle_id": "fixture-web-tooling-001",
+  "mode": "fixture",
+  "created_at": "2026-10-05T15:00:00Z",
+  "producer": {
+    "repository": "fixture/signals-ai",
+    "commit": "0000000",
+    "protocol": "fixture-v1"
+  },
+  "need": {
+    "query": "Choose a browser validation capability for a website project",
+    "concept_ids": ["browser-validation"],
+    "constraints": ["This is synthetic conformance data only"]
+  },
+  "sources": [
+    {
+      "id": "src-1",
+      "uri": "https://example.com/source",
+      "title": "Synthetic source",
+      "source_class": "fixture",
+      "observed_at": null,
+      "revision": null,
+      "independence_group": "fixture"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-1",
+      "text": "Synthetic capability supports browser checks.",
+      "source_ids": ["src-1"],
+      "status": "supported"
+    }
+  ],
+  "candidates": [
+    {
+      "id": "candidate-1",
+      "name": "Synthetic browser tool",
+      "canonical_uri": "https://example.com/tool",
+      "claim_ids": ["claim-1"],
+      "disposition": "consider",
+      "reason": "Fixture only; never valid production evidence.",
+      "limitations": ["Synthetic fixture"],
+      "signal": {
+        "evidence_confidence": "unknown",
+        "project_fit": "unknown"
+      }
+    }
+  ],
+  "limitations": ["Synthetic fixture; must never be promoted to real evidence."],
+  "extensions": {}
+}

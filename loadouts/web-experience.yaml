@@ -1,0 +1,45 @@
+schema_version: 1
+skills:
+- context-loadout
+- context-web-design
+- context-web-audit
+capabilities:
+  python-runtime: required
+  git: required
+  context-web-design: required
+  context-web-audit: required
+  browser: optional
+options:
+  brand: quiet
+decisions:
+- D-001
+- D-002
+- D-003
+- D-004
+- D-005
+- D-006
+- D-012
+- D-007
+- D-008
+- D-010
+compose: []
+id: web-experience
+description: Build and critique a coherent accessible responsive web experience.
+characteristics:
+- website
+- frontend
+- non-react-supported
+stages:
+  design:
+  - domains/web/design.md
+  - domains/web/product-ux.md
+  implement:
+  - domains/web/accessibility.md
+  - domains/web/performance.md
+  test:
+  - domains/web/browser-verification.md
+  review:
+  - domains/web/design.md
+checks:
+- Build/serve distributed output; inspect desktop/mobile screenshots and interactions;
+  run Playwright and axe; review asset budget and reduced motion.

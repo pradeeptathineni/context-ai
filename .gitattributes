@@ -1,0 +1,3 @@
+# Preserve pinned upstream text, including Markdown hard breaks and blank EOF lines.
+# Authored files retain the normal whitespace gate; sources.lock.json checks exact bytes.
+sourced/** whitespace=-blank-at-eol,-blank-at-eof

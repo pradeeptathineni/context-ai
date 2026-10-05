@@ -4,3 +4,5 @@ __pycache__/
 node_modules/
 .examples-output/
 .agents/skills/context-loadout/
+examples/web/.agents/
+examples/web/AGENTS.md

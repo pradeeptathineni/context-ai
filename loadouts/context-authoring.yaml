@@ -25,7 +25,7 @@ stages:
   - core/context.md
   implement:
   - core/compression.md
-  - custom/context-efficiency.md
+  - overlays/context-efficiency.md
   research:
   - core/research.md
   test:

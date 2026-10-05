@@ -1,0 +1,36 @@
+schema_version: 1
+skills:
+- context-loadout
+- context-react-review
+capabilities:
+  python-runtime: required
+  git: required
+  context-react-review: required
+  node: required
+options: {}
+decisions:
+- D-001
+- D-002
+- D-003
+- D-004
+- D-005
+- D-006
+- D-012
+- D-009
+compose:
+- web-experience
+id: react-web
+description: Apply stack-matched React guidance with web experience.
+characteristics:
+- react
+- nextjs-or-vite
+stages:
+  inspect:
+  - domains/web/react.md
+  implement:
+  - domains/web/react.md
+  test:
+  - domains/web/browser-verification.md
+checks:
+- Detect React/framework versions; use relevant pinned rules; build and verify browser/hydration
+  behavior.

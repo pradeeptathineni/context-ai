@@ -1,4 +1,3 @@
-# Stable, provider-neutral decision areas. A concept is not an instruction or a tool mandate.
 schema_version: 1
 concepts:
   product.intent: Define the outcome the work must achieve for its users.
@@ -10,16 +9,14 @@ concepts:
   product.acceptance: Make success observable before implementation.
   product.tradeoffs: Record consequential choices and their costs.
   product.lifecycle: Plan ownership, maintenance, deprecation, and removal.
-
   research.discovery: Find relevant primary sources and existing implementations.
   research.prior_art: Assess existing standards, native facilities, and maintained tools before building.
   research.provenance: Keep a claim traceable to its original source or observation.
   research.credibility: Judge source authority, independence, and applicability.
   research.synthesis: Combine evidence without laundering inference into fact.
   research.decision: Choose an owner for each responsibility with a review trigger.
-  research.freshness: Recheck facts likely to change before relying on them.
+  research.freshness: Assess evidence age against the volatility of the deciding claim.
   research.licensing: Establish reuse and redistribution rights for sources and software.
-
   context.instructions: Route durable instructions by authority and scope.
   context.project_knowledge: Retrieve project facts and decisions when relevant.
   context.retrieval: Select just enough source material for the current task.
@@ -31,7 +28,6 @@ concepts:
   context.injection: Keep untrusted content from becoming instructions.
   context.adaptation: Map shared guidance to a provider's actual instruction mechanism.
   context.sync: Detect drift between source material and derived context.
-
   models.selection: Choose a model for the task's required capabilities and constraints.
   models.reasoning: Set deliberation effort proportional to difficulty and stakes.
   models.routing: Map task attributes to a current model and fallback.
@@ -42,7 +38,6 @@ concepts:
   models.cost_latency: Measure total time and cost at acceptable quality.
   models.fallback: Recover when a model is unavailable or fails the task.
   models.eval: Compare model behavior on representative tasks.
-
   agents.decomposition: Split work into independently checkable tasks when useful.
   agents.orchestration: Coordinate agent work, dependencies, and result assembly.
   agents.roles: Define specialist responsibilities and boundaries.
@@ -53,7 +48,6 @@ concepts:
   agents.recovery: Resume safely after interruption or partial failure.
   agents.autonomy: Match independent action to the user's authorization and risk.
   agents.oversight: Reserve consequential choices for human judgment where needed.
-
   integration.protocols: Prefer interoperable protocols where they fit the job.
   integration.mcp: Connect model applications to tools and resources through MCP.
   integration.plugins: Distribute a cohesive set of capabilities across supported surfaces.
@@ -63,7 +57,6 @@ concepts:
   integration.authentication: Establish identity and permissions for external systems.
   integration.external_data: Access external applications and data with explicit boundaries.
   integration.workflow_capture: Turn a demonstrated repeatable workflow into a reusable procedure.
-
   architecture.boundaries: Assign authority and responsibilities to clear components.
   architecture.composition: Combine existing components before adding a new platform.
   architecture.patterns: Select patterns for present needs and removal cost.
@@ -75,7 +68,6 @@ concepts:
   architecture.concurrency: Preserve invariants under simultaneous work.
   architecture.migration: Evolve contracts and stored state without losing history.
   architecture.portability: Isolate provider or platform assumptions behind narrow adapters.
-
   implementation.reuse: Inspect existing code and libraries before writing a new mechanism.
   implementation.dependencies: Choose dependencies by fit, maintenance, and exit cost.
   implementation.types: Use type and schema checks to express useful invariants.
@@ -85,7 +77,6 @@ concepts:
   implementation.debugging: Reproduce and localize faults before changing behavior.
   implementation.refactoring: Improve structure while preserving observable behavior.
   implementation.performance: Measure meaningful bottlenecks before optimizing.
-
   data.modeling: Represent entities, relationships, and constraints faithfully.
   data.validation: Reject malformed or out-of-contract data at a defined boundary.
   data.lineage: Track how data was sourced, transformed, and used.
@@ -95,7 +86,6 @@ concepts:
   data.retention: Set deletion and archival behavior for retained data.
   data.portability: Keep data exportable and avoid needless lock-in.
   data.determinism: Produce stable, reproducible outputs where required.
-
   security.trust: Define trust boundaries for users, agents, tools, and data.
   security.permissions: Grant the least authority needed for an operation.
   security.sandbox: Match isolation claims to tested runtime boundaries.
@@ -106,7 +96,6 @@ concepts:
   security.threat_model: Identify plausible attackers, assets, and failure paths.
   security.abuse: Bound misuse of exposed capabilities and outputs.
   security.policy: Enforce restrictions with a mechanism that covers the action.
-
   quality.strategy: Choose verification proportional to risk and failure modes.
   quality.unit_tests: Check focused behavior with controlled inputs.
   quality.integration_tests: Check component boundaries and real dependencies.
@@ -118,7 +107,6 @@ concepts:
   quality.reproducibility: Preserve enough inputs and environment to repeat a result.
   quality.accessibility: Check that people can use the output across abilities and devices.
   quality.visual: Inspect rendered or interactive behavior when appearance matters.
-
   delivery.versioning: Communicate compatibility and change through release versions.
   delivery.git: Keep change history reviewable and preserve existing work.
   delivery.ci: Run deterministic repository gates on shared changes.
@@ -127,7 +115,6 @@ concepts:
   delivery.rollback: Recover from a bad release or migration.
   delivery.documentation: Give users accurate setup, usage, and limitations.
   delivery.artifacts: Produce traceable outputs and evidence of their origin.
-
   operations.observability: Collect signals that explain system behavior and failures.
   operations.reliability: Define and check the service behavior that must hold.
   operations.incidents: Detect, respond to, and learn from failures.
@@ -136,7 +123,6 @@ concepts:
   operations.resources: Bound compute, storage, network, and financial consumption.
   operations.backup: Restore essential state from verified backups.
   operations.support: Make diagnosis and correction possible for maintainers and users.
-
   communication.voice: Match tone and persona to audience and task.
   communication.anti_slop: Remove generic filler, repetition, and unsupported confidence.
   communication.clarity: Explain decisions in plain language with useful structure.
@@ -144,3 +130,155 @@ concepts:
   communication.uncertainty: Distinguish observed results, inference, and unknowns.
   communication.ux: Make outputs and controls help people decide and act.
   communication.visualization: Use a visual when it makes relationships easier to grasp.
+  context.loadouts: Select a declarative project composition with exact evidence and resource pins.
+  context.capability_selection: Choose required and optional support for the actual project and stage.
+  research.confidence: State strength and limitations of claim support without invented probabilities.
+  quality.comments: Preserve intent, invariants and useful API contracts in accurate comments.
+  web.design: Choose and critique a coherent visual direction for the product and brand.
+  web.product: Make audience, primary job and truthful content govern the experience.
+  web.responsive: Preserve reading order and usable controls across viewport and input sizes.
+  web.motion: Use bounded purposeful motion with reduced-motion and static fallbacks.
+  web.performance: Measure assets and interactions without confusing lab and field evidence.
+  web.static_hosting: Match built routes and runtime features to the actual static destination.
+
+details:
+  product.intent: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  product.audience: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  product.requirements: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  product.constraints: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  product.scope: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  product.prioritization: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  product.acceptance: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  product.tradeoffs: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  product.lifecycle: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  research.discovery: {aliases: [], scope: general, modules: [core/research.md], decisions: [D-005], evidence: [docs/references.md]}
+  research.prior_art: {aliases: [], scope: general, modules: [core/research.md], decisions: [D-005], evidence: [docs/references.md]}
+  research.provenance: {aliases: [], scope: general, modules: [core/research.md], decisions: [D-005], evidence: [docs/references.md]}
+  research.credibility: {aliases: [], scope: general, modules: [core/research.md], decisions: [D-005], evidence: [docs/references.md]}
+  research.synthesis: {aliases: [], scope: general, modules: [core/research.md], decisions: [D-005], evidence: [docs/references.md]}
+  research.decision: {aliases: [], scope: general, modules: [core/research.md], decisions: [D-005], evidence: [docs/references.md]}
+  research.freshness: {aliases: [], scope: general, modules: [core/research.md], decisions: [D-005], evidence: [docs/references.md]}
+  research.licensing: {aliases: [], scope: general, modules: [core/research.md], decisions: [D-005], evidence: [docs/references.md]}
+  context.instructions: {aliases: [], scope: general, modules: [core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.project_knowledge: {aliases: [], scope: general, modules: [core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.retrieval: {aliases: [], scope: general, modules: [core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.skills: {aliases: [], scope: general, modules: [core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.memory: {aliases: [], scope: general, modules: [core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.compression: {aliases: [], scope: general, modules: [core/compression.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.budget: {aliases: [], scope: general, modules: [core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.provenance: {aliases: [], scope: general, modules: [core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.injection: {aliases: [], scope: general, modules: [core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.adaptation: {aliases: [], scope: general, modules: [core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.sync: {aliases: [], scope: general, modules: [core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  models.selection: {aliases: [], scope: general, modules: [models/routing.yaml, overlays/model-deliberation.md], decisions: [D-003], evidence: [docs/references.md]}
+  models.reasoning: {aliases: [], scope: general, modules: [models/routing.yaml, overlays/model-deliberation.md], decisions: [D-003], evidence: [docs/references.md]}
+  models.routing: {aliases: [], scope: general, modules: [models/routing.yaml, overlays/model-deliberation.md], decisions: [D-003], evidence: [docs/references.md]}
+  models.prompting: {aliases: [], scope: general, modules: [models/routing.yaml, overlays/model-deliberation.md], decisions: [D-003], evidence: [docs/references.md]}
+  models.tool_use: {aliases: [], scope: general, modules: [models/routing.yaml, overlays/model-deliberation.md], decisions: [D-003], evidence: [docs/references.md]}
+  models.structured_output: {aliases: [], scope: general, modules: [models/routing.yaml, overlays/model-deliberation.md], decisions: [D-003], evidence: [docs/references.md]}
+  models.multimodal: {aliases: [], scope: general, modules: [models/routing.yaml, overlays/model-deliberation.md], decisions: [D-003], evidence: [docs/references.md]}
+  models.cost_latency: {aliases: [], scope: general, modules: [models/routing.yaml, overlays/model-deliberation.md], decisions: [D-003], evidence: [docs/references.md]}
+  models.fallback: {aliases: [], scope: general, modules: [models/routing.yaml, overlays/model-deliberation.md], decisions: [D-003], evidence: [docs/references.md]}
+  models.eval: {aliases: [], scope: general, modules: [models/routing.yaml, overlays/model-deliberation.md], decisions: [D-003], evidence: [docs/references.md]}
+  agents.decomposition: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  agents.orchestration: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  agents.roles: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  agents.delegation: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  agents.isolation: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  agents.state: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  agents.handoff: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  agents.recovery: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  agents.autonomy: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  agents.oversight: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  integration.protocols: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  integration.mcp: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  integration.plugins: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  integration.hooks: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  integration.commands: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  integration.api_contracts: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  integration.authentication: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  integration.external_data: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  integration.workflow_capture: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.boundaries: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.composition: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.patterns: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.interfaces: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.contracts: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.state: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.effects: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.idempotency: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.concurrency: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.migration: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  architecture.portability: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  implementation.reuse: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  implementation.dependencies: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  implementation.types: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  implementation.errors: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  implementation.configuration: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  implementation.comments: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  implementation.debugging: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  implementation.refactoring: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  implementation.performance: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  data.modeling: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  data.validation: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  data.lineage: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  data.persistence: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  data.transactions: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  data.privacy: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  data.retention: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  data.portability: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  data.determinism: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  security.trust: {aliases: [], scope: general, modules: [core/engineering.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  security.permissions: {aliases: [], scope: general, modules: [core/engineering.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  security.sandbox: {aliases: [], scope: general, modules: [core/engineering.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  security.secrets: {aliases: [], scope: general, modules: [core/engineering.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  security.supply_chain: {aliases: [], scope: general, modules: [core/engineering.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  security.vulnerabilities: {aliases: [], scope: general, modules: [core/engineering.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  security.audit: {aliases: [], scope: general, modules: [core/engineering.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  security.threat_model: {aliases: [], scope: general, modules: [core/engineering.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  security.abuse: {aliases: [], scope: general, modules: [core/engineering.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  security.policy: {aliases: [], scope: general, modules: [core/engineering.md, core/context.md], decisions: [D-003], evidence: [docs/references.md]}
+  quality.strategy: {aliases: [], scope: general, modules: [core/testing.md, core/review.md], decisions: [D-003], evidence: [docs/references.md]}
+  quality.unit_tests: {aliases: [], scope: general, modules: [core/testing.md, core/review.md], decisions: [D-003], evidence: [docs/references.md]}
+  quality.integration_tests: {aliases: [], scope: general, modules: [core/testing.md, core/review.md], decisions: [D-003], evidence: [docs/references.md]}
+  quality.end_to_end: {aliases: [], scope: general, modules: [core/testing.md, core/review.md], decisions: [D-003], evidence: [docs/references.md]}
+  quality.property_tests: {aliases: [], scope: general, modules: [core/testing.md, core/review.md], decisions: [D-003], evidence: [docs/references.md]}
+  quality.evaluations: {aliases: [], scope: general, modules: [core/benchmarking.md, core/testing.md], decisions: [D-003], evidence: [docs/references.md]}
+  quality.benchmarks: {aliases: [], scope: general, modules: [core/benchmarking.md, core/testing.md], decisions: [D-003], evidence: [docs/references.md]}
+  quality.review: {aliases: [], scope: general, modules: [core/review.md], decisions: [D-003], evidence: [docs/references.md]}
+  quality.reproducibility: {aliases: [], scope: general, modules: [core/benchmarking.md, core/testing.md], decisions: [D-003], evidence: [docs/references.md]}
+  quality.accessibility: {aliases: [], scope: general, modules: [domains/web/accessibility.md], decisions: [D-007, D-010], evidence: [docs/references.md]}
+  quality.visual: {aliases: [], scope: general, modules: [domains/web/browser-verification.md], decisions: [D-007, D-010], evidence: [docs/references.md]}
+  delivery.versioning: {aliases: [], scope: general, modules: [core/versioning.md, core/version-control.md], decisions: [D-003], evidence: [docs/references.md]}
+  delivery.git: {aliases: [], scope: general, modules: [core/version-control.md], decisions: [D-003], evidence: [docs/references.md]}
+  delivery.ci: {aliases: [], scope: general, modules: [core/versioning.md, core/version-control.md], decisions: [D-003], evidence: [docs/references.md]}
+  delivery.release: {aliases: [], scope: general, modules: [core/versioning.md, core/version-control.md], decisions: [D-003], evidence: [docs/references.md]}
+  delivery.deployment: {aliases: [], scope: general, modules: [core/versioning.md, core/version-control.md], decisions: [D-003], evidence: [docs/references.md]}
+  delivery.rollback: {aliases: [], scope: general, modules: [core/versioning.md, core/version-control.md], decisions: [D-003], evidence: [docs/references.md]}
+  delivery.documentation: {aliases: [], scope: general, modules: [core/versioning.md, core/version-control.md], decisions: [D-003], evidence: [docs/references.md]}
+  delivery.artifacts: {aliases: [], scope: general, modules: [core/versioning.md, core/version-control.md], decisions: [D-003], evidence: [docs/references.md]}
+  operations.observability: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  operations.reliability: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  operations.incidents: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  operations.scheduling: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  operations.monitoring: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  operations.resources: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  operations.backup: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  operations.support: {aliases: [], scope: general, modules: [core/engineering.md], decisions: [D-003], evidence: [docs/references.md]}
+  communication.voice: {aliases: [], scope: general, modules: [overlays/writing.md, overlays/evidence-claims.md], decisions: [D-003], evidence: [docs/references.md]}
+  communication.anti_slop: {aliases: [], scope: general, modules: [overlays/writing.md, overlays/evidence-claims.md], decisions: [D-003], evidence: [docs/references.md]}
+  communication.clarity: {aliases: [], scope: general, modules: [overlays/writing.md, overlays/evidence-claims.md], decisions: [D-003], evidence: [docs/references.md]}
+  communication.citations: {aliases: [], scope: general, modules: [overlays/writing.md, overlays/evidence-claims.md], decisions: [D-003], evidence: [docs/references.md]}
+  communication.uncertainty: {aliases: [], scope: general, modules: [overlays/writing.md, overlays/evidence-claims.md], decisions: [D-003], evidence: [docs/references.md]}
+  communication.ux: {aliases: [], scope: general, modules: [overlays/writing.md, overlays/evidence-claims.md], decisions: [D-003], evidence: [docs/references.md]}
+  communication.visualization: {aliases: [], scope: general, modules: [overlays/writing.md, overlays/evidence-claims.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.loadouts: {aliases: [], scope: general, modules: [skills/context-loadout/SKILL.md], decisions: [D-003], evidence: [docs/references.md]}
+  context.capability_selection: {aliases: [], scope: general, modules: [core/prior-art.md], decisions: [D-003], evidence: [docs/references.md]}
+  research.confidence: {aliases: [], scope: general, modules: [core/research.md], decisions: [D-005], evidence: [docs/references.md]}
+  quality.comments: {aliases: [], scope: general, modules: [core/code-comments.md], decisions: [D-003], evidence: [docs/references.md]}
+  web.design: {aliases: [], scope: web, modules: [domains/web/design.md], decisions: [D-007, D-010], evidence: [sources.lock.json]}
+  web.product: {aliases: [], scope: web, modules: [domains/web/product-ux.md], decisions: [D-007, D-010], evidence: [sources.lock.json]}
+  web.responsive: {aliases: [], scope: web, modules: [domains/web/accessibility.md, domains/web/browser-verification.md], decisions: [D-007, D-010], evidence: [sources.lock.json]}
+  web.motion: {aliases: [], scope: web, modules: [domains/web/design.md, domains/web/accessibility.md], decisions: [D-007, D-010], evidence: [sources.lock.json]}
+  web.performance: {aliases: [], scope: web, modules: [domains/web/performance.md], decisions: [D-007, D-010], evidence: [sources.lock.json]}
+  web.static_hosting: {aliases: [], scope: web, modules: [domains/web/performance.md, domains/infrastructure/aws.md], decisions: [D-007, D-010], evidence: [sources.lock.json]}

@@ -50,6 +50,17 @@ REQUIRED = %w[
   evals/usage-cases.md
   scripts/lookup.rb
   scripts/validate.rb
+  scripts/context_ai.py
+  scripts/evidence.py
+  scripts/check_loadouts.py
+  skills/context-loadout/SKILL.md
+  schemas/loadout.schema.json
+  schemas/lock.schema.json
+  schemas/installation.schema.json
+  schemas/evidence-bundle-v1.schema.json
+  capabilities.yaml
+  sources.lock.json
+  requirements.txt
   .github/workflows/validate.yml
 ].freeze
 
@@ -70,7 +81,9 @@ end
 core_files = Dir.glob(ROOT.join("core/*.md")).sort
 custom_files = Dir.glob(ROOT.join("custom/*.md")).sort
 skill_files = Dir.glob(ROOT.join(".agents/skills/*/SKILL.md")).sort
-context_files = core_files + custom_files
+overlay_files = Dir.glob(ROOT.join("overlays/*.md")).sort
+domain_files = Dir.glob(ROOT.join("domains/**/*.md")).sort
+context_files = core_files + custom_files + overlay_files + domain_files
 context_files.each do |file|
   words = File.read(file).scan(/\S+/).length
   error("context is too large (#{words} words): #{relative(file)}") if words > 1_200
@@ -278,6 +291,8 @@ reference_text = references.file? ? references.read : ""
 accounted_artifacts = (
   core_files +
   custom_files +
+  overlay_files +
+  domain_files +
   skill_files +
   Dir.glob(ROOT.join("providers/**/*.md")) +
   yaml_files +

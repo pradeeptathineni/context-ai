@@ -1,0 +1,36 @@
+schema_version: 1
+skills:
+- context-loadout
+capabilities:
+  python-runtime: required
+  git: required
+options: {}
+decisions:
+- D-001
+- D-002
+- D-003
+- D-004
+- D-005
+- D-006
+- D-012
+compose: []
+id: service-api
+description: Test API contracts, trust and persistence on the actual service stack.
+characteristics:
+- api
+- service
+- persistence
+stages:
+  inspect:
+  - core/engineering.md
+  - domains/service/api.md
+  implement:
+  - core/development.md
+  - domains/service/api.md
+  test:
+  - core/testing.md
+  review:
+  - core/review.md
+checks:
+- Run actual project type/schema/route tests; isolate database migrations; test failure
+  and scope invariants.

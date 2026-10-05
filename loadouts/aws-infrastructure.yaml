@@ -1,0 +1,37 @@
+schema_version: 1
+skills:
+- context-loadout
+capabilities:
+  python-runtime: required
+  git: required
+  terraform: optional
+  aws-cli: optional
+options: {}
+decisions:
+- D-001
+- D-002
+- D-003
+- D-004
+- D-005
+- D-006
+- D-012
+compose: []
+id: aws-infrastructure
+description: Plan and validate existing AWS/Terraform infrastructure safely.
+characteristics:
+- aws
+- terraform
+- static-hosting
+stages:
+  inspect:
+  - domains/infrastructure/aws.md
+  implement:
+  - core/development.md
+  test:
+  - core/testing.md
+  - domains/infrastructure/aws.md
+  deliver:
+  - core/versioning.md
+checks:
+- Check versions/identity/state before an authorized plan; format and backend-isolated
+  validate; review rollback. No apply/deploy side effect.

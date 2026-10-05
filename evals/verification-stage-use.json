@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "consumer": "context-ai",
+  "stage": "research/review/deliver",
+  "evidence_class": "builder-proxy",
+  "discovery": "explicit-read",
+  "library_revision": "c0d5b3274c269492e3f81dc527a5ec9f01b1cee1",
+  "source_tree_sha256": "8975f317456f19ad693f03ee0eca7b8bb81b2ad0de5729beb882f21f3186cc72",
+  "installed_lock_sha256": "82c1c97111160553d5638e584642837d7ce2470489681f4cdd0bacf6ecbcb382",
+  "loadouts": [
+    "standard",
+    "context-authoring",
+    "research-evidence",
+    "release-review"
+  ],
+  "comparison": "Bootstrap custom references now resolve through compatibility routers to canonical overlays; eight manifests and recovery fixes added. Intentional checkpoint switch, not silent refresh.",
+  "actions": [
+    {
+      "capability": "core/version-control.md",
+      "action": "read",
+      "result": "explicitly read pinned instruction"
+    },
+    {
+      "capability": "core/versioning.md",
+      "action": "read",
+      "result": "explicitly read pinned instruction"
+    },
+    {
+      "capability": "overlays/delivery.md",
+      "action": "read",
+      "result": "explicitly read pinned instruction"
+    },
+    {
+      "capability": "overlays/evidence-claims.md",
+      "action": "read",
+      "result": "explicitly read pinned instruction"
+    },
+    {
+      "capability": "procedures/research-evidence.md",
+      "action": "read",
+      "result": "explicitly read pinned instruction"
+    }
+  ],
+  "limits": [
+    "Installed resources do not establish native skill discovery or measured compliance.",
+    "Pin source_tree_sha256 distinguishes reviewed working snapshot from bootstrap Git revision."
+  ]
+}

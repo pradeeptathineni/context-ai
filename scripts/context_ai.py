@@ -132,6 +132,11 @@ def resolve(ids, project, provider, options=None):
     if provider != 'codex':
         raise Invalid('supported adapter is codex')
     all_loads = catalogue()
+    if (ROOT/'sources.lock.json').exists():
+        for source in json.loads((ROOT/'sources.lock.json').read_text())['sources']:
+            for path,sha in source['files'].items():
+                if digest(inside(ROOT,path).read_bytes())!=sha:
+                    raise Invalid('pinned upstream drift: '+path)
     ordered, active = [], set()
     def visit(id):
         if id in active:
@@ -183,7 +188,7 @@ def resolve(ids, project, provider, options=None):
             files.update(resources([registry[c]['path']]))
             for extra in registry[c].get('files',[]):
                 files.update(resources([extra]))
-    for p in ['requirements.txt','decisions/bootstrap.yaml','capabilities.yaml']:
+    for p in ['requirements.txt','capabilities.yaml']+[p.relative_to(ROOT).as_posix() for p in sorted((ROOT/'decisions').glob('*.yaml'))]+(['sources.lock.json'] if (ROOT/'sources.lock.json').exists() else []):
         files[p] = inside(ROOT,p).read_bytes()
     for id in ordered:
         files['loadouts/'+id+'.yaml'] = (ROOT/'loadouts'/ (id+'.yaml')).read_bytes()
@@ -192,7 +197,7 @@ def resolve(ids, project, provider, options=None):
     try:
         revision = subprocess.check_output(['git','-C',str(ROOT),'rev-parse','HEAD'],stderr=subprocess.DEVNULL,text=True).strip()
     except subprocess.CalledProcessError:
-        revision = 'exported-tree'
+        revision = (ROOT/'REVISION').read_text().strip() if (ROOT/'REVISION').is_file() else 'exported-tree'
     lock = {'schema_version':1,'provider':provider,'project':str(project),'library_revision':revision,
             'source_tree_sha256':tree_hash,'loadouts':ordered,'stages':stages,'skills':skills,
             'capabilities':states,'options':resolved_options,'checks':checks,
@@ -237,6 +242,12 @@ def installed(project):
         return None
     lock = json.loads(p.read_text())
     validate_schema('installation',lock)
+    resolution=lock['resolution']
+    if digest(encoded(resolution['resources'])) != resolution['source_tree_sha256']:
+        raise Invalid('source tree digest does not match resource pins')
+    for name,sha in resolution['resources'].items():
+        if not lock.get('undo_pending',False) and lock['owned'].get('.context-ai/resources/'+name) != sha:
+            raise Invalid('ownership does not match resource pins')
     if lock['resolution']['project'] != str(project):
         raise Invalid('installation belongs to another project')
     for name in lock['owned']:
@@ -258,6 +269,8 @@ def instruction_block(text):
 def apply(project,lock,files):
     previous=installed(project)
     targets=materialized(lock,files)
+    if previous and previous.get('undo_pending'):
+        raise Invalid('resolve preserved undo conflicts before applying')
     old_owned=previous['owned'] if previous else {}
     # Preflight every path before any mutation; user modifications always conflict.
     for name in set(targets)|set(old_owned):
@@ -279,7 +292,8 @@ def apply(project,lock,files):
             raise Invalid('unowned routing block')
         updated=text+('' if not text or text.endswith('\n') else '\n')+router(lock)
     state={'schema_version':1,'resolution':lock,'owned':{p:digest(d) for p,d in targets.items()},
-           'routing_block':router(lock),'agents_created':previous['agents_created'] if previous else not agents.exists()}
+           'routing_block':router(lock),'agents_created':previous['agents_created'] if previous else not agents.exists(),
+           'agents_added_newline':previous.get('agents_added_newline',False) if previous else bool(text and not text.endswith('\n'))}
     validate_schema('installation',state)
     for name,data in targets.items():
         p=inside(project,name)
@@ -299,6 +313,8 @@ def verify(project):
     state=installed(project)
     if not state:
         raise Invalid('no installation')
+    if state.get('undo_pending'):
+        raise Invalid('incomplete undo; preserved conflicts remain')
     for name,sha in state['owned'].items():
         p=inside(project,name)
         if not p.is_file() or digest(p.read_bytes())!=sha:
@@ -306,8 +322,15 @@ def verify(project):
     if instruction_block(inside(project,'AGENTS.md').read_text()) != state['routing_block']:
         raise Invalid('routing block drift')
     resolution=state['resolution']
-    capability_states({c:s['requirement'] for c,s in resolution['capabilities'].items()},
-                      {c:s['definition'] for c,s in resolution['capabilities'].items() if s['definition']['kind']=='command'}) if all(s['definition']['kind']=='command' for s in resolution['capabilities'].values()) else None
+    for key,entry in resolution['capabilities'].items():
+        definition=entry['definition']
+        if definition['kind']=='command':
+            available=shutil.which(definition['command']) is not None
+        else:
+            path=inside(project,'.context-ai/resources/'+definition['path'])
+            available=path.is_file() and digest(path.read_bytes())==resolution['resources'].get(definition['path'])
+        if entry['requirement']=='required' and not available:
+            raise Invalid('installed required capability unavailable: '+key)
     return {'verified':resolution['loadouts'],'owned_files':len(state['owned'])}
 
 def undo(project):
@@ -327,16 +350,21 @@ def undo(project):
         block=instruction_block(text)
     except Invalid:
         block=None
-    if block==state['routing_block']:
-        result=text.replace(block,'',1)
+    if state.get('routing_removed'):
+        pass
+    elif block==state['routing_block']:
+        removable=('\n'+block) if state.get('agents_added_newline') and ('\n'+block) in text else block
+        result=text.replace(removable,'',1)
         if state['agents_created'] and not result:
             agents.unlink()
         else:
             atomic(agents,result.encode())
+        state['routing_removed']=True
     else:
         conflicts.append('AGENTS.md')
     if conflicts:
         state['owned']=retained
+        state['undo_pending']=True
         atomic(inside(project,'.context-ai/lock.json'),encoded(state))
     else:
         inside(project,'.context-ai/lock.json').unlink()
@@ -352,7 +380,13 @@ def main():
     args=parser.parse_args()
     if args.command in ('list','explain'):
         loads=catalogue()
-        result=loads if args.command=='list' else {id:loads[id] for id in args.loadouts}
+        if args.command=='list':
+            result={id:{'description':d['description'],'characteristics':d['characteristics']} for id,d in sorted(loads.items())}
+        else:
+            selected={id:loads[id] for id in args.loadouts}
+            current=current_decisions()
+            registry=read_yaml(ROOT/'capabilities.yaml')['capabilities']
+            result={'loadouts':selected,'decisions':{id:current[id] for d in selected.values() for id in d['decisions']},'capabilities':{id:registry[id] for d in selected.values() for id in d['capabilities']}}
     else:
         if not args.project or not Path(args.project).is_absolute() or not Path(args.project).is_dir() or Path(args.project).is_symlink():
             raise Invalid('an existing absolute project directory is required')
@@ -363,19 +397,21 @@ def main():
             result=undo(project)
         else:
             ids=args.loadouts
+            state=installed(project)
             if args.command=='refresh' and not ids:
                 state=installed(project)
                 if not state:
                     raise Invalid('no installation to refresh')
                 ids=state['resolution']['loadouts']
-            lock,files=resolve(ids,project,args.provider,{'brand':args.brand} if args.brand else {})
+            options={'brand':args.brand} if args.brand else (state['resolution']['options'] if args.command=='refresh' and state else {})
+            lock,files=resolve(ids,project,args.provider,options)
             if args.command=='apply':
                 result=apply(project,lock,files)
             else:
                 state=installed(project)
                 old=state['resolution']['resources'] if state else {}
                 result={'resolution':lock,'writes':list(materialized(lock,files))+['AGENTS.md','.context-ai/lock.json'],
-                        'changes':[p for p in set(old)|set(lock['resources']) if old.get(p)!=lock['resources'].get(p)],
+                        'changes':sorted(p for p in set(old)|set(lock['resources']) if old.get(p)!=lock['resources'].get(p)),
                         'activation':'proposed'}
     print(encoded(result).decode(),end='')
 

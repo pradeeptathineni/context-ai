@@ -23,19 +23,23 @@ stages:
   inspect:
   - core/engineering.md
   - core/context.md
-  - custom/prior-art.md
+  - overlays/prior-art.md
   implement:
   - core/development.md
-  - custom/patterns.md
-  - custom/code-comments.md
+  - overlays/patterns.md
+  - overlays/code-comments.md
+  - core/code-comments.md
   test:
   - core/testing.md
   review:
   - core/review.md
-  - custom/evidence-claims.md
+  - overlays/evidence-claims.md
   deliver:
   - core/versioning.md
-  - custom/delivery.md
+  - overlays/delivery.md
+  - core/version-control.md
+  research:
+  - core/prior-art.md
 checks:
 - Use the repository validation commands; inspect the actual diff; preserve unrelated
   work.
