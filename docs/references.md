@@ -10,6 +10,13 @@ All external sources below were reviewed on **2026-09-12** unless another date i
 
 ## Repository context and configuration map
 
+- [`.agents/skills/standard/SKILL.md`](../.agents/skills/standard/SKILL.md)
+  - [OpenAI: Build skills](https://learn.chatgpt.com/docs/build-skills) establishes metadata-first discovery, repository and user skill paths, symlink support, and explicit versus implicit invocation. Reviewed 2026-10-05.
+  - [OpenAI: Plugins](https://learn.chatgpt.com/docs/plugins) distinguishes local skills from cross-surface plugin distribution; [Hooks](https://learn.chatgpt.com/docs/hooks) documents event checks and tool-coverage limits; [Rules](https://learn.chatgpt.com/docs/agent-configuration/rules) documents command-prefix policies and their matching limits. Reviewed 2026-10-05.
+  - [OpenAI: AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md), [Subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents), [Config basics](https://learn.chatgpt.com/docs/config-file/config-basic), and [Developer commands](https://learn.chatgpt.com/docs/developer-commands) supplied the native owner map. Reviewed 2026-10-05.
+  - [OpenAI: Personalize ChatGPT](https://learn.chatgpt.com/docs/personalize), [Projects](https://learn.chatgpt.com/docs/projects), and [Memories](https://learn.chatgpt.com/docs/customization/memories) distinguish durable preferences and project instructions from recall. Reviewed 2026-10-05.
+  - The prior-art gate composes [`custom/prior-art.md`](../custom/prior-art.md) with the maintainer's ShouldaUsedThat and Maestro reuse decisions described below. Those decisions justify a check, not mandatory adoption of one tool.
+
 - [`AGENTS.md`](../AGENTS.md)
   - [AGENTS.md open format](https://agents.md/) established plain Markdown, nested scope, and the agent-oriented repository entry point.
   - [OpenAI: Rethinking skills and prompts for GPT-6 Astra](https://developers.openai.com/blog/rethinking-skills-and-prompts-for-gpt-6-astra) informed the small task router, progressive disclosure, and removal of always-read document stacks.
@@ -88,6 +95,7 @@ The additional house files below were reviewed on **2026-10-05**. They distill p
 - [`docs/adoption.md`](adoption.md)
   - [OpenAI: Custom instructions with `AGENTS.md`](https://developers.openai.com/codex/guides/agents-md) supports the global-to-project loading order, override behavior, and fresh-session activation check. Reviewed 2026-10-05.
   - [OpenAI: Config basics](https://developers.openai.com/codex/config-basic) separates native model and reasoning settings from advisory prompt text. Reviewed 2026-10-05.
+  - [OpenAI: Build skills](https://learn.chatgpt.com/docs/build-skills) supports the repository skill path, user-level symlink, and fresh-session use. Reviewed 2026-10-05.
 
 - [`evals/README.md`](../evals/README.md)
   - [Anthropic: Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents) informed the baseline/trial/grader protocol, stable environments, outcome grading, trace inspection, and cost/latency capture.
@@ -104,6 +112,6 @@ The additional house files below were reviewed on **2026-10-05**. They distill p
 - [Claude Code memory and `CLAUDE.md`](https://code.claude.com/docs/en/memory): hierarchical and on-demand instructions, imports, path-scoped rules, and the distinction between always-loaded context and skills. It also documents importing `AGENTS.md` from `CLAUDE.md` rather than duplicating it.
 - [Gemini CLI `GEMINI.md`](https://github.com/google-gemini/gemini-cli/blob/main/docs/cli/gemini-md.md): global/workspace/just-in-time hierarchy, imports, inspection commands, and configurable context filenames.
 - [GitHub Copilot repository instructions](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions-in-your-ide/add-repository-instructions-in-your-ide): repository-wide, path-specific, and agent instruction mechanisms.
-- [Agent Skills specification](https://agentskills.io/specification): a plausible future packaging target for specialized on-demand workflows, not a replacement for provider-independent canonical context or always-on repository routing.
+- [Agent Skills specification](https://agentskills.io/specification): the format now used for the `standard` backpack. It complements provider-independent canonical context and always-on repository routing.
 
 These sources influenced the layer boundaries and future extension model. Provider adapters for Claude Code, Gemini CLI, and Copilot are intentionally absent until there is a consumer to validate them.

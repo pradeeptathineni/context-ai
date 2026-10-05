@@ -10,10 +10,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Task-specific house guidance for prior-art decisions, pattern selection, orchestration, model effort, writing, code comments, and evidence claims.
 - Staged Codex user-level adoption guide and contrasting usage cases.
+- `standard` Codex skill for native-capability and prior-art checks on substantial development and workflow decisions.
 
 ### Changed
 
 - Extended the root and custom routers, source map, and validator for the new hierarchy.
+- Added a local skill adoption path without activating global `AGENTS.md` guidance.
 - Refreshed model bindings, removed retired Codex-Spark, and corrected the value profile after checking current model positioning.
 
 ## [0.2.0] - 2026-09-13

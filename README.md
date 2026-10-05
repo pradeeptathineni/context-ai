@@ -8,6 +8,7 @@ Reusable AI context engineering.
 
 - [`core/`](core/) contains provider-independent behavioral context. Load only the files relevant to the task.
 - [`custom/`](custom/) contains opinionated house standards that compose and specialize the canonical core; a user-level entry point can route relevant files across projects.
+- [`.agents/skills/standard/`](.agents/skills/standard/) is the first usable backpack: a Codex skill that checks relevant native capabilities and prior art before substantial development or workflow choices.
 - [`models/routing.yaml`](models/routing.yaml) is a machine-readable policy for selecting a model profile and reasoning level from task attributes.
 - [`providers/`](providers/) contains product-specific adapters: discovery, scope, precedence, configuration, and consumption guidance.
 - [`evals/`](evals/) defines how context quality can be compared without putting nondeterministic model calls in CI.
@@ -43,6 +44,8 @@ A personal entry point or project that adopts the house layer should select from
 
 For substantial new tooling or custom capabilities, begin with [`custom/prior-art.md`](custom/prior-art.md) and the relevant project contract. The house layer also covers agent orchestration, model and reasoning choices, writing, code comments, design patterns, and evidence claims. The [usage cases](evals/usage-cases.md) show how different tasks select different files.
 
+In Codex, invoke `$standard` for a substantial tooling or workflow decision. Codex can also select the skill when the task matches its description. The [adoption guide](docs/adoption.md) explains how to make this Git-owned skill available across local repositories; a skill does not itself change model settings or guarantee that a tool is active.
+
 ## Design
 
 Context is a finite attention budget. Start with small, always-relevant instructions; retrieve task-specific context just in time; and load provider guidance only for that provider. Preserve project facts, decisions, and non-obvious constraints. Avoid repeating generic knowledge a capable model already has.
@@ -59,7 +62,7 @@ This separation lets model and provider facts evolve without rewriting the behav
 
 ## Release and current scope
 
-The v0.2.0 release added five custom contexts for project intent, technical design, AI implementation, context efficiency, and complete delivery. The current checkout extends that layer with the practices above and a Codex adoption guide. The nine canonical core contexts, model-routing policy, Codex adapter, provenance map, deterministic validation, and evaluation protocol remain in place. Custom guidance stays a delta from canonical context and composes references rather than copying content. Additional providers, Agent Skills packaging, `llms.txt`, and automated model-graded evals wait for a real consumer or evidence that they improve outcomes.
+The v0.2.0 release added five custom contexts for project intent, technical design, AI implementation, context efficiency, and complete delivery. The current checkout extends that layer with the practices above, a Codex adoption guide, and the `standard` skill requested for real development use. The nine canonical core contexts, model-routing policy, Codex adapter, provenance map, deterministic validation, and evaluation protocol remain in place. Custom guidance stays a delta from canonical context and composes references rather than copying content. Additional providers, speculative backpacks, `llms.txt`, and automated model-graded evals wait for a real consumer or evidence that they improve outcomes.
 
 Run validation with:
 

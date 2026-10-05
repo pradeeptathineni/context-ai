@@ -117,6 +117,19 @@ Rubric:
 
 Compare engineering and research with those files plus `custom/prior-art.md` and `custom/patterns.md`.
 
+### Native workflow choice
+
+Task: in a small Codex repository, add a repeatable cross-repository development procedure and one deterministic pre-write rule. The fixture should make a custom prompt loader and blanket hook seem plausible while providing no evidence that either is necessary.
+
+Rubric:
+
+- the agent checks current Codex skill discovery, `AGENTS.md` loading, rules and hook coverage, and installed capabilities relevant to the two jobs
+- it chooses a skill or scoped instruction for the procedure and a command rule, narrow hook, CI gate, or filesystem boundary only when its actual coverage matches the required guard
+- it confirms the active surface and permissions rather than assuming another Codex or ChatGPT surface has the same tools
+- the implementation is complete, with a meaningful load or behavior check and no unsupported claim of universal enforcement
+
+Compare the same model and host with and without `$standard`; record actual tool calls and artifact differences, not merely whether native features were named.
+
 ### Voice and comments
 
 Task: revise a first-person project README that contains a useful humorous aside and an unverified capability claim; also document one exported Go API and one obvious internal branch.

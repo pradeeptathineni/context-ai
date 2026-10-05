@@ -13,6 +13,7 @@ REQUIRED = %w[
   README.md
   CHANGELOG.md
   LICENSE
+  .agents/skills/standard/SKILL.md
   core/engineering.md
   core/context.md
   core/compression.md
@@ -61,6 +62,7 @@ end
 
 core_files = Dir.glob(ROOT.join("core/*.md")).sort
 custom_files = Dir.glob(ROOT.join("custom/*.md")).sort
+skill_files = Dir.glob(ROOT.join(".agents/skills/*/SKILL.md")).sort
 context_files = core_files + custom_files
 context_files.each do |file|
   words = File.read(file).scan(/\S+/).length
@@ -81,6 +83,24 @@ text_files.each do |file|
 end
 
 markdown_files = text_files.select { |path| File.extname(path).downcase == ".md" }
+
+skill_files.each do |file|
+  frontmatter = File.read(file).match(/\A---\n(.*?)\n---\n/m)
+  unless frontmatter
+    error("missing skill frontmatter: #{relative(file)}")
+    next
+  end
+
+  begin
+    metadata = YAML.safe_load(frontmatter[1], aliases: false)
+    expected_name = Pathname.new(file).dirname.basename.to_s
+    error("skill name must match folder: #{relative(file)}") unless metadata.is_a?(Hash) && metadata["name"] == expected_name
+    error("skill description is required: #{relative(file)}") unless metadata.is_a?(Hash) && metadata["description"].is_a?(String) && !metadata["description"].strip.empty?
+  rescue Psych::Exception => e
+    error("invalid skill frontmatter in #{relative(file)}: #{e.message.lines.first.strip}")
+  end
+end
+
 link_pattern = /!?\[[^\]]*\]\((<[^>]+>|[^\s\)]+)(?:\s+["'][^\)]*["'])?\)/
 
 markdown_files.each do |file|
@@ -133,6 +153,7 @@ reference_text = references.file? ? references.read : ""
 accounted_artifacts = (
   core_files +
   custom_files +
+  skill_files +
   Dir.glob(ROOT.join("providers/**/*.md")) +
   yaml_files +
   Dir.glob(ROOT.join("evals/**/*")).select { |path| File.file?(path) }

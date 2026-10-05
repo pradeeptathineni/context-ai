@@ -14,6 +14,7 @@
 - For releases, compatibility, or schema changes, also read `core/versioning.md`.
 - For opinionated project practice, load only the relevant files under `custom/` after the core contexts they cite.
 - Before substantial new capabilities, dependencies, services, protocols, or development tooling, read `custom/prior-art.md`; use `custom/patterns.md` when choosing the implementation shape.
+- For a substantial Codex or ChatGPT workflow choice, use the local `standard` Agent Skill to check the relevant native capability on the active surface.
 - For model or multi-agent choices, read `custom/model-deliberation.md` or `custom/orchestration.md` respectively. For reader-facing writing, code comments, or consequential claims, use the matching `custom/` file listed in `custom/README.md`.
 
 ## Boundaries

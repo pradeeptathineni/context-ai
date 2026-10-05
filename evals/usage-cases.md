@@ -12,6 +12,7 @@ The table contains routing and judgment probes, not measured model outcomes. A d
 | Audit a retained development database | `custom/evidence-claims.md`, `core/testing.md`, repository safety instructions | Inspect transitive scripts and use named disposable targets for destructive checks; report fixture, live, and human evidence separately. |
 | Investigate three independent failure hypotheses | `custom/orchestration.md`, `custom/model-deliberation.md`, current session rules | Use separate bounded investigations only if allowed and useful; assign distinct evidence, then reconcile. One shared database or edit path requires isolation or serial work. |
 | Choose a reasoning level for a clear but long edit | `custom/model-deliberation.md`, current model availability | Start from task ambiguity and consequence, not length alone; use medium or lower if a strong specification and checks exist, then escalate on observed difficulty. |
+| Choose Codex mechanisms for shared guidance, reusable review, and a receipt guard | `$standard`, relevant `custom/` files, current Codex capability docs | Use `AGENTS.md` for durable guidance and a skill for optional review; distinguish command rules, hooks, and filesystem boundaries by actual coverage. |
 
 ## Structural dry-run review, 2026-10-05
 
@@ -36,3 +37,13 @@ After updating the standalone CLI to 0.160.0 on 2026-10-05, read-only, low-effor
 The earlier rejection was resolved after the update on this installation. Model bindings still require an active-host check because product access can differ by client, account, and time.
 
 A future fresh-session comparison should run no-context, core-only, and relevant custom-file variants on the same task and tool set. Record actual artifacts and failures, not merely whether the agent says it used a file.
+
+## Standard backpack pilot, 2026-10-05
+
+A disposable Receipt Keeper fixture asked for cross-repository preferences, an optional tool-review procedure, and a machine guard against Codex shell deletion of retained `release-receipts/`. Three read-only `codex exec` runs used CLI 0.160.0, GPT-6 Luna at low effort, the same README, and no installs or edits. The baseline used an empty `HOME` with the same `CODEX_HOME` to omit the personal skill; the explicit run used the real home and `$standard`; the implicit run used the real home without naming it. Changing `HOME` is a discovery control but also a comparison confounder.
+
+`codex debug prompt-input` listed the `standard` skill description with the real home and omitted it with the empty home. In the explicit run, the trace read `custom/README.md`, `custom/prior-art.md`, `custom/patterns.md`, `custom/ai-implementation.md`, and `custom/evidence-claims.md` through the skill's links. The implicit run did not visibly read those files. The CLI event stream did not provide a separate skill-activation event, so discovery and file reads are the observed evidence; automatic invocation was not established.
+
+All three answers chose global `AGENTS.md` for durable preferences and an Agent Skill for optional review. The baseline proposed a read-only sandbox and an unverified protected-path rule for receipts. The explicit and implicit runs proposed a `PreToolUse` hook for Codex shell calls and stated that it is a covered-tool guard, not filesystem-wide enforcement. The explicit run enumerated more bypass and negative-test cases. No hook was installed or exercised. Reported total input tokens were 274,337 (baseline), 334,700 (explicit), and 289,527 (implicit), mostly cached input; one run per condition cannot establish quality or cost effectiveness.
+
+A separate native `codex execpolicy check` trial used a disposable `.rules` file. It returned `forbidden` for `rm -rf release-receipts`, but no rule match for `rm -rf ./release-receipts` or a Python deletion command. This confirms that a command-prefix rule with that pattern does not enforce the broader file invariant. It is a useful candidate only when the required command shape is narrow enough to test. The retained fixture receipt remained intact; the commands were checked as policy inputs, not executed.
