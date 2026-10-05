@@ -24,11 +24,14 @@ stages:
   - core/engineering.md
   - core/context.md
   - overlays/prior-art.md
+  - core/version-control.md
   implement:
   - core/development.md
   - overlays/patterns.md
   - overlays/code-comments.md
   - core/code-comments.md
+  - core/prior-art.md
+  - overlays/writing.md
   test:
   - core/testing.md
   review:

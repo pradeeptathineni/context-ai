@@ -314,3 +314,7 @@ Ruler fit check used npm `@intellectronica/ruler@0.3.44` with install scripts di
 Pinned upstream text retains its original whitespace, including Markdown hard breaks and blank EOF lines. `.gitattributes` exempts only `sourced/` from those two whitespace checks; authored content keeps normal checks and source hashes remain enforced.
 
 `evals/signals-evidence.bundle.json` preserves the real agent-assisted Signals export, exact SHA-256 62e5cb9a6d825a1d5194a28035640b248ee05e344bb41fd816355c1a378cb8da, from `pradeeptathineni/signals-ai` commit 4ab32a1d7ae09ae0ebb6102b4b2d7571291c5c97. `evals/signals-roundtrip.json` maps its ten candidates/claim IDs to Context decisions without activation; `decisions/peer.yaml` appends the evidence-bound D-005 successor. These are source summaries/advice and actual interchange observations, not model-led or independent benefit measurements.
+
+## Responsibility reconsideration
+
+`core/prior-art.md` and `skills/pact-hrr/SKILL.md` adapt the maintainer-supplied PACT/HRR playbook, reviewed 2026-10-05. The canonical workflow owns comparison, use and revision; the skill is a router. [Agent Skills](https://agentskills.io/specification) and [OpenAI skill documentation](https://learn.chatgpt.com/docs/build-skills) support metadata-first, on-demand procedures, reviewed 2026-10-05. This is direct source inspection, not native discovery or evidence of efficiency.

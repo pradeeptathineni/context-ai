@@ -6,7 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
-## [1.0.0] - 2026-10-05
+## [0.3.0] - 2026-10-05
+
+- Unified PACT/HRR with the canonical prior-art workflow and an instruction-only skill.
+- Routed version control before edits and writing guidance during implementation.
+- Generated grouped research needs from the current concept IDs and consumer constraints.
+- Withdrew the premature stable release without changing schema or branch history; guarded stable publication.
+
+## Withdrawn stable designation - 2026-10-05
+
+The premature v1.0.0 release/tag at `a0b6a3bbd2e1dc2c58629f6ea462e180bd12ce93` was withdrawn pending broader product review. All source commits remain available. The following historical changes remain useful; they do not establish stable maturity.
 
 ### Added
 
@@ -54,7 +63,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - Refined the existing model-routing policy into a documented schema with current OpenAI bindings, explicit matching semantics, and source review metadata.
 - Expanded the public README around progressive disclosure, layer boundaries, usage, and release scope.
 
-[Unreleased]: https://github.com/pradeeptathineni/context-ai/compare/v1.0.0...HEAD
-[1.0.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.2.0...v1.0.0
+[Unreleased]: https://github.com/pradeeptathineni/context-ai/compare/v0.2.0...HEAD
 [0.2.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pradeeptathineni/context-ai/tree/v0.1.0

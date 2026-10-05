@@ -26,8 +26,11 @@ stages:
   implement:
   - core/compression.md
   - overlays/context-efficiency.md
+  - overlays/writing.md
   research:
   - core/research.md
+  - core/prior-art.md
+  - skills/pact-hrr/SKILL.md
   test:
   - core/testing.md
   review:

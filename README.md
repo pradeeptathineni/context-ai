@@ -49,9 +49,9 @@ See the [command and schema contract](docs/loadouts.md), [compatibility/migratio
 
 ## Proof and limits
 
-The [bootstrap receipt](evals/bootstrap-use.json) records actual explicit reads and validator maintenance before bulk implementation. All eight loadouts have materialized consumer tests. The [web exercise](examples/web/brief.md) builds a static fixture, tests four viewport widths and two palettes with Playwright/axe, and has an inspected critique/revision pass. [Release evidence](evals/v1-acceptance.md) records outcomes and their limits; [references](docs/references.md) records influences and review dates.
+The [bootstrap receipt](evals/bootstrap-use.json) records actual explicit reads and validator maintenance before bulk implementation. All eight loadouts have materialized consumer tests. The [web exercise](examples/web/brief.md) builds a static fixture, tests four viewport widths and two palettes with Playwright/axe, and has an inspected critique/revision pass. [Earlier execution evidence](evals/v1-acceptance.md) records outcomes and their limits; [references](docs/references.md) records influences and review dates.
 
-Codex is the v1 delivery adapter. Impeccable binaries/hooks/extensions are excluded; its selected documentation works through direct reads. This is a context library, with no agent runtime, automatic tool installation, deployment side effects or signal-scoring engine. Capability presence checks are followed by project-specific verification recipes. Fixture tests, local browser judgment and self-reported reads do not prove production behavior, human usefulness, or native skill activation. Signals evidence advice never grants installation authority.
+Codex is the current delivery adapter. Impeccable binaries/hooks/extensions are excluded; its selected documentation works through direct reads. This is a context library, with no agent runtime, automatic tool installation, deployment side effects or signal-scoring engine. Capability presence checks are followed by project-specific verification recipes. Fixture tests, local browser judgment and self-reported reads do not prove production behavior, human usefulness, or native skill activation. Signals evidence advice never grants installation authority.
 
 Run the deterministic gates:
 
@@ -68,3 +68,5 @@ git diff --check
 The browser gate uses Node 24 in CI (Node 20+ required) and the pinned Playwright Chromium runtime: `node node_modules/playwright/cli.js install chromium`. CI also preserves its screenshots and results.
 
 Library releases use immutable annotated tags and [CHANGELOG](CHANGELOG.md). Schema versions remain independent. Repository-owned content is [MIT](LICENSE); upstream snapshots retain their own declared licences and notices.
+
+The premature v1.0.0 designation was withdrawn; its source commit remains available. Development continues in 0.x. Stable publication requires a separate future approval.

@@ -19,6 +19,8 @@ REQUIRED = %w[
   signals/common.yaml
   providers/openai/signals.yaml
   .agents/skills/standard/SKILL.md
+  skills/pact-hrr/SKILL.md
+  scripts/concepts.py
   core/engineering.md
   core/context.md
   core/compression.md
@@ -316,6 +318,7 @@ routing = yaml_documents["models/routing.yaml"]
 if routing.is_a?(Hash)
   error("models/routing.yaml schema_version must be 1") unless routing["schema_version"] == 1
   release = routing["release_version"]
+  error("stable publication requires separate future approval") unless release.to_s.start_with?("0.")
   error("models/routing.yaml release_version is not SemVer") unless release.to_s.match?(/\A(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)\z/)
 
   models = routing["models"]
