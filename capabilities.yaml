@@ -4,6 +4,7 @@ capabilities:
     kind: command
     command: python3
     boundary: Python 3.10+ and requirements.txt; no installer side effects.
+    resolver: python
   git:
     kind: command
     command: git
@@ -37,12 +38,13 @@ capabilities:
     kind: command
     command: node
     boundary: Project runtime version must be checked at use.
+    resolver: node
   browser:
     kind: command
     command: playwright
-    boundary: Optional CLI discovery only. Full Playwright/axe/browser availability
-      must be established by the recipe in the consumer project; local Node dependencies
-      may provide it without a global command.
+    boundary: Static declaration/local package/PATH discovery. Browser binaries, launch,
+      compatibility and tests remain untested until explicit project checks.
+    resolver: playwright
   terraform:
     kind: command
     command: terraform
@@ -57,3 +59,86 @@ capabilities:
     description: Reconsider a consequential responsibility using prior art and actual
       use.
     boundary: Instruction-only procedure; existing task authority governs effects.
+  context-web-design-guided:
+    kind: resource
+    path: procedures/web-design.md
+    description: Use Impeccable instruction-only design procedure for frontend work.
+    files:
+    - sourced/impeccable/design/LICENSE
+    - sourced/impeccable/design/instruction.md
+    - sourced/impeccable/design/NOTICE.md
+    boundary: No binaries/hooks; one primary procedure; brand and project authority
+      override tastes.
+  context-web-design-lightweight:
+    kind: resource
+    path: procedures/web-design-lightweight.md
+    description: Use concise frontend design guidance for bounded existing-surface
+      changes.
+    files:
+    - sourced/anthropic/design/instruction.md
+    - sourced/anthropic/design/LICENSE.txt
+    boundary: No binaries/hooks; one primary procedure; brand and project authority
+      override tastes.
+  context-diagnose:
+    kind: resource
+    path: procedures/diagnose.md
+    description: Diagnose and fix a command, integration or observable behavior failure.
+      Skip routine edits without a failure.
+    boundary: Instructions only; project commands and existing authority govern execution.
+  context-review:
+    kind: resource
+    path: procedures/review.md
+    description: Review a consequential diff for correctness, compatibility and discriminating
+      tests. Distinguish review-only authority from corrections.
+    boundary: Instructions only; a review selection grants no delegation or write
+      authority.
+  context-review-direct:
+    kind: resource
+    path: procedures/review.md
+    description: Review a consequential diff for correctness, compatibility and discriminating
+      tests. Distinguish review-only authority from corrections.
+    boundary: Instructions only; a review selection grants no delegation or write
+      authority.
+  context-review-fresh:
+    kind: resource
+    path: procedures/review-fresh.md
+    description: Review a consequential diff with one bounded fresh native reader
+      when host support and session authority permit.
+    boundary: Instructions only; a review selection grants no delegation or write
+      authority.
+  package-manager:
+    kind: command
+    command: npm
+    resolver: package-manager
+    boundary: Declared manager/lockfile and PATH are advisory; scripts are unexecuted
+      candidates. No network resolution or package scripts in discovery/probes.
+options:
+  brand:
+    description: Preserve the consuming project visual intent.
+    type: text
+    max_length: 2000
+  design_procedure:
+    description: One primary web design procedure; same acceptance floor.
+    default: guided
+    alternatives:
+      guided:
+        description: New surface or substantial design/critique.
+        aliases:
+          context-web-design: context-web-design-guided
+      lightweight:
+        description: Bounded correction within an established visual identity.
+        aliases:
+          context-web-design: context-web-design-lightweight
+  review_mode:
+    description: Direct artifact review or one bounded fresh native reader.
+    default: direct
+    alternatives:
+      direct:
+        description: One agent reviews actual artifacts; no delegation needed.
+        aliases:
+          context-review: context-review-direct
+      fresh:
+        description: One fresh native read-only reviewer, only with host support and
+          existing authority; no silent fallback.
+        aliases:
+          context-review: context-review-fresh

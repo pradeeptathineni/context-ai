@@ -9,9 +9,11 @@ capabilities:
   context-web-design: required
   context-web-audit: required
   browser: optional
+  node: optional
+  package-manager: optional
 options:
   brand: quiet
-  design_procedure: guided
+  design_procedure: null
 decisions:
 - D-001
 - D-002

@@ -1,11 +1,13 @@
 ---
 name: context-loadout
-description: Choose task guidance or compose and use a pinned Context AI project selection.
+description: Choose guidance for failure diagnosis, consequential review or web interaction work, or compose a recurring Context AI loadout. Skip routine tasks with sufficient project guidance.
 ---
 
 # Equip the current task
 
 Read the project's instructions and intended outcome first. For a small task within an established workflow, read only a relevant module directly from the source checkout or archive. No installation, environment or receipt file is required. When the project already has sufficient guidance, complete its task and checks. Use writing guidance for a prose change, testing guidance when verification needs clarification, and concern-specific guidance only when that concern is changing.
+
+For a failure read [diagnose and fix](../../procedures/diagnose.md). For a consequential diff read [review](../../procedures/review.md); choose [fresh review](../../procedures/review-fresh.md) only when existing authority and host support justify a bounded reader. For web interactions read [browser verification](../../domains/web/browser-verification.md) and the selected design procedure: [lightweight](../../procedures/web-design-lightweight.md) for a bounded existing surface, [guided](../../procedures/web-design.md) for substantial design. These direct reads have the same meaning as project options; reading guidance grants no runtime authority.
 
 For a recurring project selection, use the [command contract](../../docs/loadouts.md). `list` names the choices; `explain` resolves parents, current decisions, stage routes, options and suggested checks without writing or probing tools. Select standard for substantial development, then relevant additions. `plan` shows the exact resources, capability availability and owned writes for this project. A narrow docs task needs no web suite. For web work preserve brand/project intent and choose one primary design procedure: lightweight for bounded existing-surface changes, guided for substantial work.
 

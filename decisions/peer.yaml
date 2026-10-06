@@ -25,3 +25,32 @@ decisions:
   - Actual producer 4ab32a1d7ae09ae0ebb6102b4b2d7571291c5c97 -> Context read-only consumer;
     10 candidates mapped with activation false.
   rollback: Undo unchanged owned materialization; retain old pins.
+- id: D-005
+  revision: 3
+  supersedes: 2
+  concept: research.decision
+  action: adapt
+  selection: Supported pinned evidence, qualified observation age and separate legacy transport
+  rationale: Retain the frozen v1 input and exact-byte supported replay. Reject incompatible producer
+    protocols; current inspection exposes source age as information while explicit legacy callers retain
+    old summary labels. Context evaluates fit, without inventing a Signals freshness/score policy.
+  evidence:
+  - scripts/evidence.py
+  - scripts/legacy_evidence.py
+  - tests/test_evidence.py
+  - evals/task-capabilities.md
+  applicability: Read-only imported v1 evidence; observations and recommendations never grant execution
+    or adoption authority.
+  alternatives:
+  - Keep universal 30-day stale advice
+  - Reinterpret frozen legacy output silently
+  - Separate current inspection and frozen compatibility transport
+  unknowns:
+  - New Signals search interface is under development and no live integration was attempted.
+  validation:
+  - Both fresh code arms rejected unsupported protocols and preserved supported replay/uncertainty.
+  - Qualified age and unchanged frozen summary keys covered separately.
+  rollback: Use an earlier exact source or the explicit legacy-summary path; retain source pins and reviewed
+    project choices.
+  revisit_when: A stable documented producer interface justifies a short verified adapter, or domain-specific
+    currency evidence changes project fit.

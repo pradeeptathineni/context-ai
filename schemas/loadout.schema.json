@@ -72,19 +72,20 @@
     },
     "options": {
       "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "brand": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 2000
-        },
-        "design_procedure": {
-          "enum": [
-            "guided",
-            "lightweight"
-          ]
-        }
+      "propertyNames": {
+        "pattern": "^[a-z][a-z0-9_]*$"
+      },
+      "additionalProperties": {
+        "anyOf": [
+          {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          },
+          {
+            "type": "null"
+          }
+        ]
       }
     },
     "decisions": {

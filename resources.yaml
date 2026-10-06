@@ -57,3 +57,14 @@ dependencies:
   - sourced/vercel/react/compiled-guide.md
   procedures/web-design-lightweight.md:
   - sourced/anthropic/design/instruction.md
+  procedures/diagnose.md:
+  - core/testing.md
+  procedures/review.md:
+  - core/review.md
+  procedures/review-fresh.md:
+  - procedures/review.md
+  - overlays/orchestration.md
+  overlays/orchestration.md:
+  - core/development.md
+  - core/context.md
+  - core/review.md

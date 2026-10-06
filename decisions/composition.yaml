@@ -216,3 +216,89 @@ decisions:
   rollback: Use earlier exact sources/pins; recover pending writes and undo unchanged files.
   revisit_when: A real supported source format loses its identity or authenticated producer provenance
     becomes necessary beyond the current trusted source boundary.
+- id: D-020
+  revision: 2
+  supersedes: 1
+  concept: web.design
+  action: adapt
+  selection: Data-declared primary design alternatives in the existing resolver
+  rationale: Retain guided/lightweight meaning and current pins; finite aliases replace capability definitions
+    without a per-option Python branch. Registry defaults and explicit project choices remain inspectable.
+  evidence:
+  - capabilities.yaml
+  - tests/test_task_capabilities.py
+  - sources.lock.json
+  - evals/task-capabilities.md
+  applicability: Web selections; task/project intent and one primary design procedure; no changed acceptance
+    floor.
+  alternatives:
+  - Retain special-case design code
+  - Install every upstream design suite
+  - Declare finite aliases in the existing resolver
+  unknowns:
+  - Matched browser tasks tied on correctness; no human benefit or savings established.
+  validation:
+  - Legacy flags and generic options agree; selected closures/notices remain isolated.
+  - Both web arms passed state/preservation browser evaluation.
+  rollback: Use earlier exact source pins; undo unchanged owned resources; retain edited user work.
+  revisit_when: A real unsupported option needs a different shape or guidance worsens task outcomes.
+- id: D-010
+  revision: 2
+  supersedes: 1
+  concept: quality.accessibility
+  action: adapt
+  selection: Project-local browser discovery followed by actual interaction and screenshot checks
+  rationale: Retain Playwright/axe and project aesthetics. Static manifests and local CLI metadata make
+    installed tools discoverable without downloads; browser launch and behavioral evidence remain separate.
+    Exact keyboard assertions exposed a skip-destination defect.
+  evidence:
+  - domains/web/browser-verification.md
+  - tests/test_task_capabilities.py
+  - examples/web/verify.mjs
+  - evals/task-capabilities.md
+  applicability: Consumer web checks; supported nearest workspace boundaries and managed project environments
+    only.
+  alternatives:
+  - Global CLI presence only
+  - Require native browser/MCP or a new service
+  - Reuse local Playwright or available native host tools with declared limits
+  unknowns:
+  - Native automatic skill activation and assistive-technology user validation remain unobserved.
+  - External environments/stores and unsupported workspace glob forms need explicit inspection.
+  validation:
+  - Declared-only, installed-local, hostile-script/config and missing-browser negative controls.
+  - Fresh review found cross-segment workspace overmatching; red/green nested-member and exclusion regression.
+  - Four viewports/two palettes; note edit/retry, skip destination and next Tab focus, axe and inspected
+    screenshots.
+  rollback: Use earlier exact source pins; undo unchanged owned resources; retain edited user work.
+  revisit_when: A supported consumer boundary is rejected unnecessarily, discovery grants false readiness
+    or browser evidence misses a real failure.
+- id: D-022
+  revision: 1
+  supersedes: null
+  concept: quality.review
+  action: adapt
+  selection: Focused diagnosis and direct or bounded fresh artifact review
+  rationale: Adapt proportionate Systematic Debugging and Google review criteria through current procedures/Agent
+    Skills. Reuse existing orchestration only when host support and session authority justify a fresh
+    native reader.
+  evidence:
+  - procedures/diagnose.md
+  - procedures/review.md
+  - procedures/review-fresh.md
+  - docs/references.md
+  - evals/task-capabilities.md
+  applicability: Substantial failure diagnosis/review; existing project/user authority owns effects.
+  alternatives:
+  - Whole Superpowers suite
+  - Reviewer personas or custom orchestrator
+  - Short procedures plus existing testing/review/orchestration
+  unknowns:
+  - Both code arms fixed the protocol defect; no causal improvement or measured token/cost benefit.
+  - Inherited model/effort IDs were not surfaced; explicit reads do not prove native activation.
+  validation:
+  - Actual red/green producer compatibility fix; supported replay and incompatible protocols graded separately.
+  - One scoped fresh read-only review found a reproduced discovery boundary defect, corrected by the writer.
+  rollback: Use earlier exact source pins; undo unchanged owned resources; retain edited user work.
+  revisit_when: Repeated procedure friction or a missed consequential failure warrants simpler guidance
+    or a targeted new check.

@@ -2,6 +2,8 @@
 """Pinned, project-local context composition. Manifests never execute commands."""
 import argparse
 import base64
+import fnmatch
+from functools import lru_cache
 import hashlib
 import json
 import os
@@ -75,6 +77,23 @@ def validate_schema(name, value):
 def catalogue():
     return {p.stem: read_yaml(p) for p in (ROOT/'loadouts').glob('*.yaml')}
 
+def capability_registry():
+    document=read_yaml(ROOT/'capabilities.yaml')
+    validate_schema('capabilities',document)
+    for key,spec in document['options'].items():
+        if spec.get('type')=='text':continue
+        if spec['default'] not in spec['alternatives']:
+            raise Invalid('unsupported default option: '+key)
+        for alternative in spec['alternatives'].values():
+            for alias,target in alternative['aliases'].items():
+                if alias not in document['capabilities'] or target not in document['capabilities']:
+                    raise Invalid('unresolved option capability: '+alias+' -> '+target)
+            for conflict in alternative.get('incompatible',[]):
+                other=document['options'].get(conflict['option'],{})
+                if conflict['value'] not in other.get('alternatives',{}):
+                    raise Invalid('unresolved option incompatibility')
+    return document
+
 def current_decisions():
     decisions = {}
     for p in sorted((ROOT/'decisions').glob('*.yaml')):
@@ -146,21 +165,149 @@ def source_notices(files):
         raise Invalid('unregistered sourced resource')
     return result
 
-def capability_states(selected, registry):
+def project_data(project, path):
+    """Bounded manifest read; workspace/package symlinks must stay in their owner."""
+    target=project/path
+    if not target.resolve().is_relative_to(project.resolve()):
+        raise Invalid('tool discovery path escapes project/workspace: '+str(target))
+    if not target.is_file():
+        return None
+    if target.stat().st_size>2_000_000:
+        raise Invalid('tool manifest exceeds bounded input size: '+str(target))
+    return json.loads(target.read_text(encoding='utf-8'))
+
+def workspace_match(member, pattern):
+    """Supported workspace globs match segments; '*' never grants another level."""
+    if not pattern or len(pattern)>500 or any(x in pattern for x in ('{','}','(',')','\\')):
+        raise Invalid('unsupported workspace glob; use segment *, ?, [], ** or inspect explicitly')
+    parts=pattern.split('/')
+    if any(part in ('','.','..') for part in parts):
+        raise Invalid('unsupported workspace glob; use relative path segments')
+    path=member.split('/')
+    @lru_cache(maxsize=None)
+    def match(i,j):
+        if i==len(parts):return j==len(path)
+        if parts[i]=='**':
+            return match(i+1,j) or (j<len(path) and not path[j].startswith('.') and match(i,j+1))
+        return (j<len(path) and (not path[j].startswith('.') or parts[i].startswith('.'))
+                and fnmatch.fnmatchcase(path[j],parts[i]) and match(i+1,j+1))
+    return match(0,0)
+
+def node_project(project):
+    manifest=project_data(project,Path('package.json')) or {}
+    owner=project
+    # Only an ancestor explicitly declaring this member can supply hoisted packages.
+    for parent in project.parents:
+        if not (parent/'package.json').is_file() and not (parent/'pnpm-workspace.yaml').is_file():
+            continue
+        candidate=project_data(parent,Path('package.json')) or {}
+        patterns=candidate.get('workspaces',[])
+        if isinstance(patterns,dict):patterns=patterns.get('packages',[])
+        if (parent/'pnpm-workspace.yaml').is_file():
+            path=inside(parent,'pnpm-workspace.yaml')
+            patterns=(read_yaml(path) or {}).get('packages',[])
+        member=project.relative_to(parent).as_posix()
+        if not isinstance(patterns,list) or any(not isinstance(x,str) for x in patterns):
+            raise Invalid('unsupported workspace declaration')
+        matches=[(p.startswith('!'),workspace_match(member,p[1:] if p.startswith('!') else p)) for p in patterns]
+        positive=any(found for excluded,found in matches if not excluded)
+        excluded=any(found for excluded,found in matches if excluded)
+        if positive and not excluded:
+            owner=parent
+            break
+        # The nearest workspace/package owner is a boundary, not arbitrary ancestor search.
+        break
+    manager=manifest.get('packageManager')
+    if owner!=project:
+        manager=manager or (project_data(owner,Path('package.json')) or {}).get('packageManager')
+    locks={'pnpm-lock.yaml':'pnpm','yarn.lock':'yarn','package-lock.json':'npm','bun.lock':'bun','bun.lockb':'bun'}
+    detected=set(value for path,value in locks.items() if (owner/path).is_file())
+    if manager is not None:
+        if not isinstance(manager,str) or not re.fullmatch(r'(npm|pnpm|yarn|bun)@[^\s/]+',manager):
+            raise Invalid('unsupported packageManager declaration; inspect it explicitly')
+        command=manager.split('@')[0]
+    else:
+        command=next(iter(detected)) if len(detected)==1 else None
+    return manifest,owner,manager,command,sorted(detected)
+
+def discover_command(definition, project):
+    """Static locations are candidates, never proof of readiness or execution."""
+    command=definition['command']; resolver=definition.get('resolver')
+    result={'source':'PATH','location':shutil.which(command),'exercised':False,
+            'uncertainty':'Version, authentication, service readiness and project checks not tested.'}
+    if resolver=='python':
+        declared=[name for name in ('pyproject.toml','requirements.txt','Pipfile') if (project/name).is_file()]
+        env=project/'.venv'
+        result['declared']=declared
+        if env.exists() or env.is_symlink():
+            if env.is_symlink():
+                raise Invalid('project .venv symlink outside managed boundary; use an in-project environment')
+            cfg=inside(project,'.venv/pyvenv.cfg')
+            if (env/'bin').is_symlink():
+                raise Invalid('project .venv/bin symlink outside managed boundary; only interpreter links are supported')
+            executable=env/'bin/python'
+            # Standard venv interpreters may link to a system-managed runtime.
+            # Read no home paths/configuration beyond this explicit venv marker.
+            result.update(source='project .venv',location=str(executable) if cfg.is_file() and executable.is_file() else None,
+                          uncertainty='Managed interpreter link allowed; interpreter/version and dependencies not exercised.')
+        elif declared:
+            result.update(location=None,source='project Python declaration',
+                          uncertainty='No .venv found. Select the documented project environment explicitly; PATH/Context interpreter is not substituted.')
+    elif resolver in ('node','package-manager','playwright'):
+        manifest,owner,manager,manager_command,locks=node_project(project)
+        result.update(manifest=str(project/'package.json'),workspace=str(owner),package_manager=manager,
+                      lockfile_managers=locks,scripts=manifest.get('scripts',{}),
+                      scripts_authority='Candidates only; not evaluated or executed.')
+        if resolver=='package-manager':
+            result.update(source='packageManager or lockfile',location=shutil.which(manager_command) if manager_command else None,
+                          command=manager_command,
+                          uncertainty='Manager may be a network-resolving shim; do not probe via package resolution. Conflicting/absent lockfiles need explicit project choice.')
+        elif resolver=='playwright':
+            deps={**manifest.get('dependencies',{}),**manifest.get('devDependencies',{})}
+            result.update(declared={key:deps[key] for key in ('@playwright/test','playwright','playwright-core') if key in deps},
+                          installed=[],uncertainty='Browser binaries, launch and behavior not tested. No npx or configuration imports performed.')
+            for base in dict.fromkeys([project,owner]):
+                for package in ('@playwright/test','playwright','playwright-core'):
+                    path=Path('node_modules')/package/'package.json'
+                    info=project_data(owner,(base/path).relative_to(owner))
+                    if not info:continue
+                    if info.get('name')!=package:
+                        raise Invalid('local package identity mismatch: '+str(base/path))
+                    bins=info.get('bin',{})
+                    cli=bins.get('playwright') if isinstance(bins,dict) else bins if isinstance(bins,str) else None
+                    location=None
+                    if cli:
+                        # A package declares data, not arbitrary executable authority.
+                        if not isinstance(cli,str) or Path(cli).is_absolute() or '..' in Path(cli).parts:
+                            raise Invalid('unsafe local Playwright bin declaration')
+                        target=base/'node_modules'/package/cli
+                        if not target.resolve().is_relative_to(owner):
+                            raise Invalid('Playwright CLI escapes project/workspace')
+                        if target.is_file():location=str(target)
+                    result['installed'].append({'package':package,'version':info.get('version'),'manifest':str(base/path),'cli':location})
+            local=next((item['cli'] for item in result['installed'] if item['cli']),None)
+            if local:result.update(source='installed project package',location=local)
+    elif resolver is not None:
+        raise Invalid('unsupported tool resolver: '+resolver)
+    return result
+
+def capability_states(selected, registry, project):
     states = {}
     for key, required in selected.items():
         if key not in registry:
             raise Invalid('unknown capability: '+key)
         item = registry[key]
         if item['kind'] == 'command':
-            available = shutil.which(item['command']) is not None
+            discovery=discover_command(item,project)
+            available = discovery['location'] is not None
         elif item['kind'] == 'resource':
             available = inside(ROOT,item['path']).is_file()
         else:
             raise Invalid('unsupported capability kind')
         states[key] = {'requirement':required,'available':available,'definition':item}
+        if item['kind']=='command':states[key]['discovery']=discovery
         if required == 'required' and not available:
-            raise Invalid('missing required capability: '+key)
+            raise Invalid('missing required capability: '+key+'; '+discovery.get('uncertainty','') if item['kind']=='command' else 'missing required capability: '+key)
     return states
 
 def selection(ids, options=None):
@@ -187,9 +334,12 @@ def selection(ids, options=None):
         raise Invalid('select at least one loadout')
     stages, skills, capabilities, checks, decisions = {}, [], {}, [], []
     resolved_options = {}
+    declarations = capability_registry()['options']
     for id in ordered:
         d = all_loads[id]
         for key, value in d['options'].items():
+            if value is None:
+                value=declarations.get(key,{}).get('default')
             if key in resolved_options and resolved_options[key] != value:
                 raise Invalid('conflicting loadout option: '+key)
             resolved_options[key] = value
@@ -204,13 +354,20 @@ def selection(ids, options=None):
     for key, value in (options or {}).items():
         if key not in resolved_options:
             raise Invalid('option does not apply to this selection: '+key)
-        if key=='brand' and (not isinstance(value,str) or not value.strip() or len(value)>2000):
-            raise Invalid('brand intent must be 1-2000 characters')
-        if key=='design_procedure' and value not in ('guided','lightweight'):
-            raise Invalid('unsupported design procedure')
-        if key not in ('brand','design_procedure'):
-            raise Invalid('unsupported option '+key)
         resolved_options[key] = value
+    for key, value in resolved_options.items():
+        if key not in declarations:
+            raise Invalid('unsupported option: '+key)
+        spec = declarations[key]
+        if spec.get('type') == 'text':
+            if not isinstance(value,str) or not value.strip() or len(value)>spec['max_length']:
+                raise Invalid(key+' intent must be 1-'+str(spec['max_length'])+' characters')
+        else:
+            if not isinstance(value,str) or value not in spec['alternatives']:
+                raise Invalid('unsupported option '+key+': '+str(value))
+            for conflict in spec['alternatives'][value].get('incompatible', []):
+                if resolved_options.get(conflict['option']) == conflict['value']:
+                    raise Invalid('incompatible options: '+key+' and '+conflict['option'])
     return {'loadouts':ordered,'stages':stages,'skills':skills,'capabilities':capabilities,
             'checks':checks,'decisions':decisions,'options':resolved_options}
 
@@ -222,12 +379,22 @@ def selected_decisions(ids):
     return {id:current[id] for id in ids}
 
 def capability_definitions(options):
-    registry = read_yaml(ROOT/'capabilities.yaml')['capabilities']
-    if options.get('design_procedure')=='lightweight':
-        registry['context-web-design']={**registry['context-web-design'],
-            'path':'procedures/web-design-lightweight.md',
-            'description':'Use concise frontend design guidance for bounded web changes.',
-            'files':['sourced/anthropic/design/instruction.md','sourced/anthropic/design/LICENSE.txt']}
+    document = capability_registry()
+    registry = document['capabilities'].copy()
+    aliases = {}
+    for key, value in options.items():
+        spec = document['options'][key]
+        if spec.get('type') == 'text':
+            continue
+        for alias, target in spec['alternatives'][value].get('aliases', {}).items():
+            if alias not in registry or target not in registry:
+                raise Invalid('unresolved option capability: '+alias+' -> '+target)
+            if alias in aliases and aliases[alias] != target:
+                raise Invalid('conflicting capability alternatives: '+alias)
+            aliases[alias] = target
+    # Targets come from the base registry, never another option's replacement.
+    for alias, target in aliases.items():
+        registry[alias] = document['capabilities'][target]
     return registry
 
 def explain(ids, options=None):
@@ -240,6 +407,7 @@ def explain(ids, options=None):
     return {'loadouts':{id:loads[id] for id in selected['loadouts']},
             'composition':selected['loadouts'],'stages':selected['stages'],
             'options':selected['options'],'checks':selected['checks'],
+            'option_choices':{key:capability_registry()['options'][key] for key in selected['options']},
             'decisions':selected_decisions(selected['decisions']),
             'capabilities':{id:registry[id] for id in selected['capabilities']},
             'capability_requirements':selected['capabilities']}
@@ -264,7 +432,10 @@ def resolve(ids, project, provider, options=None):
     selected=selection(ids,options)
     decisions=selected_decisions(selected['decisions'])
     registry=capability_definitions(selected['options'])
-    states = capability_states(selected['capabilities'],registry)
+    states = capability_states(selected['capabilities'],registry,project)
+    # Machine observations belong to local reports, never portable resource pins.
+    for entry in states.values():
+        entry.pop('discovery',None)
     files = resources([p for paths in selected['stages'].values() for p in paths]+['skills/context-loadout/SKILL.md','providers/openai/codex.md','LICENSE'])
     for c in selected['capabilities']:
         if registry[c]['kind']=='resource':
@@ -289,6 +460,9 @@ def router(lock):
              'Load only the modules for the current stage:']
     for stage, paths in lock['stages'].items():
         lines.append('- '+stage+': '+', '.join('`.context-ai/resources/'+p+'`' for p in paths))
+    for key, entry in lock['capabilities'].items():
+        if entry['definition']['kind']=='resource':
+            lines.append('- '+key+': read `.context-ai/resources/'+entry['definition']['path']+'` when relevant.')
     lines.extend(['A selected recipe is not execution or deployment permission.',END])
     return '\n'.join(lines)+'\n'
 
@@ -304,7 +478,11 @@ def materialized(lock, files):
         path = 'skills/context-loadout/SKILL.md' if skill=='context-loadout' else lock['capabilities'][skill]['definition']['path']
         if path not in files:
             raise Invalid('missing selected skill instructions: '+path)
-        description = 'Use pinned Context AI project loadouts.' if skill=='context-loadout' else lock['capabilities'][skill]['definition']['description']
+        if skill=='context-loadout':
+            metadata=yaml.safe_load(files[path].decode().split('---',2)[1])
+            description=metadata['description']
+        else:
+            description=lock['capabilities'][skill]['definition']['description']
         metadata = yaml.safe_dump({'name':skill,'description':description},sort_keys=False)
         body = '---\n'+metadata+'---\n\nRead [pinned instructions](../../../.context-ai/resources/'+path+') when this procedure is relevant. Follow project instructions and user brand direction first. No tool or hook is activated by this file.\n'
         output['.agents/skills/'+skill+'/SKILL.md'] = body.encode()
@@ -404,6 +582,19 @@ def apply(project,lock,files):
     if previous and previous.get('undo_pending'):
         raise Invalid('resolve preserved undo conflicts before applying')
     old_owned=previous['owned'] if previous else {}
+    # Codex uses frontmatter names, not folder names; refuse duplicate local names.
+    skills_dir=inside(project,'.agents/skills')
+    if skills_dir.is_dir():
+        for path in skills_dir.glob('*/SKILL.md'):
+            name=path.relative_to(project).as_posix()
+            path=inside(project,name)
+            if name in old_owned:continue
+            if path.stat().st_size>2_000_000:raise Invalid('skill metadata exceeds bounded input size')
+            text=path.read_text()
+            if text.startswith('---\n') and '\n---' in text[4:]:
+                metadata=yaml.safe_load(text.split('\n---',1)[0][4:])
+                if isinstance(metadata,dict) and metadata.get('name') in lock['skills']:
+                    raise Invalid('existing skill name conflict: '+metadata['name'])
     # Preflight every path before any mutation; user modifications always conflict.
     for name in set(targets)|set(old_owned):
         p=inside(project,name)
@@ -466,13 +657,16 @@ def verify(project, allow_rebind=False):
     if instruction_block(inside(project,'AGENTS.md').read_text()) != state['routing_block']:
         raise Invalid('routing block drift')
     resolution=state['resolution']
-    probes, optional_unavailable = [], []
+    probes, optional_unavailable, discovery, observed_versions = [], [], {}, {}
     for key,entry in resolution['capabilities'].items():
         definition=entry['definition']
         if definition['kind']=='command':
-            available=shutil.which(definition['command']) is not None
+            observation=discover_command(definition,project)
+            discovery[key]=observation
+            available=observation['location'] is not None
             if entry['requirement']=='required' and available:
-                probe_command(definition['command'])
+                observed_versions[key]=probe_command(definition['command'],observation['location'])
+                observation['exercised']='version only'
                 probes.append(definition['command']+' --version')
         else:
             path=inside(project,'.context-ai/resources/'+definition['path'])
@@ -484,14 +678,16 @@ def verify(project, allow_rebind=False):
     return {'verified':resolution['loadouts'],'owned_files':len(state['owned']),
             'scope':'installation integrity and required runtime probes',
             'required_command_probes':probes,'optional_unavailable':optional_unavailable,
+            'capability_discovery':discovery,'observed_versions':observed_versions,
             'project_checks':'not_run','suggested_checks':resolution['checks']}
 
-def probe_command(command):
+def probe_command(command, location=None):
     probes={'python3':['python3','--version'],'git':['git','--version'],'node':['node','--version']}
     if command not in probes:
         raise Invalid('no reviewed required command probe: '+command)
     try:
-        run=subprocess.run(probes[command],capture_output=True,text=True,timeout=5,check=True)
+        argv=[location or probes[command][0],*probes[command][1:]]
+        run=subprocess.run(argv,capture_output=True,text=True,timeout=5,check=True)
     except (OSError, subprocess.SubprocessError) as error:
         raise Invalid('required command invocation failed: '+command) from error
     output=(run.stdout+run.stderr).strip()
@@ -577,35 +773,51 @@ def undo(project):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=['list','explain','decisions','plan','apply','verify','undo','refresh','export','rebind','recover'])
+    parser.add_argument('command',choices=['list','explain','decisions','tools','plan','apply','verify','undo','refresh','export','rebind','recover'])
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
     parser.add_argument('--lock',type=Path,help='Apply an exact portable lock against this source checkout')
     parser.add_argument('--provider',default='codex')
     parser.add_argument('--brand',help='Project visual intent, 1-2000 characters')
     parser.add_argument('--design-procedure',choices=['guided','lightweight'])
+    parser.add_argument('--option',action='append',default=[],metavar='KEY=VALUE',help='Explicit supported alternative; repeat for different options')
     args=parser.parse_args()
+    overrides={}
+    for value in args.option:
+        key,separator,item=value.partition('=')
+        if not separator or key in overrides:
+            raise Invalid('options must be unique KEY=VALUE declarations')
+        overrides[key]=item
+    for key,value in [('brand',args.brand),('design_procedure',args.design_procedure)]:
+        if value is not None:
+            if key in overrides and overrides[key]!=value:
+                raise Invalid('conflicting compatibility flag and option: '+key)
+            overrides[key]=value
     if args.command in ('list','explain','decisions'):
         loads=catalogue()
         if args.command=='list':
             result={id:{'description':d['description'],'characteristics':d['characteristics']} for id,d in sorted(loads.items())}
         elif args.command=='decisions':
-            if args.brand is not None or args.design_procedure is not None or args.lock:
+            if overrides or args.lock:
                 raise Invalid('decisions accepts only optional loadout selections')
             result=selected_decisions(selection(args.loadouts)['decisions']) if args.loadouts else current_decisions()
         else:
             if args.provider!='codex':raise Invalid('supported adapter is codex')
-            options={}
-            if args.brand is not None:options['brand']=args.brand
-            if args.design_procedure is not None:options['design_procedure']=args.design_procedure
-            result=explain(args.loadouts,options)
+            result=explain(args.loadouts,overrides)
     else:
         if not args.project or not Path(args.project).is_absolute() or not Path(args.project).is_dir() or Path(args.project).is_symlink():
             raise Invalid('an existing absolute project directory is required')
         project=Path(args.project).resolve()
-        if args.lock and (args.command!='apply' or args.loadouts or args.brand or args.design_procedure):
+        if args.lock and (args.command!='apply' or args.loadouts or overrides):
             raise Invalid('--lock is only for apply without new selections/options')
-        if args.command=='recover':
+        if args.command=='tools':
+            if args.loadouts or overrides or args.lock:
+                raise Invalid('tools accepts only --project; use plan for selected requirements')
+            registry=read_yaml(ROOT/'capabilities.yaml')['capabilities']
+            result={'project':str(project),'execution':'not_run',
+                    'tools':{key:discover_command(registry[key],project) for key in ('python-runtime','git','node','package-manager','browser')},
+                    'native_host_tools':'Host-reported tools must be inspected separately; PATH is not native host discovery.'}
+        elif args.command=='recover':
             result=recover(project)
         elif args.command=='export':
             state=installed(project)
@@ -628,10 +840,9 @@ def main():
                 ids=state['resolution']['loadouts']
             options={}
             if args.command=='refresh' and state:
-                applicable=resolve(ids,project,args.provider)[0]['options']
+                applicable=selection(ids)['options']
                 options={key:value for key,value in state['resolution']['options'].items() if key in applicable}
-            if args.brand is not None:options['brand']=args.brand
-            if args.design_procedure is not None:options['design_procedure']=args.design_procedure
+            options.update(overrides)
             if args.lock:
                 lock=json.loads(args.lock.read_text());files=pinned_files(lock)
             else:
@@ -643,6 +854,7 @@ def main():
                 old=state['resolution']['resources'] if state else {}
                 targets=materialized(lock,files)
                 result={'resolution':lock,'writes':list(targets)+['AGENTS.md','.context-ai/lock.json'],
+                        'capability_discovery':{key:discover_command(entry['definition'],project) for key,entry in lock['capabilities'].items() if entry['definition']['kind']=='command'},
                         'removals':sorted(set(state['owned'])-set(targets)) if state else [],
                         'changes':sorted(p for p in set(old)|set(lock['resources']) if old.get(p)!=lock['resources'].get(p)),
                         'activation':'proposed'}

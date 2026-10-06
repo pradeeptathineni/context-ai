@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Added data-declared design/review alternatives, a generic explicit option flag and selected procedure routers.
+- Made project-local Python, Node/workspace/package-manager and Playwright discovery useful without executing scripts or downloading packages; kept runtime observations outside portable pins.
+- Added focused failure diagnosis and consequential review procedures and stronger browser state/keyboard checks.
+- Isolated legacy checkpoint transport, qualified current observation ages and rejected unsupported producer protocols while preserving frozen summary replay.
+- Exercised substantive matched code/browser tasks; correctness ties and activation/comparison limits are recorded in `evals/task-capabilities.md`.
+
 - Made one-task reads and recurring loadouts clear to first-time maintainers; mapped each active layer to its job.
 - Removed unused pre-1 `custom/` routers and decision-concept aliases; exact older Git commits still retain them.
 - Made `plan` and `refresh` disclose owned files that a changed selection would remove.

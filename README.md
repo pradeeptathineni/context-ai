@@ -15,6 +15,8 @@ Start with the consuming project's instructions and the change you need to make.
 
 If the project's own guidance is enough, complete the task with that. For either route, check claims against the project and run its relevant tests.
 
+For a failing integration, read [diagnose and fix](procedures/diagnose.md). For a correctness/compatibility review, read [review](procedures/review.md). For a bounded interaction correction, read [lightweight design](procedures/web-design-lightweight.md) and [browser verification](domains/web/browser-verification.md). These procedures use the consumer's tools and preserve its instructions and visual identity.
+
 An ordinary agent request can be:
 
 > Use Context AI at SOURCE_PATH for this maintenance task. Preserve this repository's instructions, read only guidance that helps the change, implement it, and run the relevant project checks. Report what you used and what the checks showed.
@@ -32,20 +34,21 @@ For a loadout, choose the work it must support:
 | aws-infrastructure | Existing Terraform/AWS planning or validation is involved |
 | release-review | An authorized publication needs compatibility and release checks |
 
-Selections compose; `react-web` includes `web-experience`. A bounded existing web edit can choose `--design-procedure lightweight`; substantial design work defaults to guided. The [loadout guide](docs/loadouts.md) describes options and composition.
+Selections compose; `react-web` includes `web-experience`. `standard` defaults to direct review; `--option review_mode=fresh` selects one bounded native reader when the host and existing authority permit it. A bounded existing web edit can choose `--design-procedure lightweight`; substantial design work defaults to guided. The [loadout guide](docs/loadouts.md) describes options and composition.
 
 Run these commands **from the Context source directory**, using Python 3.10+ and a source-local environment. The target is the consuming project's absolute directory:
 
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r requirements.txt
-.venv/bin/python scripts/context_ai.py explain standard
+.venv/bin/python scripts/context_ai.py explain standard --option review_mode=direct
+.venv/bin/python scripts/context_ai.py tools --project /absolute/project
 .venv/bin/python scripts/context_ai.py plan standard --project /absolute/project
 .venv/bin/python scripts/context_ai.py apply standard --project /absolute/project
 .venv/bin/python scripts/context_ai.py verify --project /absolute/project
 ```
 
-Review the plan before applying: it shows the files and project changes. Application copies selected resources into `.context-ai/`, creates skill routers and adds a managed block to the project's `AGENTS.md`. It protects existing instructions and edited files. `verify` checks the installation and required runtime probes; it reports project checks as **not run**. Run those checks from the **consumer directory** and inspect its diff. Report what you actually read, invoked, and checked; a structured use receipt is optional for a comparison or audit.
+Review the plan before applying: it shows selected files, local tool candidates and project changes. `tools` inspects declarations, local packages, workspace ownership and PATH without running scripts or fetching packages. Installed Playwright files do not prove browser readiness. Application copies selected resources into `.context-ai/`, creates skill routers and adds a managed block to the project's `AGENTS.md`. It protects existing instructions and edited files. `verify` checks the installation and required runtime probes; it reports project checks as **not run**. Run those checks from the **consumer directory** and inspect its diff. Report what you actually read, invoked, and checked; a structured use receipt is optional for a comparison or audit.
 
 `refresh` previews changes to a selection; `undo` removes unchanged owned files and preserves user edits. See the [command contract](docs/loadouts.md) for details, [compatibility and recovery](docs/compatibility.md) for moving or restoring a selection, and the [Codex adapter](providers/openai/codex.md) for discovery limits.
 

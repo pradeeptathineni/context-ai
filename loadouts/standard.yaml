@@ -1,10 +1,15 @@
 schema_version: 1
 skills:
 - context-loadout
+- context-diagnose
+- context-review
 capabilities:
   python-runtime: required
   git: required
-options: {}
+  context-diagnose: required
+  context-review: required
+options:
+  review_mode: null
 decisions:
 - D-001
 - D-002
@@ -15,6 +20,7 @@ decisions:
 - D-012
 - D-018
 - D-019
+- D-022
 compose: []
 id: standard
 description: Proportional development using existing project tools.
@@ -34,6 +40,7 @@ stages:
   - core/code-comments.md
   - core/prior-art.md
   - overlays/writing.md
+  - procedures/diagnose.md
   test:
   - core/testing.md
   review:
