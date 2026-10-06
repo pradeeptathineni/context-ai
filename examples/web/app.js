@@ -30,12 +30,17 @@ document.querySelector('#mode').addEventListener('click', event => {
   event.currentTarget.setAttribute('aria-pressed', String(expressive));
   document.body.dataset.mode = expressive ? 'expressive' : 'quiet';
 });
+const note = document.querySelector('#note');
+const noteStatus = document.querySelector('#note-status');
+note.addEventListener('input', () => {
+  noteStatus.textContent = '';
+  note.removeAttribute('aria-invalid');
+});
 document.querySelector('#notes').addEventListener('submit', event => {
   event.preventDefault();
-  const note = document.querySelector('#note');
   const valid = note.value.trim().length >= 4;
   note.setAttribute('aria-invalid', String(!valid));
-  document.querySelector('#note-status').textContent = valid ? 'Preview note saved on this page. No server request was sent.' : 'Write at least four characters, then save your preview note.';
+  noteStatus.textContent = valid ? 'Preview note saved on this page. No server request was sent.' : 'Write at least four characters, then save your preview note.';
   if (!valid) note.focus();
 });
 render();
