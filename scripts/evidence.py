@@ -10,7 +10,7 @@ import re
 import sys
 from urllib.parse import urlparse
 
-from context_ai import ROOT, Invalid, inside, read_yaml, validate_schema, encoded
+from context_ai import ROOT, Invalid, read_yaml, validate_schema, encoded
 
 def public_url(value):
     u=urlparse(value)
@@ -34,7 +34,7 @@ def unique(items,kind):
         raise Invalid('duplicate '+kind+' IDs')
     return {x['id']:x for x in items}
 
-def load_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=False,now=None):
+def inspect_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=False,now=None):
     data=path.read_bytes()
     if len(data)>2_000_000:
         raise Invalid('bundle exceeds 2 MB limit')
@@ -54,8 +54,8 @@ def load_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=False,
     if not fixture:
         if not producer or not commit or b['producer']['repository']!=producer or b['producer']['commit']!=commit or not re.fullmatch('[0-9a-f]{40}',commit):
             raise Invalid('pinned producer identity/commit mismatch')
-        if b['producer']['protocol']=='fixture-v1':
-            raise Invalid('dishonest production protocol')
+        if b['producer']['protocol']!='signals-evidence-v1':
+            raise Invalid('unsupported producer protocol')
     sources=unique(b['sources'],'source');claims=unique(b['claims'],'claim');candidates=unique(b['candidates'],'candidate')
     concepts=read_yaml(ROOT/'concepts.yaml')['concepts']
     aliases={'browser-validation':'quality.visual'}
@@ -89,57 +89,50 @@ def load_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=False,
     now=now or datetime.now(timezone.utc)
     created=datetime.fromisoformat(b['created_at'].replace('Z','+00:00'))
     if created>now:raise Invalid('future evidence creation date')
-    stale=[];unknown=[]
+    ages={};unknown=[]
     for source in sources.values():
         date=source.get('observed_at')
         if date is None:unknown.append(source['id']);continue
         observed=datetime.fromisoformat(date.replace('Z','+00:00'))
         if observed>now:raise Invalid('future source observation')
-        if (now-observed).days>30:stale.append(source['id'])
-    return {'schema_version':1,'bundle_id':b['bundle_id'],'bundle_sha256':expected_sha,
+        ages[source['id']]=(now-observed).days
+    return {'input_schema_version':b['schema_version'],'bundle_id':b['bundle_id'],'bundle_sha256':expected_sha,
             'producer':b['producer'],'mode':b['mode'],'concept_ids':mapped,
             'admitted_as':'fixture-test' if fixture else 'pinned-peer-evidence',
-            'stale_source_ids':stale,'unknown_freshness_ids':unknown,
+            'source_age_days':ages,'unknown_freshness_ids':unknown,
+            'age_interpretation':'Observation age is information, not claim currency or an adoption cutoff.',
             'sources':list(sources.values()),'claims':list(claims.values()),
             'recommendations':list(candidates.values()),'constraints':b['need'].get('constraints',[]),
             'activation':False,'extensions_authority':'none',
             'limitations':b['limitations']+['Hashes verify bytes and local pinned origin, not truth. Claim/source ID resolution does not prove claim support. Recommendations and constraints require a Context adoption decision.']}
 
+def load_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=False,now=None):
+    """Frozen v1 summary: retain its historical age label for old callers only."""
+    result=inspect_bundle(path,expected_sha,producer,commit,allow_fixture,now)
+    ages=result.pop('source_age_days')
+    result.pop('age_interpretation')
+    result['schema_version']=result.pop('input_schema_version')
+    result['stale_source_ids']=[id for id,days in ages.items() if days>30]
+    return result
+
 def consume_checkpoint(status_path,expected_repository):
-    owner_root=status_path.parent.resolve()
-    status=json.loads(status_path.read_text())
-    campaign = status.get('campaign') == 'pact-hrr-2026-10-05'
-    owner = status.get('producer') if campaign else status.get('owner')
-    if campaign and (status.get('state') != 'ready' or status.get('repository') != expected_repository or not isinstance(status.get('revision'),int) or status['revision'] < 1):
-        raise Invalid('incomplete or unexpected campaign checkpoint')
-    if owner!='signals' or not re.fullmatch('[0-9a-f]{40}',status['commit']):
-        raise Invalid('unexpected checkpoint owner/commit')
-    if not campaign and status['contract_sha256']!=hashlib.sha256((ROOT/'schemas/evidence-bundle-v1.schema.json').read_bytes()).hexdigest():
-        raise Invalid('unsupported peer contract')
-    bundles=[]
-    for artifact in status['artifacts']:
-        p=inside(owner_root,artifact['path'])
-        data=p.read_bytes()
-        if hashlib.sha256(data).hexdigest()!=artifact['sha256']:
-            raise Invalid('checkpoint artifact digest mismatch')
-        if p.suffix=='.json':
-            value=json.loads(data)
-            if isinstance(value,dict) and 'bundle_id' in value and 'mode' in value:
-                bundles.append((p,artifact['sha256']))
-    if not bundles:raise Invalid('no completed real evidence bundle')
-    return [load_bundle(p,sha,expected_repository,status['commit']) for p,sha in bundles]
+    """Compatibility entry point for frozen checkpoint callers."""
+    from legacy_evidence import consume_checkpoint as legacy
+    return legacy(status_path,expected_repository,load_bundle)
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('bundle',type=Path,nargs='?')
     p.add_argument('--sha256');p.add_argument('--producer');p.add_argument('--commit')
     p.add_argument('--checkpoint',type=Path)
+    p.add_argument('--legacy-summary',action='store_true',help='Retain frozen v1 age labels; not a current freshness policy')
     args=p.parse_args()
     if args.checkpoint:
         result=consume_checkpoint(args.checkpoint,args.producer)
     else:
         if not args.bundle or not args.sha256:raise Invalid('bundle and --sha256 required')
-        result=load_bundle(args.bundle,args.sha256,args.producer,args.commit)
+        reader=load_bundle if args.legacy_summary else inspect_bundle
+        result=reader(args.bundle,args.sha256,args.producer,args.commit)
     print(encoded(result).decode(),end='')
 
 if __name__=='__main__':

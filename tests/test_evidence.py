@@ -53,6 +53,23 @@ class Evidence(unittest.TestCase):
         b=self.fixture();b['mode']='model-led'
         with self.assertRaisesRegex(e.Invalid,'producer'):self.check_value(b)
         result=self.check_value(self.fixture());self.assertEqual(result['unknown_freshness_ids'],['src-1'])
+
+    def test_current_observation_age_is_qualified_and_legacy_output_is_preserved(self):
+        b=self.fixture();b['sources'][0]['observed_at']='2025-01-01T00:00:00Z'
+        with tempfile.TemporaryDirectory() as td:
+            p=Path(td)/'bundle.json';p.write_text(json.dumps(b))
+            sha=hashlib.sha256(p.read_bytes()).hexdigest()
+            current=e.inspect_bundle(p,sha,allow_fixture=True,now=NOW)
+            legacy=e.load_bundle(p,sha,allow_fixture=True,now=NOW)
+        self.assertEqual(current['source_age_days'],{'src-1':642})
+        self.assertNotIn('stale_source_ids',current)
+        self.assertIn('not claim currency',current['age_interpretation'])
+        self.assertEqual(current['sources'],b['sources'])
+        self.assertEqual(current['recommendations'],b['candidates'])
+        self.assertFalse(current['activation'])
+        self.assertEqual(legacy['stale_source_ids'],['src-1'])
+        self.assertNotIn('source_age_days',legacy)
+        self.assertEqual(legacy['schema_version'],1)
     def test_empty_requires_limitation(self):
         b=self.fixture();b['sources']=[];b['claims']=[];b['candidates']=[];b['limitations']=[]
         with self.assertRaisesRegex(e.Invalid,'limitation'):self.check_value(b)
@@ -72,6 +89,34 @@ class Evidence(unittest.TestCase):
         self.assertFalse(result['activation'])
         with self.assertRaisesRegex(e.Invalid,'identity'):
             e.load_bundle(bundle,sha,'forged/producer',commit,now=NOW)
+
+    def test_real_evidence_requires_the_supported_producer_protocol(self):
+        original=json.loads((Path(__file__).resolve().parents[1]/'evals/signals-evidence.bundle.json').read_text())
+        with tempfile.TemporaryDirectory() as td:
+            path=Path(td)/'bundle.json'
+            for mode in ('agent-assisted','model-led','offline-curated'):
+                for protocol in ('signals-evidence-v2','unrelated-v1','fixture-v1'):
+                    with self.subTest(mode=mode,protocol=protocol):
+                        b=copy.deepcopy(original);b['mode']=mode;b['producer']['protocol']=protocol
+                        path.write_text(json.dumps(b))
+                        sha=hashlib.sha256(path.read_bytes()).hexdigest()
+                        with self.assertRaisesRegex(e.Invalid,'protocol'):
+                            e.load_bundle(path,sha,b['producer']['repository'],b['producer']['commit'],allow_fixture=True,now=NOW)
+
+    def test_checkpoints_cannot_admit_an_incompatible_producer_protocol(self):
+        b=json.loads((Path(__file__).resolve().parents[1]/'evals/signals-evidence.bundle.json').read_text())
+        b['producer']['protocol']='signals-evidence-v2'
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td);bundle=root/'evidence.json';bundle.write_text(json.dumps(b))
+            base={'commit':b['producer']['commit'],'artifacts':[{'path':'evidence.json','sha256':hashlib.sha256(bundle.read_bytes()).hexdigest()}]}
+            contract_sha=hashlib.sha256((e.ROOT/'schemas/evidence-bundle-v1.schema.json').read_bytes()).hexdigest()
+            statuses=[dict(base,owner='signals',contract_sha256=contract_sha),dict(base,campaign='pact-hrr-2026-10-05',producer='signals',repository=b['producer']['repository'],state='ready',revision=1)]
+            path=root/'status.json'
+            for status in statuses:
+                with self.subTest(campaign=status.get('campaign')):
+                    path.write_text(json.dumps(status))
+                    with self.assertRaisesRegex(e.Invalid,'protocol'):
+                        e.consume_checkpoint(path,b['producer']['repository'])
 
     def test_complete_campaign_checkpoint_retains_multiple_candidates_and_claim_uncertainty(self):
         b=self.fixture();b['mode']='agent-assisted';b['producer']={'repository':'example/signals','commit':'a'*40,'protocol':'signals-evidence-v1'};b['sources'][0]['source_class']='documentation'
