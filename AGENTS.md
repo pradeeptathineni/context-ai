@@ -13,7 +13,7 @@
 - For evals or comparisons, also read `core/benchmarking.md` and `core/testing.md`.
 - For releases, compatibility, or schema changes, also read `core/versioning.md`.
 - For opinionated project practice, load only the relevant files under `overlays/` after the core contexts they cite.
-- Before substantial new capabilities, dependencies, services, protocols, or development tooling, read `overlays/prior-art.md`; use `overlays/patterns.md` when choosing the implementation shape.
+- Before substantial new capabilities, dependencies, services, protocols, or development tooling, read `core/prior-art.md`; use `overlays/patterns.md` when choosing the implementation shape.
 - For a substantial Codex or ChatGPT workflow choice, use the local `standard` Agent Skill to check the relevant native capability on the active surface.
 - For an unfamiliar or consequential AI/software engineering choice, find the decision with `ruby scripts/lookup.rb --search WORDS`, then look up its concept ID with the active provider and product. The command resolves matching signals and original sources. Treat signals as candidates, not mandatory tools.
 - For model or multi-agent choices, read `overlays/model-deliberation.md` or `overlays/orchestration.md` respectively. For reader-facing writing, code comments, or consequential claims, use the matching `overlays/` file listed in `overlays/README.md`.

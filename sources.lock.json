@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "reviewed": "2026-10-05",
+  "reviewed": "2026-10-07",
   "sources": [
     {
       "id": "impeccable",
@@ -161,6 +161,47 @@
       },
       "excluded": "Executable launchers/hooks/binaries are not selected; snapshots are documentation only. Active instruction filenames are renamed; bytes otherwise unchanged.",
       "modifications": "Compiled guide link repairs are marked prominently; unmodified source bytes retained as .upstream.txt."
+    },
+    {
+      "id": "ecc",
+      "repository": "https://github.com/affaan-m/ECC",
+      "revision": "ef648e01899ba3e8dc6371642deaaf64b4477775",
+      "upstream_path": "skills/search-first",
+      "license": "MIT",
+      "excluded": "Only the selected instruction files and license are copied; hooks, agents, installers and plugin manifests are not selected. Active instruction filenames are renamed; bytes otherwise unchanged.",
+      "files": {
+        "sourced/ecc/search-first/LICENSE": "326146379f01bb137c0a5d3c54770c1aa31076705c8b88a7f6b26a460f6221b2",
+        "sourced/ecc/search-first/instruction.md": "76835db48dd910061d2e4271b1151793d2fddbabeb2d2866eed068b3580c55d5"
+      }
+    },
+    {
+      "id": "mattpocock",
+      "repository": "https://github.com/mattpocock/skills",
+      "revision": "f3fc5632f401156837ee3872f14fe33ccf1024ea",
+      "upstream_path": "skills/engineering/{tdd,code-review,research}",
+      "license": "MIT",
+      "excluded": "Only the selected instruction files and license are copied; hooks, agents, installers and plugin manifests are not selected. Active instruction filenames are renamed; bytes otherwise unchanged. agents/openai.yaml metadata and the setup/codebase-design skills are not selected; Context adapters replace those references.",
+      "files": {
+        "sourced/mattpocock/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        "sourced/mattpocock/code-review/instruction.md": "09eb147f793e4647949edd32dbad278f0554dfb56e0d46b699cd4c2c55bf0357",
+        "sourced/mattpocock/research/instruction.md": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4",
+        "sourced/mattpocock/tdd/instruction.md": "5505d25bbaa8fc14a79e4d20163936958992a2995b7f1dd1d6197edc9ed722e0",
+        "sourced/mattpocock/tdd/mocking.md": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
+        "sourced/mattpocock/tdd/tests.md": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a"
+      }
+    },
+    {
+      "id": "ponytail",
+      "repository": "https://github.com/DietrichGebert/ponytail",
+      "revision": "552acd5efd0aeae2583a12efe39373d2f076f25e",
+      "upstream_path": "skills/{ponytail,ponytail-review}",
+      "license": "MIT",
+      "excluded": "Only the selected instruction files and license are copied; hooks, agents, installers and plugin manifests are not selected. Active instruction filenames are renamed; bytes otherwise unchanged. Persistence/intensity commands and benchmarks are not selected; Context merges only the reuse ladder and review tags.",
+      "files": {
+        "sourced/ponytail/reuse/LICENSE": "fb1bc6909ac3ef82d5c22106e32ef682b0cff66788fa915fb9b53b15c9d2f3ab",
+        "sourced/ponytail/reuse/instruction.md": "1316a2f3f95741d2300b116fe0c2d81ce4a9568656ed0a62643f54aaf09957f2",
+        "sourced/ponytail/reuse/review.md": "4b29656469baa5df3513a1557197ec8053162c6a54c166c871c57061e37a8ebb"
+      }
     }
   ]
 }

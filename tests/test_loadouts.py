@@ -19,7 +19,8 @@ class Loadouts(unittest.TestCase):
         (self.project/'AGENTS.md').write_text('User instructions\n')
     def tearDown(self):self.tmp.cleanup()
     def test_every_advertised_loadout_materializes_verifies_and_undoes(self):
-        self.assertEqual(len(c.catalogue()),8)
+        original={'standard','context-authoring','research-evidence','web-experience','react-web','service-api','aws-infrastructure','release-review'}
+        self.assertEqual(set(c.catalogue()),original|{'essentials'})
         for id in c.catalogue():
             with self.subTest(id=id):
                 lock,files=c.resolve([id],self.project,'codex')
@@ -58,7 +59,7 @@ class Loadouts(unittest.TestCase):
     def test_composition_deduplicates_and_non_ui_keeps_design_out(self):
         lock,files=c.resolve(['standard','context-authoring','research-evidence','standard'],self.project,'codex')
         for modules in lock['stages'].values():self.assertEqual(len(modules),len(set(modules)))
-        self.assertFalse(any(p.startswith('sourced/') for p in files))
+        self.assertFalse(any(p.startswith(('sourced/impeccable/','sourced/anthropic/','sourced/vercel/')) for p in files))
         self.assertNotIn('context-web-design',lock['skills'])
     def test_cycle_and_conflicting_options(self):
         loads=c.catalogue();a=copy.deepcopy(loads['standard']);a['compose']=['standard'];loads['standard']=a

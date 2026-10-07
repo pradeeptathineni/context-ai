@@ -3,10 +3,6 @@ dependencies:
   core/prior-art.md:
   - core/engineering.md
   - core/research.md
-  overlays/prior-art.md:
-  - core/prior-art.md
-  - core/engineering.md
-  - core/research.md
   overlays/patterns.md:
   - core/engineering.md
   - core/development.md
@@ -62,6 +58,17 @@ dependencies:
   - core/testing.md
   procedures/review.md:
   - core/review.md
+  - sourced/mattpocock/code-review/instruction.md
+  - sourced/ponytail/reuse/review.md
+  procedures/tdd.md:
+  - core/testing.md
+  - sourced/mattpocock/tdd/instruction.md
+  - sourced/mattpocock/tdd/tests.md
+  - sourced/mattpocock/tdd/mocking.md
+  procedures/research-evidence.md:
+  - core/research.md
+  - procedures/current-docs.md
+  - sourced/mattpocock/research/instruction.md
   procedures/review-fresh.md:
   - procedures/review.md
   - overlays/orchestration.md

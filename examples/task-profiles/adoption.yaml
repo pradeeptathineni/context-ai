@@ -2,7 +2,7 @@ schema_version: 1
 task: Research whether we should adopt this tool for the actual project need.
 context:
   mode: direct
-  resources: [core/research.md, overlays/prior-art.md]
+  resources: [core/research.md, core/prior-art.md]
 model: {}
 pact:
   required: true

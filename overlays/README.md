@@ -9,7 +9,7 @@
 - Use [`ai-implementation.md`](ai-implementation.md) when deciding what established tooling, deterministic code, and models should each own.
 - Use [`context-efficiency.md`](context-efficiency.md) when reducing context, token use, latency, or model cost without lowering the quality bar.
 - Use [`delivery.md`](delivery.md) when a task includes implementation through review, refinement, version control, publication, or release.
-- Use [`prior-art.md`](prior-art.md) before choosing a substantial new capability, dependency, protocol, service, or development tool.
+- Use [`core/prior-art.md`](../core/prior-art.md) before choosing a substantial new capability, dependency, protocol, service, or development tool.
 - Use [`patterns.md`](patterns.md) when deciding ownership, state, effects, or whether an architectural pattern earns its cost.
 - Use [`orchestration.md`](orchestration.md) when considering separate agents, specialist roles, or an independent review.
 - Use [`model-deliberation.md`](model-deliberation.md) when choosing a model, reasoning level, or escalation path for a new run.
@@ -19,9 +19,9 @@
 
 Do not load the whole directory by default. Start with the smallest relevant combination and retrieve another file only when the task reaches its decision boundary.
 
-For a prior-art choice, the [concept lookup](../scripts/lookup.rb) retrieves matching shared and provider signals with original-source links. It supplies candidates to assess under `prior-art.md`; the index does not choose a tool for the project.
+For a prior-art choice, the [concept lookup](../scripts/lookup.rb) retrieves matching shared and provider signals with original-source links. It supplies candidates to assess under `core/prior-art.md`; the index does not choose a tool for the project.
 
-For a substantial new build, `prior-art.md` and `patterns.md` are the usual pair. For a normal code fix, the repository's own instructions and relevant core files may be enough. These routes are defaults for consideration, not permission to override a project's explicit contract.
+For a substantial new build, `core/prior-art.md` and `patterns.md` are the usual pair. For a normal code fix, the repository's own instructions and relevant core files may be enough. These routes are defaults for consideration, not permission to override a project's explicit contract.
 
 ## Composition and authority
 

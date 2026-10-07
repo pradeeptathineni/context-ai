@@ -1,0 +1,36 @@
+schema_version: 1
+id: essentials
+description: Smallest selected route for feature work - prior-art search with the reuse
+  ladder, a test-first loop, and spec/standards/complexity review.
+characteristics:
+- software
+- essentials
+compose: []
+skills:
+- context-loadout
+- context-pact-hrr
+- context-tdd
+- context-review
+capabilities:
+  git: optional
+  context-pact-hrr: required
+  context-tdd: required
+  context-review: required
+  context-current-docs: optional
+  context-product-questions: optional
+options: {}
+decisions:
+- D-023
+- D-024
+stages:
+  research:
+  - core/prior-art.md
+  implement:
+  - procedures/tdd.md
+  test:
+  - core/testing.md
+  review:
+  - procedures/review.md
+checks:
+- Run the project's own test command and show the new test failing before and passing
+  after the change; record the prior-art disposition in the project's decision format.

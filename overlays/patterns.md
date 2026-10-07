@@ -1,6 +1,6 @@
 # Pattern selection
 
-Use with [technical design](technical-design.md), [AI implementation](ai-implementation.md), and [prior art](prior-art.md) when choosing an implementation pattern. These are options to assess against a real contract, not a checklist to instantiate.
+Use with [technical design](technical-design.md), [AI implementation](ai-implementation.md), and [prior art](../core/prior-art.md) when choosing an implementation pattern. These are options to assess against a real contract, not a checklist to instantiate.
 
 ## Start from ownership
 
@@ -14,12 +14,6 @@ For a planned mutation or migration, make expected writes and typed postconditio
 
 ## Check the alternatives
 
-Before introducing a new layer, compare:
-
-1. current repository code and configuration;
-2. language or platform primitives;
-3. a standard or existing maintained component behind a narrow interface;
-4. a small project-specific implementation;
-5. a model or multi-agent step for semantic work that remains open ended.
+Before introducing a new layer, climb the reuse ladder in [prior art](../core/prior-art.md): existing repository code, language or platform primitives, an installed or maintained component behind a narrow interface, then a small project-specific implementation. A model or multi-agent step is an option only for semantic work that remains open ended.
 
 Use a pattern because it removes a demonstrated failure or makes a needed capability simpler to operate. Do not add speculative adapters, registries, taxonomies, caches, or abstraction hierarchies for imagined consumers. Measure a proposed optimization on a representative task before accepting its maintenance cost. Record the selected boundary and revisit trigger in the project's existing decision mechanism.

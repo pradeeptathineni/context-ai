@@ -349,3 +349,71 @@ decisions:
     installation, refresh and undo remain the materialization contract.
   revisit_when: Real first-use tasks cannot select a sufficient small profile, or a maintained native
     resolver supplies the same explicit validation with less burden.
+
+- id: D-023
+  revision: 1
+  supersedes: null
+  concept: research.prior_art
+  action: adapt
+  selection: Essentials route - one prior-art owner adapting ECC search-first and the Ponytail reuse
+    ladder, pinned Matt Pocock TDD and two-axis review, gstack product questions only for open decisions
+  rationale: The reset asks for selective evidence-backed outfitting rather than a larger constitution.
+    ECC search-first supplies the need, channel, search and adopt/extend/build sequence; its presence-only
+    preflight is replaced by capability probes. Ponytail's ladder and review tags merge into the existing
+    prior-art and review owners instead of an always-on persona. Matt Pocock's TDD and code-review files
+    are pinned whole with their helper files; references to skills not selected are replaced in thin
+    Context adapters. gstack's six product questions are adapted, hold-scope, only for unresolved decisions.
+  evidence:
+  - https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/skills/search-first/SKILL.md
+  - https://github.com/mattpocock/skills/tree/f3fc5632f401156837ee3872f14fe33ccf1024ea/skills/engineering
+  - https://github.com/DietrichGebert/ponytail/tree/552acd5efd0aeae2583a12efe39373d2f076f25e/skills
+  - https://github.com/garrytan/gstack/tree/db745675bdf9f575276db2dcd132d3c047218a12/office-hours
+  - sources.lock.json
+  - ownership.yaml
+  applicability: Feature and bug-fix work in a consuming project; ordinary edits within a settled
+    mechanism skip the prior-art search.
+  alternatives:
+  - Install full ECC, gstack, Superpowers or a development harness
+  - Keep the separate overlay and core prior-art rules
+  - Adopt OpenSpec or Spec Kit as a mandatory spec process
+  - Import Fabric patterns wholesale
+  - One adapted prior-art owner plus pinned selected upstream procedures
+  unknowns:
+  - Benefit on real consumer tasks is measured only by the bounded same-task trials recorded in evals;
+    human usefulness and model input savings beyond those runs are unmeasured.
+  validation:
+  - Upstream files read at the pinned revisions with MIT licenses; selected helper-file closure
+    (tdd tests/mocking) materializes with the license through resources.yaml and sources.lock.json.
+  - OpenSpec and Spec Kit were compared as spec owners; only the scenario and added/modified/removed
+    delta discipline is adopted, inside the review spec axis. No Fabric recipe matched a task check.
+  rollback: Use the earlier exact source/pins; undo unchanged owned resources.
+  revisit_when: A consumer trial shows the essentials route adds reads without better outcomes, or an
+    upstream revision materially changes a selected file.
+
+- id: D-024
+  revision: 1
+  supersedes: null
+  concept: context.capability_selection
+  action: build
+  selection: Concern ownership map with one active owner per concern and an archive outside loading paths
+  rationale: Active guidance had overlapping owners (two prior-art rules, a patterns alternatives list
+    restating the reuse ladder). A small validated map names, per concern, whether the native host, a
+    pinned upstream or Context-authored guidance owns it, and which active files may specialize it.
+    Superseded text moves to archive/ with a replacement pointer.
+  evidence:
+  - ownership.yaml
+  - archive/README.md
+  - tests/test_ownership.py
+  applicability: All loadouts, capabilities and skills in this library.
+  alternatives:
+  - Leave ownership implicit in prose
+  - Delete superseded files outright
+  - Explicit map, validated against loadouts, with an archive
+  unknowns:
+  - The map records library ownership; it cannot observe what a consumer's native host has installed
+    beyond project-local discovery.
+  validation:
+  - Validator rejects a concern with two owners, an active route to an archived file, and any loadout
+    or capability resource not covered by a concern.
+  rollback: Restore archived files from Git history; the map is advisory metadata for selection.
+  revisit_when: A concern needs two owners in different contexts, or the map drifts from actual loadouts.

@@ -1,0 +1,105 @@
+schema_version: 1
+# One active owner per concern. owner_kind: native (the agent host owns it), upstream (a pinned
+# selected source owns the procedure; a thin Context adapter routes to it) or context (Context-authored).
+# files: every active file that serves the concern; the first is the owner, the rest specialize it by
+# reference. native_names: skill names that, if already installed in a consumer, would duplicate this
+# concern. The 140-concept taxonomy in concepts.yaml remains reference knowledge, not a runtime obligation.
+concerns:
+  engineering-judgment:
+    owner_kind: context
+    files: [core/engineering.md, overlays/patterns.md]
+  task-context:
+    owner_kind: context
+    files: [core/context.md, core/compression.md, overlays/context-efficiency.md]
+  development-loop:
+    owner_kind: context
+    files: [core/development.md]
+  prior-art:
+    owner_kind: context
+    files: [core/prior-art.md, skills/pact-hrr/SKILL.md]
+    adapted_from: [ecc, ponytail]
+    native_names: [search-first, ponytail, pact-hrr]
+    archived: [archive/overlays/prior-art.md]
+  test-first-loop:
+    owner_kind: upstream
+    files: [procedures/tdd.md]
+    upstream: mattpocock
+    native_names: [tdd, test-driven-development]
+  verification:
+    owner_kind: context
+    files: [core/testing.md]
+  diagnosis:
+    owner_kind: context
+    files: [procedures/diagnose.md]
+    native_names: [systematic-debugging, diagnosing-bugs, investigate]
+  code-review:
+    owner_kind: upstream
+    files: [procedures/review.md, core/review.md, procedures/review-fresh.md]
+    upstream: mattpocock
+    adapted_from: [ponytail]
+    native_names: [code-review, review, ponytail-review]
+  product-decision:
+    owner_kind: context
+    files: [procedures/product-questions.md]
+    adapted_from: [gstack]
+    native_names: [office-hours, plan-ceo-review, grill-me]
+  research-evidence:
+    owner_kind: context
+    files: [procedures/research-evidence.md, core/research.md, overlays/evidence-claims.md]
+    upstream: mattpocock
+    native_names: [research, deep-research]
+  current-docs:
+    owner_kind: context
+    files: [procedures/current-docs.md]
+    tools: [context7]
+    native_names: [context7]
+  writing:
+    owner_kind: context
+    files: [overlays/writing.md]
+  code-comments:
+    owner_kind: context
+    files: [core/code-comments.md, overlays/code-comments.md]
+  version-control-and-release:
+    owner_kind: context
+    files: [core/version-control.md, core/versioning.md, overlays/delivery.md]
+  web-design:
+    owner_kind: upstream
+    files: [domains/web/design.md, procedures/web-design.md, procedures/web-design-lightweight.md]
+    upstream: impeccable
+    native_names: [impeccable, frontend-design]
+  web-quality:
+    owner_kind: context
+    files: [domains/web/accessibility.md, domains/web/product-ux.md, domains/web/performance.md,
+      domains/web/browser-verification.md, sourced/vercel/web/instruction.md]
+  react:
+    owner_kind: upstream
+    files: [domains/web/react.md, procedures/react-review.md]
+    upstream: vercel
+    native_names: [react-best-practices, vercel-react-best-practices]
+  service-api:
+    owner_kind: context
+    files: [domains/service/api.md]
+  infrastructure:
+    owner_kind: context
+    files: [domains/infrastructure/aws.md]
+  instruction-discovery:
+    owner_kind: native
+    native: Codex reads AGENTS.md; Claude Code reads CLAUDE.md, or AGENTS.md when no CLAUDE.md exists.
+  skill-activation:
+    owner_kind: native
+    native: Codex discovers .agents/skills; Claude Code discovers .claude/skills. Context writes thin routers only.
+  model-and-effort:
+    owner_kind: native
+    native: Host settings own model, effort, authentication and billing; models/routing.yaml is advice.
+  orchestration-advice:
+    owner_kind: context
+    files: [overlays/orchestration.md]
+  model-advice:
+    owner_kind: context
+    files: [overlays/model-deliberation.md]
+  delegation:
+    owner_kind: native
+    native: Host subagents and permissions; overlays/orchestration.md advises when delegation is worth it.
+  tool-output-compression:
+    owner_kind: native
+    native: Host output truncation plus bounded project logs; no compressor is default (see evals/context-efficiency-trial.md).

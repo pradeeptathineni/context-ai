@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "concerns"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "concerns": {
+      "type": "object",
+      "minProperties": 1,
+      "propertyNames": {"pattern": "^[a-z][a-z0-9-]*$"},
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["owner_kind"],
+        "properties": {
+          "owner_kind": {"enum": ["native", "upstream", "context"]},
+          "files": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "native": {"type": "string", "minLength": 1},
+          "upstream": {"type": "string", "minLength": 1},
+          "adapted_from": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "tools": {"type": "array", "uniqueItems": true, "items": {"type": "string", "minLength": 1}},
+          "native_names": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^[a-z][a-z0-9-]*$"}},
+          "archived": {"type": "array", "uniqueItems": true, "items": {"type": "string", "pattern": "^archive/"}}
+        },
+        "allOf": [
+          {"if": {"properties": {"owner_kind": {"const": "native"}}}, "then": {"required": ["native"]}, "else": {"required": ["files"]}},
+          {"if": {"properties": {"owner_kind": {"const": "upstream"}}}, "then": {"required": ["upstream"]}}
+        ]
+      }
+    }
+  }
+}

@@ -114,6 +114,61 @@ def current_decisions():
                 raise Invalid('invalid decision successor')
     return {id: max((v for (k,_),v in decisions.items() if k==id), key=lambda d:d['revision']) for id,_ in decisions}
 
+def active_files():
+    """Every guidance file a loadout, capability or packet route can load."""
+    files=set(['overlays/orchestration.md','overlays/model-deliberation.md','core/prior-art.md'])
+    for d in catalogue().values():
+        for paths in d['stages'].values():files.update(paths)
+    for item in capability_registry()['capabilities'].values():
+        if item['kind']=='resource':files.add(item['path'])
+    return files
+
+def ownership():
+    """One active owner per concern; archived files stay off every active route."""
+    document=read_yaml(ROOT/'ownership.yaml')
+    validate_schema('ownership',document)
+    pinned={s['id'] for s in json.loads((ROOT/'sources.lock.json').read_text())['sources']}
+    commands={k for k,v in capability_registry()['capabilities'].items() if v['kind']=='command'}
+    owner_of={}
+    for concern,spec in document['concerns'].items():
+        for path in spec.get('files',[]):
+            if path in owner_of:
+                raise Invalid('file has two concern owners: '+path+' ('+owner_of[path]+', '+concern+')')
+            if not inside(ROOT,path).is_file():
+                raise Invalid('missing concern file: '+path)
+            owner_of[path]=concern
+        if 'upstream' in spec and spec['upstream'] not in pinned:
+            raise Invalid('concern upstream is not pinned in sources.lock.json: '+spec['upstream'])
+        for tool in spec.get('tools',[]):
+            if tool not in commands:
+                raise Invalid('unknown concern tool capability: '+tool)
+        for path in spec.get('archived',[]):
+            if not inside(ROOT,path).is_file():
+                raise Invalid('missing archived file: '+path)
+    active=active_files()
+    uncovered=sorted(active-set(owner_of))
+    if uncovered:
+        raise Invalid('active files without a concern owner: '+', '.join(uncovered))
+    archived=[p for p in active if p.startswith('archive/')]
+    deps=read_yaml(ROOT/'resources.yaml')['dependencies']
+    archived+=[d for key,values in deps.items() for d in [key,*values] if d.startswith('archive/')]
+    if archived:
+        raise Invalid('archived file on an active route: '+', '.join(sorted(set(archived))))
+    return document['concerns'],owner_of
+
+def selected_concerns(files):
+    concerns,owner_of=ownership()
+    result={}
+    for path in dict.fromkeys(files):
+        concern=owner_of.get(path)
+        if concern:
+            spec=concerns[concern]
+            entry=result.setdefault(concern,{'owner_kind':spec['owner_kind'],'owner':spec['files'][0],'selected':[]})
+            entry['selected'].append(path)
+            for key in ('upstream','adapted_from','native_names','tools'):
+                if key in spec:entry[key]=spec[key]
+    return result
+
 def resource_path(root, name):
     path = inside(root, name)
     if path.name.casefold() in ('agents.md', 'agents.override.md', 'claude.md', 'gemini.md') or any(part.casefold() in ('.agents', '.codex') for part in path.parts):
@@ -404,8 +459,11 @@ def explain(ids, options=None):
     for id in selected['capabilities']:
         if id not in registry:
             raise Invalid('unknown capability: '+id)
+    routed=[p for paths in selected['stages'].values() for p in paths]
+    routed+=[registry[c]['path'] for c in selected['capabilities'] if registry[c]['kind']=='resource']
     return {'loadouts':{id:loads[id] for id in selected['loadouts']},
             'composition':selected['loadouts'],'stages':selected['stages'],
+            'concerns':selected_concerns(routed),
             'options':selected['options'],'checks':selected['checks'],
             'option_choices':{key:capability_registry()['options'][key] for key in selected['options']},
             'decisions':selected_decisions(selected['decisions']),
@@ -881,7 +939,7 @@ def undo(project):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=['list','explain','decisions','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover'])
+    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover'])
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
     parser.add_argument('--profile',type=Path,help='Explicit JSON/YAML task profile for read-only packet resolution')
@@ -904,9 +962,13 @@ def main():
             if key in overrides and overrides[key]!=value:
                 raise Invalid('conflicting compatibility flag and option: '+key)
             overrides[key]=value
-    if args.command in ('list','explain','decisions'):
+    if args.command in ('list','explain','decisions','owners'):
         loads=catalogue()
-        if args.command=='list':
+        if args.command=='owners':
+            if args.loadouts or overrides or args.lock:
+                raise Invalid('owners takes no selections')
+            result=ownership()[0]
+        elif args.command=='list':
             result={id:{'description':d['description'],'characteristics':d['characteristics']} for id,d in sorted(loads.items())}
         elif args.command=='decisions':
             if overrides or args.lock:

@@ -24,7 +24,7 @@ stages:
   research:
   - core/research.md
   - procedures/research-evidence.md
-  - overlays/prior-art.md
+  - core/prior-art.md
   - overlays/evidence-claims.md
 checks:
 - Verify claim/source references, freshness, producer mode and exact-byte interchange

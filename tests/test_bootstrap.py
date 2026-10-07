@@ -15,7 +15,7 @@ class Bootstrap(unittest.TestCase):
             subprocess.run(['git','init','-q',str(project)],check=True)
             (project/'AGENTS.md').write_text('User instructions\n')
             lock,files=c.resolve(['standard','context-authoring','standard'],project,'codex')
-            self.assertEqual(lock['loadouts'],['standard','context-authoring'])
+            self.assertEqual(lock['loadouts'],['essentials','standard','context-authoring'])
             self.assertNotIn('design',lock['stages'])
             c.apply(project,lock,files)
             first=(project/'.context-ai/lock.json').read_bytes()

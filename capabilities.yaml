@@ -122,6 +122,33 @@ capabilities:
     resolver: package-manager
     boundary: Declared manager/lockfile and PATH are advisory; scripts are unexecuted
       candidates. No network resolution or package scripts in discovery/probes.
+  context-tdd:
+    kind: resource
+    stages: [implement, test]
+    path: procedures/tdd.md
+    description: Run a red-green test-first loop at an agreed public seam for a feature
+      or bug fix. Skip spikes, prose and changes the project cannot exercise locally.
+    boundary: Instructions only; uses the project's existing test runner.
+  context-current-docs:
+    kind: resource
+    stages: [research, implement]
+    path: procedures/current-docs.md
+    description: Answer a version-sensitive library or API question from the exact
+      installed version, using Context7 when available and official docs otherwise.
+    boundary: Instructions only; Context7 is optional and never receives secrets or
+      private code.
+  context-product-questions:
+    kind: resource
+    stages: [research]
+    path: procedures/product-questions.md
+    description: Resolve a genuinely open product or scope decision with hold-scope
+      questions. Never re-interview requirements the user already stated.
+    boundary: Instructions only; asks only what evidence cannot settle.
+  context7:
+    kind: command
+    command: ctx7
+    boundary: Optional Context7 CLI on PATH. Presence is not a successful lookup; the
+      hosted index is third-party, and absence falls back to official docs.
 options:
   brand:
     description: Preserve the consuming project visual intent.

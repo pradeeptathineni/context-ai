@@ -21,9 +21,11 @@ decisions:
 - D-018
 - D-019
 - D-022
-compose: []
+compose:
+- essentials
 id: standard
-description: Proportional development using existing project tools.
+description: Proportional development using existing project tools; composes the essentials
+  route.
 characteristics:
 - software
 - maintenance
@@ -31,14 +33,12 @@ stages:
   inspect:
   - core/engineering.md
   - core/context.md
-  - overlays/prior-art.md
   - core/version-control.md
   implement:
   - core/development.md
   - overlays/patterns.md
   - overlays/code-comments.md
   - core/code-comments.md
-  - core/prior-art.md
   - overlays/writing.md
   - procedures/diagnose.md
   test:
@@ -50,8 +50,6 @@ stages:
   - core/versioning.md
   - overlays/delivery.md
   - core/version-control.md
-  research:
-  - core/prior-art.md
 checks:
 - Use the repository validation commands; inspect the actual diff; preserve unrelated
   work.
