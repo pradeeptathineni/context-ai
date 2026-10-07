@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Extended `context-loadout` to equip ordinary software tasks with explicit profiles and read-only execution packets; retained direct reads and optional recurring materialization.
+- Reused composition/options, resource/source closure, local capability discovery and literal model routing; added staged resource-capability hints, PACT/orchestration advice, verification expectations and unresolved boundaries without an agent runtime.
+- Recorded selection ownership HRR in D-004 revision 3; added six task examples, a no-extra-context control and contract/effect-boundary checks.
+
 - Added data-declared design/review alternatives, a generic explicit option flag and selected procedure routers.
 - Made project-local Python, Node/workspace/package-manager and Playwright discovery useful without executing scripts or downloading packages; kept runtime observations outside portable pins.
 - Added focused failure diagnosis and consequential review procedures and stronger browser state/keyboard checks.

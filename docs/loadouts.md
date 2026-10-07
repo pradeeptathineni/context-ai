@@ -2,6 +2,8 @@
 
 For one task, start with project instructions and read only relevant guidance directly. No installation is required. For a recurring project selection, a manifest selects resources and a resolved lock pins their bytes. Report actual use and checks separately in the task result; a structured use receipt is optional unless the project requires one. Project instructions and explicit user authority take precedence.
 
+The [context-loadout skill](../skills/context-loadout/SKILL.md) also equips ordinary tasks with several choices. Its [task profile](task-profiles.md) resolves a read-only execution packet through `packet --profile /absolute/task.yaml --project /absolute/project`; direct reads remain setup-free. Packet resolution does not pin or activate a selection.
+
 ## Supported catalogue
 
 | ID | Use | Verification recipe |
@@ -49,6 +51,8 @@ python3 -m venv .venv
 Loadout YAML has `id`, description/characteristics, ordered composition/modules/skills, required/optional capabilities, options, stage routing, check recipes and decision references. `schemas/loadout.schema.json` owns its fields. Composition is depth-first parents then selection, deduplicated by ID; cycles and conflicting defaults fail. An option key in a loadout makes it applicable; `null` selects the registry default. Existing explicit values remain valid.
 
 `capabilities.yaml` and `schemas/capabilities.schema.json` own the small option vocabulary. Finite alternatives have a default, applicability description, aliases to existing capability definitions and optional explicit incompatible option/value pairs. Brand is bounded project intent (1-2000 characters). Code validates explicit supported values and aliases; it makes no model call or keyword-based task choice. `explain` shows `option_choices`; the agent uses task/project facts to choose. Aliases replace selected definitions from the base registry, so only selected resources/notices enter the closure. Informational links do not pull in another alternative.
+
+Resource capabilities may declare `stages` for packet slicing. Omitted hints conservatively apply to every selected stage; explicit task capabilities are retained. These hints do not prune persistent materialization, which still resolves the full composition.
 
 | Option | Default and alternatives | Behavior |
 | --- | --- | --- |

@@ -4,7 +4,7 @@ from pathlib import Path
 import json
 import sys
 import tempfile
-from context_ai import ROOT, catalogue, current_decisions, resolve, validate_schema
+from context_ai import ROOT, catalogue, current_decisions, read_yaml, resolve, task_packet, validate_schema
 from jsonschema import Draft202012Validator
 
 def check():
@@ -25,6 +25,8 @@ def check():
         for id,d in catalogue().items():
             validate_schema('loadout',d)
             resolve([id],Path(td).resolve(),'codex')
+        for path in (ROOT/'examples/task-profiles').glob('*.yaml'):
+            task_packet(read_yaml(path),Path(td).resolve())
     print('Loadout validation passed: 8 manifests, source pins, decisions, concepts and schemas.')
 
 if __name__=='__main__':

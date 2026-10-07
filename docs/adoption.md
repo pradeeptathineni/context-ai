@@ -10,6 +10,8 @@ For one maintenance task, start with the consuming repository's instructions and
 
 A direct read needs no installation, Python environment or receipt file. For a documentation change, [writing guidance](../overlays/writing.md) may be enough. A linked file is loaded only when the agent reads it.
 
+When the task needs several Context choices, the [context-loadout skill](../skills/context-loadout/SKILL.md) interprets the ordinary request and can validate an explicit [task profile](task-profiles.md). Its packet advises what to read, which development shape fits, and what remains unverified. The agent still performs the task through its native environment. You need not name the library's internal parts.
+
 For recurring use in one repository, follow the [context-loadout procedure](../skills/context-loadout/SKILL.md) and [command contract](loadouts.md). Run these commands **from the Context source directory**, using Python 3.10+ and a source-local environment; `--project` names the consuming repository's absolute directory:
 
 ```sh
@@ -32,7 +34,7 @@ Restart the Codex run after changing project instructions. Installed routers do 
 
 ## Optional setup across repositories
 
-For a user-level route across repositories, put a checkout or pointer at `~/.ai/context-ai` on each host that should use it. The remaining global guidance is opt-in. This library's `models/routing.yaml` is the durable route policy, not a command that changes a running model. Keep any separate local model-routing proposal outside the canonical hierarchy until an implemented router replaces it.
+For a user-level route across repositories, put a checkout or pointer at `~/.ai/context-ai` on each host that should use it. The remaining global guidance is opt-in. This library's `models/routing.yaml` is the durable route policy; task packets resolve literal attributes as advice, and native host controls select any actual model change.
 
 ## Loading layers
 

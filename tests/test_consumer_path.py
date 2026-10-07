@@ -70,7 +70,7 @@ class ConsumerPath(unittest.TestCase):
         self.assertEqual(run.returncode,0,run.stderr)
         view=json.loads(run.stdout)
         self.assertEqual(view,c.explain(['standard'])['decisions'])
-        self.assertEqual(view['D-004']['revision'],2)
+        self.assertEqual(view['D-004']['revision'],3)
         self.assertNotIn('D-008',view)
         for d in c.current_decisions().values():
             self.assertNotIn('v1 consumers',d['applicability'])

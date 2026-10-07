@@ -1,0 +1,13 @@
+schema_version: 1
+task: Review this architecture for a high-consequence persistence boundary; review-only scope.
+context:
+  mode: direct
+  resources: [overlays/technical-design.md, domains/service/api.md, procedures/review.md]
+model: {intent: architecture, consequence: high}
+pact:
+  required: true
+  reason: Reconsider component and persistence ownership before recommending a consequential change.
+verification:
+- Trace ownership, failure recovery and preserved data against actual code; reproduce material findings without production writes.
+unresolved:
+- Proposed architecture alone cannot establish recovery behavior; inspect the current implementation.

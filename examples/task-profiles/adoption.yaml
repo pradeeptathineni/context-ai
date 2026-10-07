@@ -1,0 +1,13 @@
+schema_version: 1
+task: Research whether we should adopt this tool for the actual project need.
+context:
+  mode: direct
+  resources: [core/research.md, overlays/prior-art.md]
+model: {}
+pact:
+  required: true
+  reason: A new dependency changes responsibility and operational burden; compare the current owner first.
+verification:
+- Check original maintained sources for fit, interface, license, privacy and maintenance; record evidence and a bounded disposition in the existing decision artifact.
+unresolved:
+- A researched candidate is not installed, invoked or proven useful on this project.

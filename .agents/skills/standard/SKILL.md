@@ -7,6 +7,8 @@ description: Use for substantial development, AI workflow design, or tooling cho
 
 Use the current task, repository instructions, and actual environment as the authority for what is needed. This skill supplies a decision habit, not permission or a fixed tool stack.
 
+Task equipping belongs to [context-loadout](../../../skills/context-loadout/SKILL.md) when several guidance/procedure choices need resolution. Keep this skill focused on the consequential prior-art and native-capability junction; do not create another task router here.
+
 ## Before choosing a mechanism
 
 For a substantial new capability, dependency, service, protocol, agent workflow, or development tool, **check prior art before building**. Name the job and its observable contract. Inspect the repository's current owner and decisions, then the relevant standard, native facility, maintained implementation, and smallest custom remainder. Read [prior-art](../../../overlays/prior-art.md); use [patterns](../../../overlays/patterns.md) when deciding ownership or architecture. A small edit within an established path needs no landscape review.

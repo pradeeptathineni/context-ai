@@ -1,0 +1,13 @@
+schema_version: 1
+task: Implement this API from explicit acceptance criteria using the settled service architecture.
+context:
+  mode: direct
+  resources: [domains/service/api.md, core/review.md]
+model: {intent: coding, requirements: explicit, architecture: settled}
+pact:
+  required: false
+  reason: Existing API, persistence and testing tools own this implementation.
+verification:
+- Test schema, authorization, successful replies, failure contracts and persistence invariants using isolated project data.
+unresolved:
+- Deployment and live-client compatibility require a separately authorized environment.

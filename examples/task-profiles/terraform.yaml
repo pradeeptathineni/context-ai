@@ -1,0 +1,14 @@
+schema_version: 1
+task: Change this Terraform in an existing AWS project; plan and validation only.
+context:
+  mode: direct
+  resources: [domains/infrastructure/aws.md, core/review.md]
+capabilities: {terraform: required, aws-cli: optional}
+model: {intent: coding, scope: bounded, interaction: iterative}
+pact:
+  required: false
+  reason: Resource ownership and provider choices are already settled.
+verification:
+- Inspect versions, identity and state; run formatting and backend-isolated validation, then an authorized plan and rollback review.
+unresolved:
+- No apply or deployment authority is implied by this profile.

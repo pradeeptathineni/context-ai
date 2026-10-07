@@ -48,6 +48,8 @@ REQUIRED = %w[
   scripts/check_loadouts.py
   skills/context-loadout/SKILL.md
   schemas/loadout.schema.json
+  schemas/task-profile.schema.json
+  docs/task-profiles.md
   schemas/lock.schema.json
   schemas/installation.schema.json
   schemas/evidence-bundle-v1.schema.json

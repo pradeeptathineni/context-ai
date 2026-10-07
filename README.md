@@ -6,12 +6,17 @@ The library covers engineering, research, writing, web work, APIs, infrastructur
 
 ## Use it for a task
 
-Start with the consuming project's instructions and the change you need to make. Then choose a route:
+Give your agent the change you need and the Context source path:
+
+> Use Context AI at SOURCE_PATH to fix this failing integration. Inspect this project's instructions and tools, choose the smallest useful execution profile, complete the fix, and report what you used and verified.
+
+The [context-loadout skill](skills/context-loadout/SKILL.md) equips the task. The agent interprets the request; Context can validate its explicit choices and return a read-only [execution packet](docs/task-profiles.md). You do not need to name modules, options or model routes. Small tasks can still use a direct read with no setup.
 
 | Need | Start here |
 | --- | --- |
 | One task | Read a relevant file from an exact Context checkout or archive. A README change, for example, may benefit from [writing guidance](overlays/writing.md). No setup or receipt is required. |
-| Repeated work in one project | Use the [context-loadout skill](skills/context-loadout/SKILL.md) to choose, preview, and pin a loadout. Read only the guidance for the current stage. |
+| Several choices in one task | Let the agent resolve a [task profile](docs/task-profiles.md), then read its selected guidance and use native tools. |
+| Repeated work in one project | Let the agent choose, preview, and pin a loadout. Read only the guidance for the current stage. |
 
 If the project's own guidance is enough, complete the task with that. For either route, check claims against the project and run its relevant tests.
 
@@ -21,7 +26,7 @@ An ordinary agent request can be:
 
 > Use Context AI at SOURCE_PATH for this maintenance task. Preserve this repository's instructions, read only guidance that helps the change, implement it, and run the relevant project checks. Report what you used and what the checks showed.
 
-For a loadout, choose the work it must support:
+For recurring use, the agent can choose from:
 
 | Loadout | Select when |
 | --- | --- |

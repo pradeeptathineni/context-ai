@@ -302,3 +302,50 @@ decisions:
   rollback: Use earlier exact source pins; undo unchanged owned resources; retain edited user work.
   revisit_when: Repeated procedure friction or a missed consequential failure warrants simpler guidance
     or a targeted new check.
+
+- id: D-004
+  revision: 3
+  supersedes: 2
+  concept: context.loadouts
+  action: adapt
+  selection: Agent-led task equipping through context-loadout and a read-only explicit profile resolver
+  rationale: HRR found that first-use routing, direct reads and recurring compositions already belong to
+    context-loadout; standard owns consequential prior-art judgment. Extend that owner instead of adding
+    a skill, semantic classifier or runtime. Reuse resource closure, options, tool discovery and model routes.
+    Resolve only explicit agent choices; project/user instructions remain authoritative.
+  evidence:
+  - core/prior-art.md
+  - skills/context-loadout/SKILL.md
+  - docs/task-profiles.md
+  - https://learn.chatgpt.com/docs/build-skills
+  - https://agentskills.io/specification
+  - https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/skills/writing-plans/SKILL.md
+  applicability: Existing capable agents equipping software tasks; direct reads remain setup-free and
+    materialization is optional for recurring selections. Packet selection is advice, never authority.
+  alternatives:
+  - Retain manual assembly by consumers familiar with Context internals
+  - Make standard a second task-selection owner
+  - Introduce a task skill, natural-language classifier or agent runtime
+  - Adopt Superpowers planning and execution lifecycle wholesale
+  - Adapt context-loadout and validate explicit choices with current deterministic machinery
+  unknowns:
+  - Native automatic skill selection and human first-use usefulness are not established by source
+    documentation or deterministic profile tests.
+  - Model recommendations require current host access checks; packets cannot observe session authority
+    or native browser/subagent readiness.
+  validation:
+  - Before implementation, traced clean main 51de330 selection, explain, resolve, resources and discovery;
+    task options/local tools already exist and need no replacement.
+  - Primary skill documentation supports model-led selection and on-demand resources. Superpowers
+    planning supplies explicit constraints and verification but its mandatory handoff/lifecycle exceeds
+    this library's task-equipping responsibility.
+  - Six builder-authored task profiles and a no-extra-context control resolve through the CLI;
+    contract tests cover literal route precedence, stage slicing, unsafe/unknown choices, opposing
+    procedures, fresh-review consistency and execution/write tripwires.
+  - Actual review/validation use on this change resolved eleven guidance resources with required
+    PACT and one-agent advice, without materialization or active-model changes; evidence and limits
+    are recorded in evals/task-profiles.md.
+  rollback: Use the earlier exact source/pins. Profile resolution writes no consumer files; existing
+    installation, refresh and undo remain the materialization contract.
+  revisit_when: Real first-use tasks cannot select a sufficient small profile, or a maintained native
+    resolver supplies the same explicit validation with less burden.

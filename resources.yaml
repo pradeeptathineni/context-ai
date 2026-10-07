@@ -34,6 +34,7 @@ dependencies:
   - core/prior-art.md
   skills/context-loadout/SKILL.md:
   - docs/loadouts.md
+  - docs/task-profiles.md
   domains/web/design.md:
   - procedures/design-selection.md
   domains/service/api.md:
@@ -68,3 +69,5 @@ dependencies:
   - core/development.md
   - core/context.md
   - core/review.md
+  overlays/model-deliberation.md:
+  - core/benchmarking.md

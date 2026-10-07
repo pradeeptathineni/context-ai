@@ -1,0 +1,17 @@
+schema_version: 1
+task: Redesign this page; recurring web work within the established project visual identity.
+context:
+  mode: loadout
+  loadouts: [web-experience]
+  stages: [design, test]
+  options:
+    design_procedure: lightweight
+    brand: Preserve the existing typography, wordmark and restrained palette.
+model: {intent: coding, scope: bounded, interaction: iterative}
+pact:
+  required: false
+  reason: The visual system, project tools and component ownership are settled.
+verification:
+- Inspect desktop/mobile appearance, keyboard navigation, interactions, accessibility and reduced motion with project tools.
+unresolved:
+- Static Playwright discovery cannot establish browser launch or visual quality.

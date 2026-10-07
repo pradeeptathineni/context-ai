@@ -11,6 +11,7 @@ capabilities:
     boundary: Read-only discovery; mutation needs task authority.
   context-web-design:
     kind: resource
+    stages: [design, review]
     path: procedures/web-design.md
     description: Use Impeccable instruction-only design procedure for frontend work.
     files:
@@ -21,6 +22,7 @@ capabilities:
       override tastes.
   context-react-review:
     kind: resource
+    stages: [inspect, implement, review]
     path: procedures/react-review.md
     description: Read targeted Vercel React rules when the actual project uses React.
     files:
@@ -29,6 +31,7 @@ capabilities:
     boundary: Match framework/version; no forced Next or Vercel hosting.
   context-web-audit:
     kind: resource
+    stages: [review]
     path: sourced/vercel/web/instruction.md
     description: Audit web interaction with Vercel guidance and WCAG.
     files:
@@ -55,12 +58,14 @@ capabilities:
     boundary: Optional for source planning; no apply/deployment authorization.
   context-pact-hrr:
     kind: resource
+    stages: [research]
     path: skills/pact-hrr/SKILL.md
     description: Reconsider a consequential responsibility using prior art and actual
       use.
     boundary: Instruction-only procedure; existing task authority governs effects.
   context-web-design-guided:
     kind: resource
+    stages: [design, review]
     path: procedures/web-design.md
     description: Use Impeccable instruction-only design procedure for frontend work.
     files:
@@ -71,6 +76,7 @@ capabilities:
       override tastes.
   context-web-design-lightweight:
     kind: resource
+    stages: [design, review]
     path: procedures/web-design-lightweight.md
     description: Use concise frontend design guidance for bounded existing-surface
       changes.
@@ -81,12 +87,14 @@ capabilities:
       override tastes.
   context-diagnose:
     kind: resource
+    stages: [implement]
     path: procedures/diagnose.md
     description: Diagnose and fix a command, integration or observable behavior failure.
       Skip routine edits without a failure.
     boundary: Instructions only; project commands and existing authority govern execution.
   context-review:
     kind: resource
+    stages: [review]
     path: procedures/review.md
     description: Review a consequential diff for correctness, compatibility and discriminating
       tests. Distinguish review-only authority from corrections.
@@ -94,6 +102,7 @@ capabilities:
       authority.
   context-review-direct:
     kind: resource
+    stages: [review]
     path: procedures/review.md
     description: Review a consequential diff for correctness, compatibility and discriminating
       tests. Distinguish review-only authority from corrections.
@@ -101,6 +110,7 @@ capabilities:
       authority.
   context-review-fresh:
     kind: resource
+    stages: [review]
     path: procedures/review-fresh.md
     description: Review a consequential diff with one bounded fresh native reader
       when host support and session authority permit.

@@ -291,7 +291,7 @@ def discover_command(definition, project):
         raise Invalid('unsupported tool resolver: '+resolver)
     return result
 
-def capability_states(selected, registry, project):
+def capability_states(selected, registry, project, strict=True):
     states = {}
     for key, required in selected.items():
         if key not in registry:
@@ -306,7 +306,7 @@ def capability_states(selected, registry, project):
             raise Invalid('unsupported capability kind')
         states[key] = {'requirement':required,'available':available,'definition':item}
         if item['kind']=='command':states[key]['discovery']=discovery
-        if required == 'required' and not available:
+        if strict and required == 'required' and not available:
             raise Invalid('missing required capability: '+key+'; '+discovery.get('uncertainty','') if item['kind']=='command' else 'missing required capability: '+key)
     return states
 
@@ -411,6 +411,114 @@ def explain(ids, options=None):
             'decisions':selected_decisions(selected['decisions']),
             'capabilities':{id:registry[id] for id in selected['capabilities']},
             'capability_requirements':selected['capabilities']}
+
+def model_recommendation(attributes):
+    """Literal first-match policy; task interpretation and host settings stay external."""
+    policy=read_yaml(ROOT/'models/routing.yaml')
+    keys={key for route in policy['routes'] for key in route['match']}
+    if set(attributes)-keys:
+        raise Invalid('unknown model route attributes: '+', '.join(sorted(set(attributes)-keys)))
+    if '*' in attributes.values():
+        raise Invalid('model wildcard belongs to policy, not task attributes')
+    route=next((r for r in policy['routes'] if all(value=='*' or attributes.get(key)==value
+                for key,value in r['match'].items())),None)
+    if route is None:
+        route=next(r for r in policy['routes'] if r['id']==policy['matching']['fallback_route'])
+    def binding(choice):
+        model=policy['models'][choice['model_profile']]
+        return {**choice,'provider':model['provider'],'model':model['model'],
+                'availability':model['availability']}
+    return {'route':route['id'],'attributes':attributes,'recommendation':binding(route['select']),
+            'fallback':binding(route['fallback']) if 'fallback' in route else None,
+            'policy':'models/routing.yaml','reviewed':policy['reviewed'],'applied':False}
+
+def task_packet(profile, project):
+    """Resolve advice without materialization, command probes or semantic classification."""
+    validate_schema('task-profile',profile)
+    context=profile.get('context',{'mode':'direct'})
+    stages,options,loadouts,checks,decision_ids={},{},[],[],[]
+    selected=profile.get('capabilities',{}).copy()
+    roots=context.get('resources',[]).copy()
+    if context['mode']=='loadout':
+        composition=selection(context['loadouts'],context.get('options'))
+        loadouts=composition['loadouts'];options=composition['options']
+        for stage in context['stages']:
+            if stage not in composition['stages']:
+                raise Invalid('stage does not apply to selection: '+stage)
+            stages[stage]=composition['stages'][stage]
+            roots.extend(stages[stage])
+        checks=composition['checks'];decision_ids=composition['decisions']
+        # Resource capabilities belong only to a requested stage. Command requirements
+        # remain composition requirements, but their discovery is never execution.
+        registry=capability_definitions(options)
+        for key,requirement in composition['capabilities'].items():
+            definition=registry[key]
+            if definition['kind']=='command' or set(definition.get('stages',context['stages'])) & set(context['stages']):
+                selected[key]='required' if 'required' in (selected.get(key),requirement) else 'optional'
+    orchestration=profile.get('orchestration','single_agent')
+    if profile['pact']['required']:
+        roots.append('core/prior-art.md')
+    if 'model' in profile:
+        roots.append('overlays/model-deliberation.md')
+    if orchestration!='single_agent':
+        roots.append('overlays/orchestration.md')
+    if orchestration=='fresh_review':
+        roots.append('procedures/review-fresh.md')
+    registry=capability_definitions(options)
+    for key in selected:
+        if key not in registry:
+            raise Invalid('unknown capability: '+key)
+        definition=registry[key]
+        if definition['kind']=='resource':
+            roots.extend([definition['path'],*definition.get('files',[])])
+    roots=list(dict.fromkeys(roots))
+    if any(Path(p).suffix.lower()!='.md' or p.split('/')[0] not in
+           ('core','overlays','domains','procedures','skills','providers','sourced')
+           for p in context.get('resources',[])):
+        raise Invalid('direct resources must be Context guidance Markdown paths')
+    files=resources(roots)
+    files.update(source_notices(files))
+    # Alternatives that are prerequisites of another (direct review for fresh
+    # review) compose; competing primary procedures do not.
+    for spec in capability_registry()['options'].values():
+        paths={registry[target]['path'] for alt in spec.get('alternatives',{}).values()
+               for target in alt.get('aliases',{}).values() if registry[target]['kind']=='resource'}
+        chosen=paths & set(files)
+        primary={path for path in chosen if not any(path in resources([other]) for other in chosen if other!=path)}
+        if len(primary)>1:
+            raise Invalid('conflicting primary procedures: '+', '.join(sorted(primary)))
+    fresh='procedures/review-fresh.md' in files
+    if fresh and orchestration!='fresh_review':
+        raise Invalid('fresh review guidance requires explicit orchestration=fresh_review')
+    if 'review' in stages and 'review_mode' in options:
+        expected='fresh' if orchestration=='fresh_review' else 'direct'
+        if options['review_mode']!=expected:
+            raise Invalid('review_mode and orchestration must agree for the review stage')
+    states=capability_states(selected,registry,project,strict=False)
+    unresolved=profile.get('unresolved',[]).copy()
+    for key,state in states.items():
+        if not state['available']:
+            unresolved.append(key+': '+state['requirement']+' candidate unavailable; '+state['definition']['boundary'])
+        if state['definition']['kind']=='command':
+            unresolved.append(key+': '+state['discovery']['uncertainty'])
+    model=model_recommendation(profile['model']) if 'model' in profile else {'applied':False,'recommendation':None}
+    if 'model' in profile:
+        unresolved.append('Model/reasoning binding and access need active-host verification; explicit session choices win.')
+    if orchestration!='single_agent':
+        unresolved.append('Delegation authority, bounded ownership and native host support need agent verification; no agents spawned.')
+    return {'schema_version':1,'task':profile['task'],
+            'authority':'Advice only. User and project instructions always win.',
+            'context':{'mode':context['mode'],'loadouts':loadouts,'options':options,'stages':stages,
+                       'reads':list(files),'resource_sha256':{p:digest(data) for p,data in files.items()},
+                       'procedures':[p for p in files if p.startswith('procedures/')]},
+            'capabilities':states,'native_host_tools':'Host-reported separately; local discovery cannot establish native readiness.',
+            'model':model,'orchestration':{'recommendation':orchestration,'applied':False},
+            'pact':profile['pact'],'verification':{'expectations':profile['verification'],
+                'suggested_checks':checks,'project_checks':'not_run'},
+            'unresolved':list(dict.fromkeys(unresolved)),
+            'decisions':{key:{'revision':record['revision'],'concept':record['concept']}
+                         for key,record in selected_decisions(decision_ids).items()},
+            'execution':'not_run','writes':[]}
 
 def source_revision():
     # An exported tree nested in a consumer repository must not inherit its commit.
@@ -773,15 +881,18 @@ def undo(project):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=['list','explain','decisions','tools','plan','apply','verify','undo','refresh','export','rebind','recover'])
+    parser.add_argument('command',choices=['list','explain','decisions','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover'])
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
+    parser.add_argument('--profile',type=Path,help='Explicit JSON/YAML task profile for read-only packet resolution')
     parser.add_argument('--lock',type=Path,help='Apply an exact portable lock against this source checkout')
     parser.add_argument('--provider',default='codex')
     parser.add_argument('--brand',help='Project visual intent, 1-2000 characters')
     parser.add_argument('--design-procedure',choices=['guided','lightweight'])
     parser.add_argument('--option',action='append',default=[],metavar='KEY=VALUE',help='Explicit supported alternative; repeat for different options')
     args=parser.parse_args()
+    if (args.command=='packet') != (args.profile is not None):
+        raise Invalid('--profile is required only for packet')
     overrides={}
     for value in args.option:
         key,separator,item=value.partition('=')
@@ -810,7 +921,11 @@ def main():
         project=Path(args.project).resolve()
         if args.lock and (args.command!='apply' or args.loadouts or overrides):
             raise Invalid('--lock is only for apply without new selections/options')
-        if args.command=='tools':
+        if args.command=='packet':
+            if args.loadouts or overrides or args.lock or args.provider!='codex':
+                raise Invalid('packet selections belong in --profile')
+            result=task_packet(read_yaml(args.profile),project)
+        elif args.command=='tools':
             if args.loadouts or overrides or args.lock:
                 raise Invalid('tools accepts only --project; use plan for selected requirements')
             registry=read_yaml(ROOT/'capabilities.yaml')['capabilities']

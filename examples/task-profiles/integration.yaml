@@ -1,0 +1,13 @@
+schema_version: 1
+task: Fix this failing integration; the existing service protocol and ownership are settled.
+context:
+  mode: direct
+  resources: [procedures/diagnose.md, domains/service/api.md]
+model: {intent: debugging, scope: bounded}
+pact:
+  required: false
+  reason: Correct behavior within the existing contract; no new component or dependency.
+verification:
+- Reproduce the failing contract, pass a discriminating regression and retain incompatible-version rejection.
+unresolved:
+- Local contract tests do not establish live producer behavior without credentials.

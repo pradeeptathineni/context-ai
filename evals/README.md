@@ -4,6 +4,8 @@ The [usage cases](usage-cases.md) check selective loading with structural exampl
 
 Deterministic repository validation checks structure and syntax; it cannot establish that context improves agent behavior. Behavioral evaluation should compare complete model + reasoning + context + harness combinations on representative tasks.
 
+[Task profile evidence](task-profiles.md) records explicit resolution/effect checks and builder use on real Context development. It does not claim that an uncoached consumer selected those profiles or that native skill discovery occurred.
+
 ## Protocol
 
 For each scenario:

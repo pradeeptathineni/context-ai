@@ -1,0 +1,23 @@
+schema_version: 1
+task: Review and validate Context task equipping while preserving existing ownership, pins and authority.
+context:
+  mode: direct
+  resources:
+  - core/context.md
+  - core/compression.md
+  - core/development.md
+  - core/testing.md
+  - core/review.md
+  - core/versioning.md
+  - overlays/patterns.md
+  - overlays/evidence-claims.md
+pact:
+  required: true
+  reason: Reopen selection ownership through HRR and retain the existing context-loadout owner.
+verification:
+- Resolve the six explicit task examples and the project-guidance-only control.
+- Exercise unknown selections, contradictory procedures, missing candidates and no consumer writes or execution.
+- Run repository validation, contract tests, semantic lint and diff checks; preserve previous command contracts.
+unresolved:
+- Human first-use usefulness and automatic native skill discovery are not established in this session.
+- This is builder review on one shared edit surface; no independent reviewer was dispatched.

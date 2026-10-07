@@ -1,13 +1,19 @@
 ---
 name: context-loadout
-description: Choose guidance for failure diagnosis, consequential review or web interaction work, or compose a recurring Context AI loadout. Skip routine tasks with sufficient project guidance.
+description: Equip software tasks with the smallest useful Context guidance, procedures and execution advice, or pin a recurring project loadout. Skip routine tasks with sufficient project guidance.
 ---
 
 # Equip the current task
 
 Read the project's instructions and intended outcome first. For a small task within an established workflow, read only a relevant module directly from the source checkout or archive. No installation, environment or receipt file is required. When the project already has sufficient guidance, complete its task and checks. Use writing guidance for a prose change, testing guidance when verification needs clarification, and concern-specific guidance only when that concern is changing.
 
+When a task needs several Context choices, read [task profiles](../../docs/task-profiles.md). Interpret the request using actual project scope, stack, consequence, uncertainty and acceptance criteria. Select direct resources or a justified recurring loadout and current stages, capabilities, optional model-route attributes, orchestration advice, PACT disposition and verification expectations. Keep only choices that affect the task; do not ask the user to name Context internals. Resolve the explicit profile with `packet --profile /absolute/task.yaml --project /absolute/project` from the source checkout when deterministic validation helps. A small direct read still needs no profile file or Python setup.
+
+Inspect the packet's reads and boundaries, then read the needed instructions and perform the work in the native host. The packet grants no authority: user/project choices win, model recommendations do not change settings, and orchestration recommendations do not spawn agents. Use the existing `standard`/PACT workflow at consequential responsibility choices, rather than making every implementation a research task. If project facts change a material choice, revise the profile at a task boundary; a profile never refreshes an installed pin.
+
 For a failure read [diagnose and fix](../../procedures/diagnose.md). For a consequential diff read [review](../../procedures/review.md); choose [fresh review](../../procedures/review-fresh.md) only when existing authority and host support justify a bounded reader. For web interactions read [browser verification](../../domains/web/browser-verification.md) and the selected design procedure: [lightweight](../../procedures/web-design-lightweight.md) for a bounded existing surface, [guided](../../procedures/web-design.md) for substantial design. These direct reads have the same meaning as project options; reading guidance grants no runtime authority.
+
+For architecture decisions add [technical design](../../overlays/technical-design.md); for an API contract use [service guidance](../../domains/service/api.md). For Terraform/AWS use [infrastructure guidance](../../domains/infrastructure/aws.md) when that is the actual stack. For tool adoption start with [research](../../core/research.md) and the prior-art workflow; load the Signals exchange procedure only when that integration is needed and available.
 
 For a recurring project selection, use the [command contract](../../docs/loadouts.md). `list` names the choices; `explain` resolves parents, current decisions, stage routes, options and suggested checks without writing or probing tools. Select standard for substantial development, then relevant additions. `plan` shows the exact resources, capability availability and owned writes for this project. A narrow docs task needs no web suite. For web work preserve brand/project intent and choose one primary design procedure: lightweight for bounded existing-surface changes, guided for substantial work.
 
