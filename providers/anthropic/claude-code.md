@@ -16,6 +16,8 @@ Context therefore uses the native route first:
 | A project CLAUDE.md that imports `@AGENTS.md` | Nothing extra |
 | A CLAUDE.md that does not import `AGENTS.md`, or only `CLAUDE.local.md`/an ancestor CLAUDE.md | One owned block in the project `CLAUDE.md` (or the existing `.claude/CLAUDE.md`) with the same router text |
 
+Import detection follows Claude's rules: a relative `@path` resolves from the file that contains it (so `.claude/CLAUDE.md` needs `@../AGENTS.md`), mentions inside code spans and fenced blocks are not imports, and a CLAUDE.md symlinked to AGENTS.md counts as importing it. The user-level **Project instructions** setting (`instructionFiles` under the built-in `cc-plugin-agents-md` plugin in `~/.claude/settings.json`) can change the default; Context does not read user settings, so a user who chose `claude-md` only should apply with a CLAUDE.md present to get a managed block.
+
 Context never adds `@AGENTS.md` to a user's CLAUDE.md, because that would pull the user's whole AGENTS.md into Claude sessions that deliberately excluded it. `plan` reports the chosen mode under `host_routing.claude`; `verify` fails if a CLAUDE.md later shadows AGENTS.md without a managed route, so `refresh` can add one.
 
 ## Skills

@@ -201,5 +201,27 @@ class ClaudeAndBothHosts(unittest.TestCase):
         with self.assertRaisesRegex(c.Invalid,'unapproved'):c.transaction_path(self.project,'.claude/settings.json')
         with self.assertRaisesRegex(c.Invalid,'unsafe'):c.inside(self.project,'.claude/../../x')
 
+    def test_import_detection_follows_claude_resolution_rules(self):
+        cases=[('CLAUDE.md','Examples:\n```md\n@AGENTS.md\n```\n','managed-block'),
+               ('CLAUDE.md','Mention `@AGENTS.md` literally\n','managed-block'),
+               ('.claude/CLAUDE.md','@AGENTS.md\n','managed-block'),
+               ('.claude/CLAUDE.md','@../AGENTS.md\n','imports-agents'),
+               ('CLAUDE.md','See @./AGENTS.md for shared rules\n','imports-agents')]
+        for name,text,mode in cases:
+            with self.subTest(name=name,text=text):
+                for leftover in ('CLAUDE.md','.claude/CLAUDE.md'):
+                    if (self.project/leftover).exists():(self.project/leftover).unlink()
+                path=self.project/name;path.parent.mkdir(exist_ok=True);path.write_text(text)
+                lock,files=c.resolve(['essentials'],self.project,'claude')
+                self.assertEqual(c.plan(self.project,lock,files)['host_routing']['claude']['mode'],mode)
+
+    def test_symlinked_claude_md_to_agents_counts_as_import(self):
+        (self.project/'CLAUDE.md').symlink_to('AGENTS.md')
+        lock,files=c.resolve(['essentials'],self.project,'claude')
+        self.assertEqual(c.plan(self.project,lock,files)['host_routing']['claude']['mode'],'imports-agents')
+        c.apply(self.project,lock,files);c.verify(self.project)
+        self.assertTrue((self.project/'CLAUDE.md').is_symlink())
+        self.assertTrue(c.undo(self.project)['undone'])
+
 if __name__=='__main__':
     unittest.main()

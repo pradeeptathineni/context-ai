@@ -750,8 +750,19 @@ def instruction_block(text):
         finish+=1
     return text[start:finish]
 
-def imports_agents(text):
-    return re.search(r'^\s*@(\./)?AGENTS\.md\s*$',text,re.M) is not None
+def imports_agents(project, path):
+    """Claude imports resolve relative to the importing file and skip code spans/fences."""
+    target=(project/'AGENTS.md').resolve()
+    if path.is_symlink():
+        return path.resolve()==target
+    text=re.sub(r'(?ms)^[ \t]*(```|~~~).*?^[ \t]*\1[^\n]*$','',path.read_text())
+    text=re.sub(r'`[^`\n]*`','',text)
+    for match in re.finditer(r'(?<![\w`])@((?:\\ |[^\s`])+)',text):
+        reference=match.group(1).replace('\\ ',' ')
+        if reference.startswith('~'):continue
+        if (path.parent/reference).resolve()==target:
+            return True
+    return False
 
 def claude_route(project, previous=None):
     """Native first: Claude Code reads AGENTS.md unless a CLAUDE.md shadows it."""
@@ -765,10 +776,9 @@ def claude_route(project, previous=None):
     for p in local:
         name=p.relative_to(project).as_posix()
         if name=='CLAUDE.local.md':continue
-        text=p.read_text()
         if owned and owned['path']==name:
             return {'mode':'managed-block','path':name}
-        if imports_agents(text):
+        if imports_agents(project,p):
             return {'mode':'imports-agents','path':name}
     if owned:
         return {'mode':'managed-block','path':owned['path']}
