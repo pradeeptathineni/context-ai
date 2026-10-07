@@ -757,14 +757,36 @@ def instruction_block(text):
         finish+=1
     return text[start:finish]
 
+def outside_code(text):
+    """Markdown text outside fenced blocks and code spans; an unclosed fence runs to EOF."""
+    kept=[];fence=None
+    for line in text.splitlines():
+        opening=re.match(r'^ {0,3}(`{3,}|~{3,})',line)
+        if fence:
+            if opening and opening.group(1)[0]==fence[0] and len(opening.group(1))>=len(fence) and not line.strip(' '+fence[0]):
+                fence=None
+            continue
+        if opening:
+            fence=opening.group(1);continue
+        out=[];i=0
+        while i<len(line):
+            if line[i]!='`':
+                out.append(line[i]);i+=1;continue
+            run=re.match(r'`+',line[i:]).group(0)
+            close=re.search(r'(?<!`)'+run+r'(?!`)',line[i+len(run):])
+            if close is None:
+                # An unmatched backtick run is literal, but the rest is ambiguous: skip it conservatively.
+                break
+            i+=len(run)+close.end()
+        kept.append(''.join(out))
+    return '\n'.join(kept)
+
 def imports_agents(project, path):
     """Claude imports resolve relative to the importing file and skip code spans/fences."""
     target=(project/'AGENTS.md').resolve()
     if path.is_symlink():
         return path.resolve()==target
-    text=re.sub(r'(?ms)^[ \t]*(```|~~~).*?^[ \t]*\1[^\n]*$','',path.read_text())
-    text=re.sub(r'`[^`\n]*`','',text)
-    for match in re.finditer(r'(?<![\w`])@((?:\\ |[^\s`])+)',text):
+    for match in re.finditer(r'(?<![\w`])@((?:\\ |[^\s`])+)',outside_code(path.read_text())):
         reference=match.group(1).replace('\\ ',' ')
         if reference.startswith('~'):continue
         if (path.parent/reference).resolve()==target:

@@ -9,7 +9,7 @@ function facts(item) {
   return [
     ['Selected guidance', `${plural(item.guidance, 'file')}${item.composes.length ? ` (with ${item.composes.join(', ')})` : ''} · owners: ${owners}${upstream}`],
     ['Operational tools', `${tools}${optional}; checked by verify, not by this page`],
-    ['Measured benefit', item.measured ? `recorded in ${item.measured}` : 'unmeasured']
+    ['Measured benefit', item.evidence.record ? `${item.evidence.benefit}: ${item.evidence.summary} (${item.evidence.record})` : item.evidence.benefit]
   ];
 }
 const search = document.querySelector('#search');

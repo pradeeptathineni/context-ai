@@ -228,7 +228,12 @@ class ClaudeAndBothHosts(unittest.TestCase):
                ('CLAUDE.md','Mention `@AGENTS.md` literally\n','managed-block'),
                ('.claude/CLAUDE.md','@AGENTS.md\n','managed-block'),
                ('.claude/CLAUDE.md','@../AGENTS.md\n','imports-agents'),
-               ('CLAUDE.md','See @./AGENTS.md for shared rules\n','imports-agents')]
+               ('CLAUDE.md','See @./AGENTS.md for shared rules\n','imports-agents'),
+               ('CLAUDE.md','Literal ``@AGENTS.md``\n','managed-block'),
+               ('CLAUDE.md','Literal `` `@AGENTS.md` ``\n','managed-block'),
+               ('CLAUDE.md','Notes\n```\n@AGENTS.md\n','managed-block'),
+               ('CLAUDE.md','~~~~\n```\n~~~~\n@AGENTS.md\n','imports-agents'),
+               ('CLAUDE.md','`code` then @AGENTS.md\n','imports-agents')]
         for name,text,mode in cases:
             with self.subTest(name=name,text=text):
                 for leftover in ('CLAUDE.md','.claude/CLAUDE.md'):

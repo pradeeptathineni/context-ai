@@ -40,7 +40,10 @@ try {
     await page.getByRole('button',{name:'Clear filters'}).click();
     assert.equal(await page.locator('.loadout').count(),9);
     await expect(page.locator('.loadout').first().locator('h3')).toHaveText('essentials');
-    await expect(page.locator('.loadout').first().getByText('recorded in evals/essentials-trial.md')).toBeVisible();
+    await expect(page.locator('.loadout').first().getByText(/^not shown: same-task Codex trials/)).toBeVisible();
+    await expect(page.locator('.loadout',{hasText:'web-experience'}).getByText(/^unmeasured: browser builder checks/)).toBeVisible();
+    await expect(page.locator('.loadout',{hasText:'Proportional development'}).getByText(/^unmeasured: shares the essentials trial/)).toBeVisible();
+    await expect(page.getByText(/^recorded in /)).toHaveCount(0);
     await expect(page.locator('.loadout',{hasText:'release-review'}).getByText('unmeasured')).toBeVisible();
     for (const state of ['Reference knowledge','Selected guidance','Installed resource','Operational tool','Measured benefit'])
       await expect(page.locator('#states dt',{hasText:state})).toBeVisible();

@@ -5,7 +5,15 @@ import sys
 
 from context_ai import ROOT, capability_definitions, catalogue, explain, read_yaml
 
-MEASURED={'essentials':'evals/essentials-trial.md','standard':'evals/essentials-trial.md','web-experience':'evals/web-exercise.json'}
+# Benefit stays unmeasured unless a same-task comparison of this exact route shows one.
+EVIDENCE={
+    'essentials':{'benefit':'not shown','record':'evals/essentials-trial.md',
+                  'summary':'same-task Codex trials: equal sampled correctness, more verification, about 2.75-3.8x native input tokens'},
+    'standard':{'benefit':'unmeasured','record':'evals/essentials-trial.md',
+                'summary':'shares the essentials trial; the refreshed standard route itself was not an arm'},
+    'web-experience':{'benefit':'unmeasured','record':'evals/web-exercise.json',
+                      'summary':'browser builder checks (fixture + browser proxy), not a consumer comparison'},
+}
 WEB={'web-experience','react-web'}
 
 def build():
@@ -26,7 +34,7 @@ def build():
         rows.append({'id':id,'kind':'web' if id in WEB else 'engineering','description':d['description'],
                      'composes':[x for x in resolved['composition'] if x!=id],'guidance':len(files),
                      'owners':owners,'upstream':upstream,'tools':tools,'optional_tools':optional,
-                     'measured':MEASURED.get(id)})
+                     'evidence':EVIDENCE.get(id,{'benefit':'unmeasured'})})
     return {'concepts':concepts,'loadouts':rows}
 
 def render(data):
