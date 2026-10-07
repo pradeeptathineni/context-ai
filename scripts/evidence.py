@@ -34,6 +34,23 @@ def unique(items,kind):
         raise Invalid('duplicate '+kind+' IDs')
     return {x['id']:x for x in items}
 
+RECOMMENDATIONS='signals.recommendations'
+
+def contextual_recommendations(ext,candidates,claims):
+    """Optional advisory envelope; absent in older bundles, never relabels v1 fields."""
+    value=ext.get(RECOMMENDATIONS)
+    if value is None:
+        return None
+    if not isinstance(value,dict) or value.get('version')!='signals-recommendation-v1':
+        raise Invalid('unsupported recommendation extension version: '+str(value.get('version') if isinstance(value,dict) else value))
+    validate_schema('recommendation-v1',value)
+    for item in value['items']:
+        if item['candidate_id'] not in candidates:
+            raise Invalid('recommendation names an unknown candidate')
+        if any(id not in claims for id in item['provenance']['claim_ids']):
+            raise Invalid('recommendation cites an unknown claim')
+    return {**value,'authority':'advisory; Context decides project adoption'}
+
 def inspect_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=False,now=None):
     data=path.read_bytes()
     if len(data)>2_000_000:
@@ -79,6 +96,7 @@ def inspect_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=Fal
     if (not sources or not claims or not candidates) and not b['limitations']:
         raise Invalid('empty evidence requires an honest limitation')
     ext=b.get('extensions',{})
+    recommendations=contextual_recommendations(ext,candidates,claims)
     # Extensions are opaque non-authoritative data. Unknown policy IDs cannot grant authority.
     for key,value in ext.items():
         if key in ('privacy','privacy_scope') or key.endswith(('.privacy','.privacy_scope')):
@@ -103,6 +121,7 @@ def inspect_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=Fal
             'age_interpretation':'Observation age is information, not claim currency or an adoption cutoff.',
             'sources':list(sources.values()),'claims':list(claims.values()),
             'recommendations':list(candidates.values()),'constraints':b['need'].get('constraints',[]),
+            'contextual_recommendations':recommendations,
             'activation':False,'extensions_authority':'none',
             'limitations':b['limitations']+['Hashes verify bytes and local pinned origin, not truth. Claim/source ID resolution does not prove claim support. Recommendations and constraints require a Context adoption decision.']}
 

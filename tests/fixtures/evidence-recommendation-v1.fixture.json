@@ -1,0 +1,181 @@
+{
+ "schema_version": 1,
+ "bundle_id": "fixture-retry-library-002",
+ "mode": "fixture",
+ "created_at": "2026-10-07T15:00:00Z",
+ "producer": {
+  "repository": "fixture/signals-ai",
+  "commit": "0000000",
+  "protocol": "fixture-v1"
+ },
+ "need": {
+  "query": "Retry transient HTTP failures in a Python requests client",
+  "concept_ids": [
+   "research.prior_art"
+  ],
+  "constraints": [
+   "Synthetic conformance data only"
+  ]
+ },
+ "sources": [
+  {
+   "id": "src-urllib3",
+   "uri": "https://urllib3.readthedocs.io/en/stable/reference/urllib3.util.html",
+   "title": "urllib3 Retry reference",
+   "source_class": "fixture",
+   "observed_at": "2026-10-06T00:00:00Z",
+   "revision": null,
+   "independence_group": "urllib3"
+  },
+  {
+   "id": "src-popular",
+   "uri": "https://example.com/popular-retry",
+   "title": "Popular retry library",
+   "source_class": "fixture",
+   "observed_at": "2026-10-06T00:00:00Z",
+   "revision": null,
+   "independence_group": "popular"
+  }
+ ],
+ "claims": [
+  {
+   "id": "claim-urllib3",
+   "text": "urllib3 Retry supports status_forcelist and backoff for requests adapters.",
+   "source_ids": [
+    "src-urllib3"
+   ],
+   "status": "supported"
+  },
+  {
+   "id": "claim-popular",
+   "text": "The popular library retries promises with exponential backoff.",
+   "source_ids": [
+    "src-popular"
+   ],
+   "status": "supported"
+  },
+  {
+   "id": "claim-rumor",
+   "text": "A new library may support retries.",
+   "source_ids": [
+    "src-popular"
+   ],
+   "status": "uncertain"
+  }
+ ],
+ "candidates": [
+  {
+   "id": "cand-popular",
+   "name": "popular-retry (Node)",
+   "canonical_uri": "https://example.com/popular-retry",
+   "claim_ids": [
+    "claim-popular"
+   ],
+   "disposition": "adopt",
+   "reason": "Very popular, high intrinsic strength.",
+   "limitations": [
+    "Synthetic"
+   ],
+   "signal": {
+    "evidence_confidence": "high",
+    "project_fit": "unknown"
+   }
+  },
+  {
+   "id": "cand-urllib3",
+   "name": "urllib3 Retry",
+   "canonical_uri": "https://urllib3.readthedocs.io/",
+   "claim_ids": [
+    "claim-urllib3"
+   ],
+   "disposition": "consider",
+   "reason": "Already a transitive dependency of requests.",
+   "limitations": [
+    "Synthetic"
+   ],
+   "signal": {
+    "evidence_confidence": "medium",
+    "project_fit": "unknown"
+   }
+  },
+  {
+   "id": "cand-rumor",
+   "name": "rumored-retry",
+   "canonical_uri": "https://example.com/rumor",
+   "claim_ids": [
+    "claim-rumor"
+   ],
+   "disposition": "consider",
+   "reason": "Unverified mention.",
+   "limitations": [
+    "Synthetic"
+   ]
+  }
+ ],
+ "limitations": [
+  "Synthetic fixture; must never be promoted to real evidence."
+ ],
+ "extensions": {
+  "signals.recommendations": {
+   "version": "signals-recommendation-v1",
+   "query": "Retry transient HTTP failures in a Python requests client",
+   "items": [
+    {
+     "candidate_id": "cand-popular",
+     "capability": "http-retry",
+     "action": "use",
+     "reason": "Highest stars in the scan.",
+     "limitations": [
+      "Node only"
+     ],
+     "provenance": {
+      "claim_ids": [
+       "claim-popular"
+      ],
+      "assessed_at": "2026-10-07T00:00:00Z",
+      "assessor": "fixture"
+     },
+     "assessment_state": "assessed",
+     "intrinsic_strength": "high",
+     "facts": {
+      "license": "MIT",
+      "runtime": "node"
+     }
+    },
+    {
+     "candidate_id": "cand-urllib3",
+     "capability": "http-retry",
+     "action": "wrap",
+     "reason": "Installed with requests; configure via HTTPAdapter.",
+     "limitations": [
+      "Session-wide policy"
+     ],
+     "provenance": {
+      "claim_ids": [
+       "claim-urllib3"
+      ]
+     },
+     "assessment_state": "screened",
+     "intrinsic_strength": "medium",
+     "facts": {
+      "license": "MIT",
+      "runtime": "python"
+     }
+    },
+    {
+     "candidate_id": "cand-rumor",
+     "capability": "http-retry",
+     "action": "watch",
+     "reason": "Mentioned once.",
+     "limitations": [],
+     "provenance": {
+      "claim_ids": [
+       "claim-rumor"
+      ]
+     },
+     "assessment_state": "unassessed"
+    }
+   ]
+  }
+ }
+}
