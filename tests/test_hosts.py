@@ -54,6 +54,17 @@ class ClaudeAndBothHosts(unittest.TestCase):
         c.undo(self.project)
         self.assertEqual(agents.stat().st_mode&0o777,0o644)
 
+    def test_source_checkout_under_codex_worktree_still_delivers(self):
+        source=Path(self.tmp.name)/'.codex/worktrees/x/context-ai'
+        archive=subprocess.check_output(['git','-C',str(ROOT),'ls-files','-z'],text=True).split('\0')
+        for name in filter(None,archive):
+            target=source/name;target.parent.mkdir(parents=True,exist_ok=True)
+            if (ROOT/name).is_file():shutil.copy2(ROOT/name,target)
+        run=subprocess.run([sys.executable,str(source/'scripts/context_ai.py'),'plan','essentials','--project',str(self.project),'--provider','both'],capture_output=True,text=True)
+        self.assertEqual(run.returncode,0,run.stderr)
+        with self.assertRaisesRegex(c.Invalid,'untrusted instruction activation'):c.resource_path(c.ROOT,'.codex/core.md')
+        with self.assertRaisesRegex(c.Invalid,'untrusted instruction activation'):c.resource_path(c.ROOT,'core/AGENTS.md')
+
     def test_router_points_to_single_canonical_copy(self):
         lock,files=c.resolve(['essentials'],self.project,'both');c.apply(self.project,lock,files)
         codex=(self.project/'.agents/skills/context-tdd/SKILL.md').read_text()

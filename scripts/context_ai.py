@@ -171,7 +171,8 @@ def selected_concerns(files):
 
 def resource_path(root, name):
     path = inside(root, name)
-    if path.name.casefold() in ('agents.md', 'agents.override.md', 'claude.md', 'gemini.md') or any(part.casefold() in ('.agents', '.codex') for part in path.parts):
+    # Only the selected name is checked: a source checkout may itself live under .codex/worktrees.
+    if path.name.casefold() in ('agents.md', 'agents.override.md', 'claude.md', 'gemini.md') or any(part.casefold() in ('.agents', '.codex', '.claude') for part in Path(name).parts):
         raise Invalid('untrusted instruction activation: '+name)
     return path
 
