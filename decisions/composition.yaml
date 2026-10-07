@@ -478,3 +478,41 @@ decisions:
     version_not_found; installed urllib3 2.8.0 Retry signature inspected.
   rollback: Remove the optional capability; the procedure already works without it.
   revisit_when: Context7 indexes exact versions for the project's dependencies, or its terms change.
+
+- id: D-027
+  revision: 1
+  supersedes: null
+  concept: context.sync
+  action: retain
+  selection: Keep Context's thin native routers and managed blocks for Codex and Claude Code; Rulesync
+    not adopted as the rendering backend
+  rationale: Native host facilities came first. Claude Code reads AGENTS.md natively and discovers
+    .claude/skills; Codex discovers .agents/skills. Rulesync 27.0.0 direct conversion was idempotent but
+    overwrote edited and unowned destinations, did not copy the guidance closure and left foreign
+    Claude outputs after Context undo. Replacing the few rendering lines would add a Node runtime and a
+    staging layer without removing selection, pinning, preview, recovery or undo.
+  evidence:
+  - https://github.com/dyoshikawa/rulesync/tree/0e60051de7e7d8793d92f75a7b15dd3e87e33a18
+  - https://code.claude.com/docs/en/memory
+  - https://code.claude.com/docs/en/skills
+  - https://learn.chatgpt.com/docs/import
+  - providers/anthropic/claude-code.md
+  - tests/test_hosts.py
+  applicability: Rendering selected routers and instruction blocks into AGENTS.md, CLAUDE.md,
+    .agents/skills and .claude/skills of a consumer project.
+  alternatives:
+  - Rulesync generation or direct conversion behind Context preview
+  - Native Codex /import of Claude configuration
+  - Duplicate CLAUDE.md content for every project
+  - Native-first routing with Context-owned thin routers
+  unknowns:
+  - Native Codex /import was not exercised (it needs an idle interactive session); Claude Skill
+    invocation was not observed because the standalone CLI is not signed in.
+  validation:
+  - Independent parallel Codex session ran Rulesync v27.0.0 (MIT, npm artifact pinned, install hooks
+    disabled) in disposable consumers against the C1 lifecycle; its delivery decision and runnable
+    scripts are in the local planning folder.
+  - All loadouts pass the lifecycle suite for codex, claude and both.
+  rollback: Not applicable; nothing from Rulesync was installed.
+  revisit_when: Context needs a host format or metadata conversion beyond thin routers that Rulesync
+    supports with an in-memory boundary, preserved closure and lifecycle parity.
