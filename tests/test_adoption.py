@@ -65,6 +65,14 @@ class Adoption(unittest.TestCase):
         self.assertEqual(by['cand-urllib3']['decision'],'reject')
         with self.assertRaisesRegex(c.Invalid,'capability'):decide(admitted,{'runtimes':['python']})
 
+    def test_producer_adopt_without_capability_mapping_is_only_studied(self):
+        result=decide(admit(OLD),{'capability':'browser-validation'})
+        self.assertEqual([d['decision'] for d in result['decisions']],['study'])
+        bundle=json.loads(FIXTURE.read_text());del bundle['extensions']['signals.recommendations']
+        decisions=decide(admit(self.write(bundle)),{'capability':'http-retry'})['decisions']
+        self.assertTrue(all(d['decision']=='study' for d in decisions))
+        self.assertEqual({d['producer_disposition'] for d in decisions},{'adopt','consider'})
+
     def test_research_route_does_not_require_signals(self):
         text=(ROOT/'procedures/research-evidence.md').read_text()
         self.assertIn('never blocks a decision',text)

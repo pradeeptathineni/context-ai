@@ -24,6 +24,7 @@ def decide(admitted, need):
         reasons=[];blocked=[]
         supported=[id for id in candidate['claim_ids'] if claims[id]['status'] in ('observed','supported')]
         item=advice.get(candidate['id'])
+        unknown=[]
         # Producer-reported facts are checked against constraints and re-verified before adoption.
         facts=item.get('facts',{}) if item else {}
         addresses=item['capability'] if item else None
@@ -31,7 +32,6 @@ def decide(admitted, need):
             blocked.append('addresses '+addresses+', not '+need['capability'])
         if candidate['id'] in need.get('excluded',[]) or candidate['name'] in need.get('excluded',[]):
             blocked.append('excluded by project')
-        unknown=[]
         for key,allowed,label in (('runtime',need.get('runtimes'),'project runtimes'),('license',need.get('licenses_allowed'),'allowed licenses')):
             if not allowed:continue
             if key not in facts:unknown.append(key)
@@ -44,14 +44,16 @@ def decide(admitted, need):
             reasons.append('project already owns this with '+need['existing_owner']+'; adoption must beat it on a trial')
         if not supported:
             blocked.append('no supported or observed claim')
+        if addresses is None:
+            unknown.append('capability')
+            reasons.append('no recommendation states which capability this addresses; map it before a trial')
         if blocked:
             decision='reject' if any(not b.startswith('no supported') for b in blocked) else 'study'
         elif unknown:
             decision='study'
-        elif need.get('existing_owner'):
-            decision='trial'
         else:
-            decision='trial' if candidate['disposition']!='adopt' else 'adopt'
+            # Adoption needs a passing project trial; evidence alone earns a trial, never adoption.
+            decision='trial'
         decisions.append({'candidate':candidate['id'],'name':candidate['name'],'decision':decision,
                           'blocked_by':blocked,'notes':reasons,'supporting_claims':supported,
                           'producer_disposition':candidate['disposition'],
@@ -59,7 +61,8 @@ def decide(admitted, need):
                           'producer_action':item['action'] if item else None,
                           'producer_intrinsic_strength':item.get('intrinsic_strength') if item else None})
     return {'capability':need['capability'],'bundle_id':admitted['bundle_id'],'mode':admitted['mode'],
-            'decisions':decisions,'authority':'Advice only; installation needs a separate plan and user/project authority.',
+            'decisions':decisions,'adoption_rule':'adopt only after the trial passes in this project',
+            'authority':'Advice only; installation needs a separate plan and user/project authority.',
             'activation':False}
 
 def main():
