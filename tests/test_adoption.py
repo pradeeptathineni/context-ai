@@ -73,6 +73,22 @@ class Adoption(unittest.TestCase):
         self.assertTrue(all(d['decision']=='study' for d in decisions))
         self.assertEqual({d['producer_disposition'] for d in decisions},{'adopt','consider'})
 
+    def test_context_assessment_maps_capability_and_overrides_producer_facts(self):
+        bundle=json.loads(FIXTURE.read_text());del bundle['extensions']['signals.recommendations']
+        admitted=admit(self.write(bundle))
+        need={'capability':'http-retry','runtimes':['python'],'licenses_allowed':['MIT'],
+              'assessments':{'cand-urllib3':{'capability':'http-retry','revision':'2.8.0','facts':{'runtime':'python','license':'MIT'},
+                                             'verified':['installed Retry signature']},
+                             'cand-popular':{'capability':'http-retry','revision':'9.9.9','facts':{'runtime':'node','license':'MIT'},
+                                             'verified':['package.json engines']}}}
+        result=decide(admitted,need);by={d['candidate']:d for d in result['decisions']}
+        self.assertEqual(by['cand-urllib3']['decision'],'trial');self.assertEqual(by['cand-popular']['decision'],'reject')
+        self.assertEqual(by['cand-rumor']['decision'],'study')
+        self.assertIn('not granted',result['trial_authorization'])
+        for bad in ({'nope':{'capability':'x','revision':'1','verified':['y']}},{'cand-urllib3':{'capability':'x'}},
+                    {'cand-urllib3':{'capability':'x','revision':'1','verified':[]}}):
+            with self.assertRaises(c.Invalid):decide(admitted,{'capability':'http-retry','assessments':bad})
+
     def test_research_route_does_not_require_signals(self):
         text=(ROOT/'procedures/research-evidence.md').read_text()
         self.assertIn('never blocks a decision',text)

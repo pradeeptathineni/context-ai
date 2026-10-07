@@ -603,9 +603,24 @@ def hosts(provider):
         raise Invalid('supported adapters are codex, claude and both')
     return PROVIDERS[provider]
 
-def resolve(ids, project, provider, options=None):
+def with_capabilities(selected, extras):
+    """Explicit project-chosen resource procedures beyond the loadouts; never added from evidence."""
+    registry=capability_registry()['capabilities']
+    for key in extras:
+        if key not in registry or registry[key]['kind']!='resource' or not key.startswith('context-'):
+            raise Invalid('--with accepts only registered context-* resource capabilities: '+str(key))
+        selected['capabilities'][key]='required'
+        if key not in selected['skills']:
+            selected['skills'].append(key)
+    return selected
+
+def resolve(ids, project, provider, options=None, extras=()):
     hosts(provider)
     selected=selection(ids,options)
+    extras=list(dict.fromkeys(extras))
+    if extras:
+        selected=with_capabilities(selected,extras)
+        selected['extra_capabilities']=extras
     decisions=selected_decisions(selected['decisions'])
     registry=capability_definitions(selected['options'])
     states = capability_states(selected['capabilities'],registry,project)
@@ -1109,9 +1124,9 @@ def pinned_files(lock):
         data=path.read_bytes()
         if digest(data)!=sha:raise Invalid('pinned resource drift: '+name)
         files[name]=data
-    expected,_=resolve(lock['loadouts'],Path.cwd(),lock['provider'],lock['options'])
-    for field in ['loadouts','stages','skills','options','checks','decisions','resources']:
-        if lock[field]!=expected[field]:raise Invalid('imported pin differs from reviewed source '+field)
+    expected,_=resolve(lock['loadouts'],Path.cwd(),lock['provider'],lock['options'],lock.get('extra_capabilities',[]))
+    for field in ['loadouts','stages','skills','options','checks','decisions','resources','extra_capabilities']:
+        if lock.get(field)!=expected.get(field):raise Invalid('imported pin differs from reviewed source '+field)
     definitions=lambda value:{key:{'requirement':entry['requirement'],'definition':entry['definition']} for key,entry in value.items()}
     if definitions(lock['capabilities'])!=definitions(expected['capabilities']):
         raise Invalid('imported capability definitions differ from reviewed source')
@@ -1175,7 +1190,10 @@ def main():
     parser.add_argument('--brand',help='Project visual intent, 1-2000 characters')
     parser.add_argument('--design-procedure',choices=['guided','lightweight'])
     parser.add_argument('--option',action='append',default=[],metavar='KEY=VALUE',help='Explicit supported alternative; repeat for different options')
+    parser.add_argument('--with',dest='extras',action='append',default=[],metavar='CAPABILITY',help='Add a registered context-* resource procedure to this project selection')
     args=parser.parse_args()
+    if args.extras and args.command not in ('plan','apply','refresh'):
+        raise Invalid('--with applies only to plan, apply and refresh')
     if (args.command=='packet') != (args.profile is not None):
         raise Invalid('--profile is required only for packet')
     overrides={}
@@ -1247,10 +1265,12 @@ def main():
                 options={key:value for key,value in state['resolution']['options'].items() if key in applicable}
             options.update(overrides)
             provider=args.provider or (state['resolution'].get('provider','codex') if state else 'codex')
+            extras=args.extras or (state['resolution'].get('extra_capabilities',[]) if state and args.command=='refresh' else [])
+            if args.lock and args.extras:raise Invalid('--lock already pins its capabilities')
             if args.lock:
                 lock=json.loads(args.lock.read_text());files=pinned_files(lock)
             else:
-                lock,files=resolve(ids,project,provider,options)
+                lock,files=resolve(ids,project,provider,options,extras)
             if args.command=='apply':
                 result=apply(project,lock,files)
             else:

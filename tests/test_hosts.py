@@ -250,5 +250,28 @@ class ClaudeAndBothHosts(unittest.TestCase):
         self.assertTrue((self.project/'CLAUDE.md').is_symlink())
         self.assertTrue(c.undo(self.project)['undone'])
 
+    def test_explicit_with_capability_is_pinned_refreshed_and_exported(self):
+        lock,files=c.resolve(['research-evidence'],self.project,'claude',extras=['context-portable-notes'])
+        self.assertEqual(lock['extra_capabilities'],['context-portable-notes'])
+        self.assertIn('sourced/neoma/markdown-compatibility.md',files);self.assertIn('sourced/neoma/LICENSE',files)
+        c.apply(self.project,lock,files);c.verify(self.project)
+        self.assertTrue((self.project/'.claude/skills/context-portable-notes/SKILL.md').is_file())
+        run=cli('refresh','--project',str(self.project))
+        self.assertEqual(run.returncode,0,run.stderr)
+        self.assertEqual(json.loads(run.stdout)['resolution']['extra_capabilities'],['context-portable-notes'])
+        exported=cli('export','--project',str(self.project));pin=Path(self.tmp.name)/'pin.json';pin.write_text(exported.stdout)
+        fresh=Path(self.tmp.name)/'fresh';fresh.mkdir()
+        run=cli('apply','--lock',str(pin),'--project',str(fresh));self.assertEqual(run.returncode,0,run.stderr)
+        self.assertTrue((fresh/'.claude/skills/context-portable-notes/SKILL.md').is_file())
+        self.assertTrue(c.undo(self.project)['undone'])
+        plain,plain_files=c.resolve(['research-evidence'],self.project,'claude')
+        self.assertNotIn('sourced/neoma/LICENSE',plain_files);self.assertNotIn('extra_capabilities',plain)
+
+    def test_with_rejects_unregistered_command_and_recommended_names(self):
+        for bad in ('neoma','context7','git','context-unknown'):
+            with self.subTest(bad=bad):
+                with self.assertRaisesRegex(c.Invalid,'--with accepts only'):c.resolve(['essentials'],self.project,'codex',extras=[bad])
+        self.assertNotEqual(cli('explain','essentials','--with','context-portable-notes').returncode,0)
+
 if __name__=='__main__':
     unittest.main()

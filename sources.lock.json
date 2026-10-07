@@ -202,6 +202,18 @@
         "sourced/ponytail/reuse/instruction.md": "1316a2f3f95741d2300b116fe0c2d81ce4a9568656ed0a62643f54aaf09957f2",
         "sourced/ponytail/reuse/review.md": "4b29656469baa5df3513a1557197ec8053162c6a54c166c871c57061e37a8ebb"
       }
+    },
+    {
+      "id": "neoma",
+      "repository": "https://github.com/infinitumio/neoma",
+      "revision": "18c63fbd72e40f7cefad22f189b6ecde79e61716",
+      "upstream_path": "docs/markdown-compatibility.md",
+      "license": "AGPL-3.0-or-later",
+      "excluded": "Documentation only, aggregated unmodified with its license; no application code, build, hooks or desktop/App Store material (separately licensed) is selected.",
+      "files": {
+        "sourced/neoma/LICENSE": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
+        "sourced/neoma/markdown-compatibility.md": "0e0336ff55ebca35214c9ce7968a7517995af32cb01e2185c495f46ac958d47e"
+      }
     }
   ]
 }

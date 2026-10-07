@@ -60,6 +60,8 @@ dependencies:
   - core/review.md
   - sourced/mattpocock/code-review/instruction.md
   - sourced/ponytail/reuse/review.md
+  procedures/portable-notes.md:
+  - sourced/neoma/markdown-compatibility.md
   procedures/tdd.md:
   - core/testing.md
   - sourced/mattpocock/tdd/instruction.md

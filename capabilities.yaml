@@ -144,6 +144,14 @@ capabilities:
     description: Resolve a genuinely open product or scope decision with hold-scope
       questions. Never re-interview requirements the user already stated.
     boundary: Instructions only; asks only what evidence cannot settle.
+  context-portable-notes:
+    kind: resource
+    stages: [research, implement]
+    path: procedures/portable-notes.md
+    description: Write research notes as portable Markdown that Git and Neoma both read,
+      when the project has chosen Neoma as a note reader. Skip otherwise.
+    boundary: Documentation only; installs no Neoma code. Plain Markdown in Git stays the
+      canonical owner.
   context7:
     kind: command
     command: ctx7

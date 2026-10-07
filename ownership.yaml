@@ -48,6 +48,11 @@ concerns:
     files: [procedures/research-evidence.md, core/research.md, overlays/evidence-claims.md]
     upstream: mattpocock
     native_names: [research, deep-research]
+  portable-notes:
+    owner_kind: upstream
+    files: [procedures/portable-notes.md]
+    upstream: neoma
+    native_names: [neoma, obsidian-markdown]
   current-docs:
     owner_kind: context
     files: [procedures/current-docs.md]

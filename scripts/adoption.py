@@ -7,7 +7,8 @@ import sys
 from context_ai import Invalid, encoded, read_yaml
 from evidence import inspect_bundle
 
-FIT_KEYS=('capability','runtimes','licenses_allowed','existing_owner','excluded')
+FIT_KEYS=('capability','runtimes','licenses_allowed','existing_owner','excluded','assessments')
+ASSESSMENT_KEYS={'capability','facts','revision','verified'}
 
 def decide(admitted, need):
     """Each candidate gets adopt/trial/study/reject from project fit plus supported claims.
@@ -19,15 +20,22 @@ def decide(admitted, need):
         raise Invalid('need declares capability plus optional '+', '.join(FIT_KEYS[1:]))
     claims={c['id']:c for c in admitted['claims']}
     advice={item['candidate_id']:item for item in (admitted.get('contextual_recommendations') or {}).get('items',[])}
+    assessments=need.get('assessments',{})
+    known={c['id'] for c in admitted['recommendations']}
+    for key,value in assessments.items():
+        if key not in known:raise Invalid('assessment names an unknown candidate: '+key)
+        if not isinstance(value,dict) or set(value)-ASSESSMENT_KEYS or not {'capability','revision','verified'}<=set(value) or not value['verified']:
+            raise Invalid('a Context assessment needs capability, inspected revision and what was verified')
     decisions=[]
     for candidate in admitted['recommendations']:
         reasons=[];blocked=[]
         supported=[id for id in candidate['claim_ids'] if claims[id]['status'] in ('observed','supported')]
         item=advice.get(candidate['id'])
         unknown=[]
-        # Producer-reported facts are checked against constraints and re-verified before adoption.
-        facts=item.get('facts',{}) if item else {}
-        addresses=item['capability'] if item else None
+        # Context's own inspection outranks producer-reported facts; both stay visible.
+        assessment=assessments.get(candidate['id'])
+        facts=(assessment or {}).get('facts') or (item.get('facts',{}) if item else {})
+        addresses=assessment['capability'] if assessment else item['capability'] if item else None
         if addresses is not None and addresses!=need['capability']:
             blocked.append('addresses '+addresses+', not '+need['capability'])
         if candidate['id'] in need.get('excluded',[]) or candidate['name'] in need.get('excluded',[]):
@@ -38,7 +46,9 @@ def decide(admitted, need):
             elif facts[key] not in allowed:blocked.append(key+' '+facts[key]+' not in '+label+' '+', '.join(allowed))
         if unknown:
             reasons.append('unknown '+' and '.join(unknown)+'; inspect the candidate before any trial')
-        if facts:
+        if assessment:
+            reasons.append('capability/license/runtime verified by Context at '+assessment['revision'])
+        elif facts:
             reasons.append('license/runtime are producer-reported; verify at the exact version before adoption')
         if need.get('existing_owner'):
             reasons.append('project already owns this with '+need['existing_owner']+'; adoption must beat it on a trial')
@@ -56,12 +66,14 @@ def decide(admitted, need):
             decision='trial'
         decisions.append({'candidate':candidate['id'],'name':candidate['name'],'decision':decision,
                           'blocked_by':blocked,'notes':reasons,'supporting_claims':supported,
+                          'context_assessment':assessment,
                           'producer_disposition':candidate['disposition'],
                           'producer_signal':candidate.get('signal'),
                           'producer_action':item['action'] if item else None,
                           'producer_intrinsic_strength':item.get('intrinsic_strength') if item else None})
     return {'capability':need['capability'],'bundle_id':admitted['bundle_id'],'mode':admitted['mode'],
             'decisions':decisions,'adoption_rule':'adopt only after the trial passes in this project',
+            'trial_authorization':'not granted here; a trial needs the project owner\'s authority and a separate plan',
             'authority':'Advice only; installation needs a separate plan and user/project authority.',
             'activation':False}
 

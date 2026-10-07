@@ -153,6 +153,14 @@
         ]
       },
       "type": "object"
+    },
+    "extra_capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^context-[a-z0-9-]+$"
+      }
     }
   },
   "required": [
