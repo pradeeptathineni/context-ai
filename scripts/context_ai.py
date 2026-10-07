@@ -671,10 +671,16 @@ def materialized(lock, files):
 
 def atomic(path,data):
     path.parent.mkdir(parents=True,exist_ok=True)
+    # mkstemp creates 0600; keep an existing file's mode, else the umask default.
+    if path.exists():
+        mode=path.stat().st_mode & 0o7777
+    else:
+        umask=os.umask(0);os.umask(umask);mode=0o666 & ~umask
     fd,tmp = tempfile.mkstemp(prefix='.context-ai-write-',dir=path.parent)
     try:
         with os.fdopen(fd,'wb') as f:
             f.write(data)
+        os.chmod(tmp,mode)
         os.replace(tmp,path)
     finally:
         if os.path.exists(tmp):

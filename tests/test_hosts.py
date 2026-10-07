@@ -43,6 +43,17 @@ class ClaudeAndBothHosts(unittest.TestCase):
                     self.assertEqual((self.project/'AGENTS.md').read_text(),'User instructions\n')
                     self.assertFalse((self.project/'CLAUDE.md').exists())
 
+    def test_apply_preserves_user_file_modes_and_uses_umask_for_new_files(self):
+        agents=self.project/'AGENTS.md';os.chmod(agents,0o644)
+        (self.project/'CLAUDE.md').write_text('Rules\n');os.chmod(self.project/'CLAUDE.md',0o640)
+        lock,files=c.resolve(['essentials'],self.project,'both');c.apply(self.project,lock,files)
+        self.assertEqual(agents.stat().st_mode&0o777,0o644)
+        self.assertEqual((self.project/'CLAUDE.md').stat().st_mode&0o777,0o640)
+        umask=os.umask(0);os.umask(umask)
+        self.assertEqual((self.project/'.claude/skills/context-tdd/SKILL.md').stat().st_mode&0o777,0o666&~umask)
+        c.undo(self.project)
+        self.assertEqual(agents.stat().st_mode&0o777,0o644)
+
     def test_router_points_to_single_canonical_copy(self):
         lock,files=c.resolve(['essentials'],self.project,'both');c.apply(self.project,lock,files)
         codex=(self.project/'.agents/skills/context-tdd/SKILL.md').read_text()
