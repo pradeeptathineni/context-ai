@@ -28,6 +28,36 @@
       "minLength": 1,
       "type": "string"
     },
+    "claude_routing": {
+      "additionalProperties": false,
+      "properties": {
+        "added_newline": {
+          "type": "boolean"
+        },
+        "block": {
+          "minLength": 1,
+          "type": "string"
+        },
+        "created": {
+          "type": "boolean"
+        },
+        "path": {
+          "enum": [
+            "CLAUDE.md",
+            ".claude/CLAUDE.md"
+          ]
+        },
+        "removed": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path",
+        "block",
+        "created"
+      ],
+      "type": "object"
+    },
     "owned": {
       "additionalProperties": {
         "pattern": "^[0-9a-f]{64}$",

@@ -99,7 +99,11 @@
       "type": "string"
     },
     "provider": {
-      "const": "codex"
+      "enum": [
+        "codex",
+        "claude",
+        "both"
+      ]
     },
     "resources": {
       "additionalProperties": {

@@ -592,9 +592,18 @@ def source_revision():
     revision=marker.read_text().strip() if marker.is_file() else ''
     return revision if re.fullmatch(r'[0-9a-f]{40}',revision) else 'exported-tree'
 
+PROVIDERS = {'codex':('codex',),'claude':('claude',),'both':('codex','claude')}
+SKILL_DIRS = {'codex':'.agents/skills','claude':'.claude/skills'}
+ADAPTER_DOCS = {'codex':'providers/openai/codex.md','claude':'providers/anthropic/claude-code.md'}
+CLAUDE_FILES = ('CLAUDE.md','.claude/CLAUDE.md','CLAUDE.local.md')
+
+def hosts(provider):
+    if provider not in PROVIDERS:
+        raise Invalid('supported adapters are codex, claude and both')
+    return PROVIDERS[provider]
+
 def resolve(ids, project, provider, options=None):
-    if provider != 'codex':
-        raise Invalid('supported adapter is codex')
+    hosts(provider)
     selected=selection(ids,options)
     decisions=selected_decisions(selected['decisions'])
     registry=capability_definitions(selected['options'])
@@ -602,7 +611,8 @@ def resolve(ids, project, provider, options=None):
     # Machine observations belong to local reports, never portable resource pins.
     for entry in states.values():
         entry.pop('discovery',None)
-    files = resources([p for paths in selected['stages'].values() for p in paths]+['skills/context-loadout/SKILL.md','providers/openai/codex.md','LICENSE'])
+    files = resources([p for paths in selected['stages'].values() for p in paths]+['skills/context-loadout/SKILL.md','LICENSE']
+                      +[ADAPTER_DOCS[host] for host in hosts(provider)])
     for c in selected['capabilities']:
         if registry[c]['kind']=='resource':
             files.update(resources([registry[c]['path']]))
@@ -624,10 +634,13 @@ def router(lock):
              'Project instructions and explicit task authority take precedence. Use the pinned `.context-ai/lock.json`.',
              'Read `.context-ai/resources/skills/context-loadout/SKILL.md` when changing the selection; report actual reads and checks in the task result.',
              'Load only the modules for the current stage:']
+    staged=set()
     for stage, paths in lock['stages'].items():
+        staged.update(paths)
         lines.append('- '+stage+': '+', '.join('`.context-ai/resources/'+p+'`' for p in paths))
     for key, entry in lock['capabilities'].items():
-        if entry['definition']['kind']=='resource':
+        # A procedure already routed by a stage is not listed twice.
+        if entry['definition']['kind']=='resource' and entry['definition']['path'] not in staged:
             lines.append('- '+key+': read `.context-ai/resources/'+entry['definition']['path']+'` when relevant.')
     lines.extend(['A selected recipe is not execution or deployment permission.',END])
     return '\n'.join(lines)+'\n'
@@ -650,8 +663,10 @@ def materialized(lock, files):
         else:
             description=lock['capabilities'][skill]['definition']['description']
         metadata = yaml.safe_dump({'name':skill,'description':description},sort_keys=False)
+        # One canonical instruction copy; each host gets a thin router at the same depth.
         body = '---\n'+metadata+'---\n\nRead [pinned instructions](../../../.context-ai/resources/'+path+') when this procedure is relevant. Follow project instructions and user brand direction first. No tool or hook is activated by this file.\n'
-        output['.agents/skills/'+skill+'/SKILL.md'] = body.encode()
+        for host in hosts(lock['provider']):
+            output[SKILL_DIRS[host]+'/'+skill+'/SKILL.md'] = body.encode()
     return output
 
 def atomic(path,data):
@@ -665,8 +680,10 @@ def atomic(path,data):
         if os.path.exists(tmp):
             os.unlink(tmp)
 
+SKILL_ROUTER = r'\.(agents|claude)/skills/context-[a-z0-9-]+/SKILL\.md'
+
 def transaction_path(project, name):
-    if name not in ('AGENTS.md','.context-ai/lock.json') and not (name.startswith('.context-ai/resources/') or re.fullmatch(r'\.agents/skills/context-[a-z0-9-]+/SKILL\.md',name)):
+    if name not in ('AGENTS.md','.context-ai/lock.json','CLAUDE.md','.claude/CLAUDE.md') and not (name.startswith('.context-ai/resources/') or re.fullmatch(SKILL_ROUTER,name)):
         raise Invalid('unapproved recovery path: '+name)
     return inside(project,name)
 
@@ -718,7 +735,7 @@ def installed(project, allow_rebind=False):
     if bound != str(project) and not allow_rebind:
         raise Invalid('installation belongs to another project')
     for name in lock['owned']:
-        if not (name.startswith('.context-ai/resources/') or re.fullmatch(r'\.agents/skills/[a-z][a-z0-9-]{0,63}/SKILL\.md',name)):
+        if not (name.startswith('.context-ai/resources/') or re.fullmatch(r'\.(agents|claude)/skills/[a-z][a-z0-9-]{0,63}/SKILL\.md',name)):
             raise Invalid('unapproved owned path')
         inside(project,name)
     return lock
@@ -733,7 +750,75 @@ def instruction_block(text):
         finish+=1
     return text[start:finish]
 
-def apply(project,lock,files):
+def imports_agents(text):
+    return re.search(r'^\s*@(\./)?AGENTS\.md\s*$',text,re.M) is not None
+
+def claude_route(project, previous=None):
+    """Native first: Claude Code reads AGENTS.md unless a CLAUDE.md shadows it."""
+    owned=(previous or {}).get('claude_routing')
+    shadow=[]
+    for base in [project,*project.parents]:
+        for name in CLAUDE_FILES:
+            candidate=base/name
+            if candidate.is_file():shadow.append(candidate)
+    local=[p for p in shadow if p.parent in (project,project/'.claude')]
+    for p in local:
+        name=p.relative_to(project).as_posix()
+        if name=='CLAUDE.local.md':continue
+        text=p.read_text()
+        if owned and owned['path']==name:
+            return {'mode':'managed-block','path':name}
+        if imports_agents(text):
+            return {'mode':'imports-agents','path':name}
+    if owned:
+        return {'mode':'managed-block','path':owned['path']}
+    if not shadow:
+        return {'mode':'native-agents','path':None}
+    existing=[p.relative_to(project).as_posix() for p in local if p.name!='CLAUDE.local.md']
+    return {'mode':'managed-block','path':existing[0] if existing else 'CLAUDE.md'}
+
+def host_routing(project, lock, previous=None):
+    result={}
+    for host in hosts(lock['provider']):
+        if host=='codex':
+            result['codex']={'mode':'agents-block','path':'AGENTS.md','skills':SKILL_DIRS['codex']}
+        else:
+            result['claude']={**claude_route(project,previous),'skills':SKILL_DIRS['claude']}
+    return result
+
+def skill_metadata(path):
+    if path.stat().st_size>2_000_000:raise Invalid('skill metadata exceeds bounded input size')
+    text=path.read_text()
+    if text.startswith('---\n') and '\n---' in text[4:]:
+        metadata=yaml.safe_load(text.split('\n---',1)[0][4:])
+        if isinstance(metadata,dict):return metadata
+    return {}
+
+def native_inventory(project, owned):
+    """Project-local host-managed resources; read only, never written by Context."""
+    skills=[]
+    for host,folder in SKILL_DIRS.items():
+        base=inside(project,folder)
+        if not base.is_dir():continue
+        for path in sorted(base.glob('*/SKILL.md')):
+            name=path.relative_to(project).as_posix()
+            if name in owned:continue
+            path=inside(project,name)
+            skills.append({'host':host,'path':name,'name':skill_metadata(path).get('name',path.parent.name),'folder':path.parent.name})
+    plugins=[]
+    for name in ('.claude/settings.json','.claude/settings.local.json'):
+        p=inside(project,name)
+        if p.is_file():
+            try:enabled=json.loads(p.read_text()).get('enabledPlugins',{})
+            except json.JSONDecodeError:enabled={}
+            plugins.extend({'host':'claude','source':name,'plugin':key} for key,on in sorted(enabled.items()) if on)
+    p=inside(project,'.codex/config.toml')
+    if p.is_file():
+        plugins.extend({'host':'codex','source':'.codex/config.toml','plugin':m} for m in re.findall(r'^\[plugins\."([^"]+)"\]',p.read_text(),re.M))
+    return {'skills':skills,'plugins':plugins}
+
+def preflight(project, lock, files):
+    """Everything apply would do, as data; conflicts are reported, never resolved silently."""
     validate_schema('lock',lock)
     if {name:digest(data) for name,data in files.items()} != lock['resources'] or digest(encoded(lock['resources'])) != lock['source_tree_sha256']:
         raise Invalid('application bytes do not match the pin')
@@ -745,48 +830,94 @@ def apply(project,lock,files):
         raise Invalid('legacy pin belongs to another project')
     previous=installed(project)
     targets=materialized(lock,files)
+    conflicts=[]
     if previous and previous.get('undo_pending'):
-        raise Invalid('resolve preserved undo conflicts before applying')
+        conflicts.append('resolve preserved undo conflicts before applying')
     old_owned=previous['owned'] if previous else {}
-    # Codex uses frontmatter names, not folder names; refuse duplicate local names.
-    skills_dir=inside(project,'.agents/skills')
-    if skills_dir.is_dir():
-        for path in skills_dir.glob('*/SKILL.md'):
-            name=path.relative_to(project).as_posix()
-            path=inside(project,name)
-            if name in old_owned:continue
-            if path.stat().st_size>2_000_000:raise Invalid('skill metadata exceeds bounded input size')
-            text=path.read_text()
-            if text.startswith('---\n') and '\n---' in text[4:]:
-                metadata=yaml.safe_load(text.split('\n---',1)[0][4:])
-                if isinstance(metadata,dict) and metadata.get('name') in lock['skills']:
-                    raise Invalid('existing skill name conflict: '+metadata['name'])
-    # Preflight every path before any mutation; user modifications always conflict.
+    inventory=native_inventory(project,old_owned)
+    # Hosts match frontmatter names, not folder names; refuse duplicate local names.
+    for skill in inventory['skills']:
+        if skill['name'] in lock['skills'] or skill['folder'] in lock['skills']:
+            conflicts.append('existing skill name conflict: '+skill['name']+' ('+skill['path']+')')
+    routed=[p for paths in lock['stages'].values() for p in paths]+[e['definition']['path'] for e in lock['capabilities'].values() if e['definition']['kind']=='resource']
+    duplicates=[]
+    for concern,entry in selected_concerns(routed).items():
+        for skill in inventory['skills']:
+            if skill['name'] in entry.get('native_names',[]):
+                duplicates.append({'concern':concern,'existing':skill['path'],'name':skill['name'],'context_owner':entry['owner']})
+    conflicts.extend('duplicate concern owner: '+d['concern']+' is already routed by '+d['existing']+'; remove it or deselect the Context route' for d in duplicates)
     for name in set(targets)|set(old_owned):
         p=inside(project,name)
         if p.exists():
             if not p.is_file() or name not in old_owned or digest(p.read_bytes())!=old_owned[name]:
-                raise Invalid('user file conflict: '+name)
+                conflicts.append('user file conflict: '+name)
         elif name in old_owned:
-            raise Invalid('missing owned file: '+name)
+            conflicts.append('missing owned file: '+name)
     agents=inside(project,'AGENTS.md')
     text=agents.read_text() if agents.exists() else ''
     old_block=previous['routing_block'] if previous else None
+    updated=None
     if old_block:
-        if instruction_block(text)!=old_block:
-            raise Invalid('edited managed AGENTS block')
-        updated=text.replace(old_block,router(lock),1)
+        try:current=instruction_block(text)
+        except Invalid:current=None
+        if current!=old_block:
+            conflicts.append('edited managed AGENTS block')
+        else:
+            updated=text.replace(old_block,router(lock),1)
+    elif BEGIN in text or END in text:
+        conflicts.append('unowned routing block')
     else:
-        if BEGIN in text or END in text:
-            raise Invalid('unowned routing block')
         updated=text+('' if not text or text.endswith('\n') else '\n')+router(lock)
+    routing=host_routing(project,lock,previous)
+    claude_desired={}; claude_state=None
+    old_claude=previous.get('claude_routing') if previous else None
+    want=routing.get('claude',{}).get('mode')=='managed-block'
+    if old_claude and (not want or routing['claude']['path']!=old_claude['path']):
+        p=inside(project,old_claude['path'])
+        ctext=p.read_text() if p.exists() else ''
+        try:current=instruction_block(ctext)
+        except Invalid:current=None
+        if current!=old_claude['block']:
+            conflicts.append('edited managed '+old_claude['path']+' block')
+        else:
+            removable=('\n'+current) if old_claude.get('added_newline') and ('\n'+current) in ctext else current
+            rest=ctext.replace(removable,'',1)
+            claude_desired[old_claude['path']]=None if old_claude['created'] and not rest else rest.encode()
+        old_claude=None
+    if want:
+        name=routing['claude']['path']
+        p=inside(project,name)
+        ctext=p.read_text() if p.exists() else ''
+        if old_claude:
+            try:current=instruction_block(ctext)
+            except Invalid:current=None
+            if current!=old_claude['block']:
+                conflicts.append('edited managed '+name+' block')
+            else:
+                claude_desired[name]=ctext.replace(old_claude['block'],router(lock),1).encode()
+            claude_state={**old_claude,'block':router(lock)}
+        elif BEGIN in ctext or END in ctext:
+            conflicts.append('unowned routing block in '+name)
+        else:
+            claude_desired[name]=(ctext+('' if not ctext or ctext.endswith('\n') else '\n')+router(lock)).encode()
+            claude_state={'path':name,'block':router(lock),'created':not p.exists(),'added_newline':bool(ctext and not ctext.endswith('\n'))}
     state={'schema_version':2,'bound_project':str(project),'resolution':lock,'owned':{p:digest(d) for p,d in targets.items()},
            'routing_block':router(lock),'agents_created':previous['agents_created'] if previous else not agents.exists(),
            'agents_added_newline':previous.get('agents_added_newline',False) if previous else bool(text and not text.endswith('\n'))}
+    if claude_state:state['claude_routing']=claude_state
     validate_schema('installation',state)
-    data=encoded(state)
-    desired={**targets,'AGENTS.md':updated.encode(),'.context-ai/lock.json':data}
+    desired={**targets,'.context-ai/lock.json':encoded(state)}
+    if updated is not None:desired['AGENTS.md']=updated.encode()
+    desired.update(claude_desired)
     desired.update({name:None for name in set(old_owned)-set(targets)})
+    return {'previous':previous,'targets':targets,'old_owned':old_owned,'state':state,'desired':desired,
+            'conflicts':conflicts,'duplicates':duplicates,'inventory':inventory,'host_routing':routing}
+
+def apply(project,lock,files):
+    check=preflight(project,lock,files)
+    if check['conflicts']:
+        raise Invalid('; '.join(check['conflicts']))
+    desired=check['desired']
     before={}
     for name in desired:
         p=transaction_path(project,name)
@@ -808,7 +939,42 @@ def apply(project,lock,files):
             raise Invalid('application interrupted; recovery bytes retained in .context-ai/pending.json') from recovery_error
         raise
     journal.unlink()
-    return {'applied':lock['loadouts'],'resource_count':len(files),'lock_sha256':digest(data)}
+    return {'applied':lock['loadouts'],'provider':lock['provider'],'resource_count':len(files),
+            'lock_sha256':digest(desired['.context-ai/lock.json']),'host_routing':check['host_routing']}
+
+def upstream_pins(files):
+    pins=[]
+    for source in json.loads((ROOT/'sources.lock.json').read_text())['sources']:
+        selected=sorted(set(files)&set(source['files']))
+        if selected:
+            pins.append({'id':source['id'],'repository':source['repository'],'revision':source['revision'],
+                         'license':source['license'],'files':selected,'update_owner':'context (sources.lock.json)'})
+    return pins
+
+def plan(project, lock, files):
+    check=preflight(project,lock,files)
+    previous=check['previous']
+    old=previous['resolution']['resources'] if previous else {}
+    old_owned=check['old_owned']; targets=check['targets']
+    registry={key:entry for key,entry in lock['capabilities'].items()}
+    return {'resolution':lock,
+            'writes':sorted(set(targets)|{name for name,value in check['desired'].items() if value is not None}),
+            'additions':sorted(set(targets)-set(old_owned)),
+            'replacements':sorted(name for name in set(targets)&set(old_owned) if digest(targets[name])!=old_owned[name]),
+            'removals':sorted(set(old_owned)-set(targets)),
+            'changes':sorted(p for p in set(old)|set(lock['resources']) if old.get(p)!=lock['resources'].get(p)),
+            'conflicts':check['conflicts'],'duplicate_concern_owners':check['duplicates'],
+            'prerequisites':{key:{'requirement':entry['requirement'],'kind':entry['definition']['kind'],'available':entry['available'],
+                                  'boundary':entry['definition']['boundary']} for key,entry in registry.items()},
+            'capability_discovery':{key:discover_command(entry['definition'],project) for key,entry in lock['capabilities'].items() if entry['definition']['kind']=='command'},
+            'runs_code':{'apply':False,'verify':'bounded version probes for required python3/git/node only'},
+            'credentials':'none read or required by Context',
+            'host_routing':check['host_routing'],
+            'native_managed':check['inventory'],
+            'host_management':'Context owns only listed writes; native skills/plugins above stay host-managed and are never modified.',
+            'upstream_pins':upstream_pins(files),
+            'concerns':selected_concerns([p for paths in lock['stages'].values() for p in paths]),
+            'activation':'proposed'}
 
 def verify(project, allow_rebind=False):
     state=installed(project, allow_rebind=allow_rebind)
@@ -822,6 +988,11 @@ def verify(project, allow_rebind=False):
             raise Invalid('managed file drift: '+name)
     if instruction_block(inside(project,'AGENTS.md').read_text()) != state['routing_block']:
         raise Invalid('routing block drift')
+    claude=state.get('claude_routing')
+    if claude:
+        p=inside(project,claude['path'])
+        if not p.is_file() or instruction_block(p.read_text())!=claude['block']:
+            raise Invalid('routing block drift: '+claude['path'])
     resolution=state['resolution']
     probes, optional_unavailable, discovery, observed_versions = [], [], {}, {}
     for key,entry in resolution['capabilities'].items():
@@ -841,8 +1012,16 @@ def verify(project, allow_rebind=False):
             raise Invalid('installed required capability unavailable: '+key)
         if entry['requirement']=='optional' and not available:
             optional_unavailable.append({'id':key,'boundary':definition['boundary']})
-    return {'verified':resolution['loadouts'],'owned_files':len(state['owned']),
+    routing=host_routing(project,resolution,state)
+    if 'claude' in routing and routing['claude']['mode']=='managed-block' and not claude:
+        raise Invalid('Claude Code no longer reads AGENTS.md here (a CLAUDE.md now shadows it); refresh to route Claude')
+    return {'verified':resolution['loadouts'],'provider':resolution.get('provider','codex'),'owned_files':len(state['owned']),
             'scope':'installation integrity and required runtime probes',
+            'levels':{'files_present':True,'schema_valid':True,
+                      'native_discovery':'not_observed; run the host (see providers/) and record what it listed',
+                      'runtime_tools':'required version probes passed' if probes else 'no required command probes',
+                      'consumer_task':'not_run'},
+            'host_routing':routing,
             'required_command_probes':probes,'optional_unavailable':optional_unavailable,
             'capability_discovery':discovery,'observed_versions':observed_versions,
             'project_checks':'not_run','suggested_checks':resolution['checks']}
@@ -899,6 +1078,22 @@ def pinned_files(lock):
         raise Invalid('imported capability definitions differ from reviewed source')
     return files
 
+def remove_block(project, name, block, created, added_newline):
+    path=inside(project,name)
+    text=path.read_text() if path.exists() else ''
+    try:
+        current=instruction_block(text)
+    except Invalid:
+        current=None
+    if current!=block:
+        return False
+    removable=('\n'+block) if added_newline and ('\n'+block) in text else block
+    result=text.replace(removable,'',1)
+    if created and not result:
+        path.unlink()
+    else:
+        atomic(path,result.encode())
+    return True
 
 def undo(project):
     state=installed(project)
@@ -911,24 +1106,17 @@ def undo(project):
             p.unlink()
         elif p.exists():
             conflicts.append(name); retained[name]=sha
-    agents=inside(project,'AGENTS.md')
-    text=agents.read_text() if agents.exists() else ''
-    try:
-        block=instruction_block(text)
-    except Invalid:
-        block=None
-    if state.get('routing_removed'):
-        pass
-    elif block==state['routing_block']:
-        removable=('\n'+block) if state.get('agents_added_newline') and ('\n'+block) in text else block
-        result=text.replace(removable,'',1)
-        if state['agents_created'] and not result:
-            agents.unlink()
+    if not state.get('routing_removed'):
+        if remove_block(project,'AGENTS.md',state['routing_block'],state['agents_created'],state.get('agents_added_newline')):
+            state['routing_removed']=True
         else:
-            atomic(agents,result.encode())
-        state['routing_removed']=True
-    else:
-        conflicts.append('AGENTS.md')
+            conflicts.append('AGENTS.md')
+    claude=state.get('claude_routing')
+    if claude and not claude.get('removed'):
+        if remove_block(project,claude['path'],claude['block'],claude['created'],claude.get('added_newline')):
+            claude['removed']=True
+        else:
+            conflicts.append(claude['path'])
     if conflicts:
         state['owned']=retained
         state['undo_pending']=True
@@ -944,7 +1132,7 @@ def main():
     parser.add_argument('--project')
     parser.add_argument('--profile',type=Path,help='Explicit JSON/YAML task profile for read-only packet resolution')
     parser.add_argument('--lock',type=Path,help='Apply an exact portable lock against this source checkout')
-    parser.add_argument('--provider',default='codex')
+    parser.add_argument('--provider',choices=sorted(PROVIDERS),help='Host adapter: codex (default), claude or both; refresh keeps the installed host')
     parser.add_argument('--brand',help='Project visual intent, 1-2000 characters')
     parser.add_argument('--design-procedure',choices=['guided','lightweight'])
     parser.add_argument('--option',action='append',default=[],metavar='KEY=VALUE',help='Explicit supported alternative; repeat for different options')
@@ -975,16 +1163,15 @@ def main():
                 raise Invalid('decisions accepts only optional loadout selections')
             result=selected_decisions(selection(args.loadouts)['decisions']) if args.loadouts else current_decisions()
         else:
-            if args.provider!='codex':raise Invalid('supported adapter is codex')
             result=explain(args.loadouts,overrides)
     else:
         if not args.project or not Path(args.project).is_absolute() or not Path(args.project).is_dir() or Path(args.project).is_symlink():
             raise Invalid('an existing absolute project directory is required')
         project=Path(args.project).resolve()
-        if args.lock and (args.command!='apply' or args.loadouts or overrides):
-            raise Invalid('--lock is only for apply without new selections/options')
+        if args.lock and (args.command!='apply' or args.loadouts or overrides or args.provider):
+            raise Invalid('--lock is only for apply without new selections/options/provider')
         if args.command=='packet':
-            if args.loadouts or overrides or args.lock or args.provider!='codex':
+            if args.loadouts or overrides or args.lock or args.provider:
                 raise Invalid('packet selections belong in --profile')
             result=task_packet(read_yaml(args.profile),project)
         elif args.command=='tools':
@@ -992,7 +1179,8 @@ def main():
                 raise Invalid('tools accepts only --project; use plan for selected requirements')
             registry=read_yaml(ROOT/'capabilities.yaml')['capabilities']
             result={'project':str(project),'execution':'not_run',
-                    'tools':{key:discover_command(registry[key],project) for key in ('python-runtime','git','node','package-manager','browser')},
+                    'tools':{key:discover_command(registry[key],project) for key in ('python-runtime','git','node','package-manager','browser','context7')},
+                    'native_managed':native_inventory(project,{}),
                     'native_host_tools':'Host-reported tools must be inspected separately; PATH is not native host discovery.'}
         elif args.command=='recover':
             result=recover(project)
@@ -1011,7 +1199,6 @@ def main():
             ids=args.loadouts
             state=installed(project)
             if args.command=='refresh' and not ids:
-                state=installed(project)
                 if not state:
                     raise Invalid('no installation to refresh')
                 ids=state['resolution']['loadouts']
@@ -1020,21 +1207,15 @@ def main():
                 applicable=selection(ids)['options']
                 options={key:value for key,value in state['resolution']['options'].items() if key in applicable}
             options.update(overrides)
+            provider=args.provider or (state['resolution'].get('provider','codex') if state else 'codex')
             if args.lock:
                 lock=json.loads(args.lock.read_text());files=pinned_files(lock)
             else:
-                lock,files=resolve(ids,project,args.provider,options)
+                lock,files=resolve(ids,project,provider,options)
             if args.command=='apply':
                 result=apply(project,lock,files)
             else:
-                state=installed(project)
-                old=state['resolution']['resources'] if state else {}
-                targets=materialized(lock,files)
-                result={'resolution':lock,'writes':list(targets)+['AGENTS.md','.context-ai/lock.json'],
-                        'capability_discovery':{key:discover_command(entry['definition'],project) for key,entry in lock['capabilities'].items() if entry['definition']['kind']=='command'},
-                        'removals':sorted(set(state['owned'])-set(targets)) if state else [],
-                        'changes':sorted(p for p in set(old)|set(lock['resources']) if old.get(p)!=lock['resources'].get(p)),
-                        'activation':'proposed'}
+                result=plan(project,lock,files)
     print(encoded(result).decode(),end='')
 
 if __name__=='__main__':
