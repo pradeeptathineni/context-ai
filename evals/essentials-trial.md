@@ -21,3 +21,14 @@ All three implemented a bounded local loop, retried 502/503/504 and connection e
 **Limits.** One run per arm, builder-designed task, builder grading. The user's global `~/.agents/skills/standard` skill (which routes to this library) was visible to every arm, so "native" is not Context-free. Human usefulness is unmeasured. Raw JSONL, diffs and the decision record are kept in the local planning folder, not this repository.
 
 **Consequence.** Essentials stays the default feature route because it produced the prior-art inspection and record that CTX04 requires and the other arms skipped. Revisit if a second task shows the extra reads without a better-evidenced decision.
+
+## Second case: version-sensitive API (C-DEV-02)
+
+A consumer pinned to urllib3 2.8.0 asks for GET retries on 429/502/503/504, a 20-second cap on `Retry-After` and up to 0.3 s backoff jitter, using what the installed library offers. The cap is the discriminating part: `retry_after_max` exists in 2.8.0 but not in older documentation (Context7 indexes only 1.26.20 for this library). Same host and settings as above, no Context7 CLI on PATH.
+
+| Arm | Wall time | Input tokens (cached) | Output tokens | Commands | Result |
+| --- | --- | --- | --- | --- | --- |
+| native | 138 s | 104,884 (96,128) | 2,415 | 8 | 17 tests pass; used `retry_after_max` and `backoff_jitter`, confirmed in the installed `Retry` signature and source |
+| essentials | 210 s | 288,738 (254,080) | 3,496 | 11 | 8 tests pass; same parameters, confirmed in installed source **and** the official 2.8.0 reference page (opened with the host's web tool), red-then-green per test group |
+
+Both arms reached the correct native policy without a wrapper or new dependency. Essentials followed `procedures/current-docs.md` (no Context7, so official versioned docs plus installed source) and wrote failing tests first; native reached the same correctness by reading installed source alone, faster and at about 36% of the tokens. On this case the refreshed route added verification depth, not correctness. One run per arm.
