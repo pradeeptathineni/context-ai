@@ -4,7 +4,7 @@ name: model-routing
 description: >-
   Provider-aware policy for selecting a model profile and reasoning level from
   task intent, scope, risk, latency, autonomy, and cost constraints.
-reviewed: "2026-10-05"
+reviewed: "2026-10-07"
 
 matching:
   strategy: first_match
@@ -27,6 +27,18 @@ sources:
     url: https://learn.chatgpt.com/docs/models
     reviewed: "2026-10-05"
     covers: Codex model positioning, product caveats, and current bindings
+  claude_code_models:
+    url: https://code.claude.com/docs/en/model-config
+    reviewed: "2026-10-07"
+    covers: Claude Code aliases (opus, sonnet), effort levels and provider-dependent mappings
+  claude_plan_billing:
+    url: https://support.claude.com/en/articles/15036540-use-the-claude-agent-sdk-with-your-claude-plan
+    reviewed: "2026-10-07"
+    covers: October 7, 2026 withdrawal of the Agent SDK monthly credit; API credit applies to Max and Team, not Pro
+  claude_headless:
+    url: https://code.claude.com/docs/en/headless
+    reviewed: "2026-10-07"
+    covers: Print mode loads ambient hooks/MCP; --bare uses API/provider credentials instead of subscription sign-in
 
 defaults:
   principles:
@@ -172,7 +184,79 @@ models:
       - deep_cross_system_reasoning
     source_refs: [codex_models, openai_api_models]
 
+  claude_frontier:
+    provider: anthropic
+    model: claude-opus-5-5
+    display_name: Claude Opus 5.5
+    lifecycle: current
+    documented_for: [claude_code]
+    availability: verify_for_plan_auth_and_client
+    reasoning:
+      supported: [low, medium, high, xhigh, max]
+      default: medium
+    strengths:
+      - critical multi-step implementation and review
+      - long-horizon judgment
+    tradeoffs:
+      relative_cost: highest_claude_option
+      overkill_for: bounded_mechanical_work
+    recommended_intents:
+      - architecture
+      - difficult_reasoning
+      - final_adversarial_review
+    source_refs: [claude_code_models, claude_plan_billing]
+
+  claude_balanced:
+    provider: anthropic
+    model: claude-sonnet-5-5
+    display_name: Claude Sonnet 5.5
+    lifecycle: current
+    documented_for: [claude_code]
+    availability: verify_for_plan_auth_and_client
+    reasoning:
+      supported: [low, medium, high, xhigh, max]
+      default: medium
+    strengths:
+      - well-specified implementation
+      - routine review and edits
+    tradeoffs:
+      relative_cost: lower_than_opus
+      capability: escalate_for_unsettled_architecture
+    recommended_intents:
+      - coding
+      - debugging
+    source_refs: [claude_code_models, claude_plan_billing]
+
 routes:
+  - id: claude_high_consequence
+    match:
+      host: claude
+      consequence: high
+    select:
+      model_profile: claude_frontier
+      reasoning: high
+    fallback:
+      model_profile: claude_balanced
+      reasoning: high
+
+  - id: claude_difficult
+    match:
+      host: claude
+      difficulty: high
+    select:
+      model_profile: claude_frontier
+      reasoning: high
+    fallback:
+      model_profile: claude_balanced
+      reasoning: high
+
+  - id: claude_default
+    match:
+      host: claude
+    select:
+      model_profile: claude_balanced
+      reasoning: medium
+
   - id: architecture_critical
     match:
       intent: architecture
@@ -364,6 +448,26 @@ recommended_workflow:
     route: final_review
   - stage: apply_review_fixes
     route: realtime_bounded_coding
+
+runtime_observations:
+  # Dated observations of what actually ran; they do not change routes or settings.
+  - observed: "2026-10-07"
+    host: codex-cli 0.160.0
+    authentication: ChatGPT sign-in (subscription)
+    requested: {model: gpt-6.1-sol, reasoning: medium}
+    actual: {model: gpt-6.1-sol, reasoning: medium}
+    note: Explicit -m and model_reasoning_effort with --ignore-user-config; the user's default config also names gpt-6.1-sol/high.
+  - observed: "2026-10-07"
+    host: claude-code 2.1.285 (standalone CLI)
+    authentication: none (apiKeySource none, not logged in)
+    requested: {model: sonnet}
+    actual: {model: claude-sonnet-5-5, inference: blocked}
+    note: The alias resolved in the init event, but no request ran. Pro does not supply Agent SDK/API credit after 2026-10-07; headless Claude needs a supported sign-in or authorized API credentials.
+  - observed: "2026-10-07"
+    host: claude-code desktop session (this reset's writer)
+    authentication: desktop subscription session
+    requested: {model: claude-opus-5-5, reasoning: high}
+    actual: {model: "claude-opus-5-5 (1M context) as reported by the session environment", reasoning: not surfaced}
 
 maintenance:
   compatibility:

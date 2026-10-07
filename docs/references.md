@@ -381,6 +381,7 @@ The signals-context reset kit (prepared 2026-10-07, outside this repository) ask
 - **gstack** ([garrytan/gstack@db74567](https://github.com/garrytan/gstack/tree/db745675bdf9f575276db2dcd132d3c047218a12/office-hours), MIT): not copied. `procedures/product-questions.md` adapts the six office-hours question headings in hold-scope mode for unresolved decisions only.
 - **OpenSpec** ([Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec)) and **Spec Kit** ([github/spec-kit](https://github.com/github/spec-kit)) were compared as the spec owner. Neither is installed; the scenario and added/modified/removed delta discipline is part of the review spec axis. **Fabric** ([danielmiessler/Fabric](https://github.com/danielmiessler/Fabric)) had no recipe matching a task check and stays reference only.
 - `evals/essentials-trial.md` records the same-task Codex comparison of no Context, the pre-reset `standard` loadout and `essentials`.
+- `evals/context-efficiency-trial.md` records the Headroom, context-mode, Graphify and Context7 trials behind D-025 and D-026.
 - `procedures/current-docs.md` adds optional Context7 ([upstash/context7](https://github.com/upstash/context7)) lookup with an exact-version official-docs fallback; `procedures/product-questions.md` and `procedures/tdd.md` are new Context procedures.
 
 ## Claude Code delivery (reviewed 2026-10-07)

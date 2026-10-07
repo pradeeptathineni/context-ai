@@ -417,3 +417,64 @@ decisions:
     or capability resource not covered by a concern.
   rollback: Restore archived files from Git history; the map is advisory metadata for selection.
   revisit_when: A concern needs two owners in different contexts, or the map drifts from actual loadouts.
+
+- id: D-025
+  revision: 1
+  supersedes: null
+  concept: context.compression
+  action: retain
+  selection: Bounded project logs and native host truncation own tool-output efficiency; no compressor
+    or code graph by default
+  rationale: On a verbose failing log with the root cause mid-file, a saved log plus targeted search
+    kept both the cause and the symptom in 1.6 KB. Headroom's library mode reduced the Anthropic-format
+    tool result by about 8% losslessly and passed OpenAI tool messages through unchanged; context-mode
+    missed the cause until a second query. Graphify's explain matched rg on callers, and its path query
+    was misleading. Their agent integrations write user-global configuration.
+  evidence:
+  - evals/context-efficiency-trial.md
+  - https://github.com/headroomlabs-ai/headroom/tree/278bbc8771938eec18e89df942e1594b6ddf41d4
+  - https://github.com/mksglu/context-mode/tree/2a7a92ab00496a4848decdd7b651daf9ccd90d96
+  - https://github.com/Graphify-Labs/graphify/tree/6478eb71237c86ee5fb6a35c702835e987ca445d
+  applicability: Consumer tasks with verbose command output or cross-file questions in small and
+    medium repositories.
+  alternatives:
+  - Headroom library, proxy or MCP
+  - context-mode MCP sandbox and search
+  - Graphify code graph
+  - Current bounded logs, rg and native truncation
+  unknowns:
+  - No model-in-the-loop end-task comparison was run for the challengers, because their agent
+    integrations require global configuration; long-session savings are untested.
+  validation:
+  - Deterministic recovery comparison on one 208 KB log; Graphify built and queried on scripts/.
+  rollback: Not applicable; nothing was installed into the library or a consumer.
+  revisit_when: A project-local integration exists and a long-session workload shows retained
+    correctness with material savings, or a large repository defeats rg navigation.
+
+- id: D-026
+  revision: 1
+  supersedes: null
+  concept: context.retrieval
+  action: adopt
+  selection: Optional Context7 lookup with exact-version check and installed-source or official-doc
+    fallback
+  rationale: A live Context7 query for urllib3 Retry returned relevant main-branch documentation with
+    source links, but the exact installed version (2.8.0) was refused as version_not_found (only
+    1.26.20 indexed). The procedure's version check caught the mismatch; the installed signature
+    confirmed the documented parameters. Context7 helps discovery but cannot be the version authority.
+  evidence:
+  - procedures/current-docs.md
+  - https://github.com/upstash/context7
+  - evals/context-efficiency-trial.md
+  applicability: Version-sensitive library or API questions in a consumer project.
+  alternatives:
+  - Require Context7 for every docs question
+  - Official documentation only
+  - Optional Context7 plus exact-version verification and fallback
+  unknowns:
+  - Context7 index coverage varies by library; the hosted backend is third-party and not self-hostable.
+  validation:
+  - Live search and context calls on 2026-10-07; version-pinned call returned HTTP 404
+    version_not_found; installed urllib3 2.8.0 Retry signature inspected.
+  rollback: Remove the optional capability; the procedure already works without it.
+  revisit_when: Context7 indexes exact versions for the project's dependencies, or its terms change.

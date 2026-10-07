@@ -18,10 +18,12 @@ capabilities:
   context-review: required
   context-current-docs: optional
   context-product-questions: optional
+  context7: optional
 options: {}
 decisions:
 - D-023
 - D-024
+- D-026
 stages:
   research:
   - core/prior-art.md
