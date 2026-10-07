@@ -516,3 +516,40 @@ decisions:
   rollback: Not applicable; nothing from Rulesync was installed.
   revisit_when: Context needs a host format or metadata conversion beyond thin routers that Rulesync
     supports with an in-memory boundary, preserved closure and lifecycle parity.
+
+- id: D-028
+  revision: 1
+  supersedes: null
+  concept: research.decision
+  action: trial
+  selection: For a Markdown-in-Git reading-notes project that also opens notes in Neoma, deliver Neoma's
+    pinned Markdown compatibility documentation through an opt-in procedure; Neoma stays a reader and
+    plain Markdown in Git stays the owner
+  rationale: A real post-reset Signals export nominated Neoma from one supported upstream claim. Context
+    inspected the pinned revision (AGPL-3.0-or-later, no install hooks, Markdown canonical) and ran the
+    upstream import/export and link tests. A consumer agent using only the delivered procedure wrote three
+    notes that Neoma's own code parsed with no broken links and a byte-identical ZIP round trip; the
+    unchanged baseline failed the same check. The other six Signals candidates address different
+    capabilities and were rejected for this need. A producer score or action decided nothing.
+  evidence:
+  - https://github.com/infinitumio/neoma/tree/18c63fbd72e40f7cefad22f189b6ecde79e61716
+  - sources.lock.json
+  - procedures/portable-notes.md
+  - evals/pair-exercise.md
+  applicability: Projects that keep research notes as Markdown in Git and have chosen Neoma as a reader;
+    opt-in with --with context-portable-notes, never a default.
+  alternatives:
+  - Plain Markdown and Git only (status quo)
+  - Install the Neoma application into the consumer
+  - Adopt one of the other Signals candidates (Zotero MCP, Local Deep Research, Zotero, Gemini
+    Notebook, GPT Researcher, Open Notebook)
+  - Opt-in documentation-only procedure over the pinned compatibility reference
+  unknowns:
+  - One agent run and one builder-designed task; Neoma's browser UI, folder vaults and citation handling
+    were not exercised; human usefulness is unmeasured.
+  validation:
+  - Neoma-based external check failed on the baseline consumer and passed after the agent task (5 notes,
+    0 broken links, identical re-import); undo preserved user edits and the notes still passed.
+  rollback: undo the consumer selection; drop the opt-in capability and the pinned documentation.
+  revisit_when: Neoma's compatibility documentation changes materially, its license changes, or the
+    consumer stops using Neoma.

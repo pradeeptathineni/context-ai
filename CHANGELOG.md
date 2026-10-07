@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Completed the Signals to Context pair exercise on a real post-reset export: Neoma trial for a Markdown notes consumer (D-028), opt-in `--with context-portable-notes`, Context-verified adoption assessments, and a consumer task checked with Neoma's own code (`evals/pair-exercise.md`).
+- Fixed review findings at 4e573a3: Claude import detection for double-backtick spans and unclosed fences; the web catalog no longer labels browser checks or a shared trial as measured benefit.
 - Added `ownership.yaml`: one active owner per concern (native host, pinned upstream or Context), validated against every loadout route; archived the duplicate prior-art overlay under `archive/` with a replacement pointer.
 - Added the `essentials` loadout (composed by `standard`): `core/prior-art.md` adapts ECC search-first and the Ponytail reuse ladder; pinned Matt Pocock TDD, code-review and research files and Ponytail review tags behind thin adapters; hold-scope product questions; exact-version docs with optional Context7.
 - Added Claude Code delivery (`--provider claude|both`) with `.claude/skills` routers to the same pinned copy, native AGENTS.md reading first and an owned CLAUDE.md block only when CLAUDE.md shadows it; import detection follows Claude's resolution rules.
