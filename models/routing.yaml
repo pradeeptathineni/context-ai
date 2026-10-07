@@ -464,6 +464,12 @@ runtime_observations:
     actual: {model: claude-sonnet-5-5, inference: blocked}
     note: The alias resolved in the init event, but no request ran. Pro does not supply Agent SDK/API credit after 2026-10-07; headless Claude needs a supported sign-in or authorized API credentials.
   - observed: "2026-10-07"
+    host: claude-code 2.1.285 (standalone CLI, after sign-in)
+    authentication: claude.ai sign-in (Pro subscription)
+    requested: {model: sonnet}
+    actual: {model: claude-sonnet-5-5, reasoning: not surfaced}
+    note: One bounded print-mode task (19 turns). Client list-price estimate 0.23 USD is not the subscription bill.
+  - observed: "2026-10-07"
     host: claude-code desktop session (this reset's writer)
     authentication: desktop subscription session
     requested: {model: claude-opus-5-5, reasoning: high}

@@ -22,7 +22,7 @@ Context never adds `@AGENTS.md` to a user's CLAUDE.md, because that would pull t
 
 ## Skills
 
-Claude Code discovers project skills in `.claude/skills/<name>/SKILL.md` from the start directory up to the repository root and watches those directories for changes within a session ([skills documentation](https://code.claude.com/docs/en/skills)). It does not read `.agents/skills`. With `--provider claude` or `--provider both`, Context writes thin routers there with the same `name` and `description` frontmatter as the Codex routers. Each router links to the single pinned copy under `.context-ai/resources/`; no instruction text is duplicated per host. Claude may load a skill automatically from its description or by `/name`; the `Skill` tool call in a session transcript is the activation evidence, not the file on disk.
+Claude Code discovers project skills in `.claude/skills/<name>/SKILL.md` from the start directory up to the repository root and watches those directories for changes within a session ([skills documentation](https://code.claude.com/docs/en/skills)). It does not read `.agents/skills`. With `--provider claude` or `--provider both`, Context writes thin routers there with the same `name` and `description` frontmatter as the Codex routers. Each router links to the single pinned copy under `.context-ai/resources/`; no instruction text is duplicated per host. Claude may load a skill automatically from its description or by `/name`; the `Skill` tool call in a session transcript is the activation evidence, not the file on disk. On 2026-10-07 a signed-in print-mode run selected `context-tdd` from its description without being told its name ([host activation](../../evals/host-activation.md)).
 
 ## Native ownership and coexistence
 
