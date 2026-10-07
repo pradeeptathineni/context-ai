@@ -9,7 +9,7 @@ const out = fileURLToPath(new URL('../../.examples-output/web-evidence/', import
 await mkdir(out, {recursive:true});
 const server=createServer(async (req,res)=>{
   const name=req.url==='/'?'index.html':req.url.slice(1);
-  if (!['index.html','style.css','app.js'].includes(name)) {res.writeHead(404);res.end();return;}
+  if (!['index.html','style.css','catalog.js','app.js'].includes(name)) {res.writeHead(404);res.end();return;}
   try {res.setHeader('Content-Type',name.endsWith('.css')?'text/css':name.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(dist+name));}
   catch {res.writeHead(500);res.end();}
 });
@@ -25,7 +25,7 @@ try {
     page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
     page.on('requestfailed',r=>errors.push(r.url()));
     await page.goto(base);await page.locator('.loadout').last().waitFor();
-    assert.equal(await page.locator('.loadout').count(),8);
+    assert.equal(await page.locator('.loadout').count(),9);
     const overflow=await page.evaluate(()=>({present:document.documentElement.scrollWidth>innerWidth,offenders:[...document.querySelectorAll('body *')].filter(el=>el.getBoundingClientRect().right>innerWidth+.5).map(el=>({tag:el.tagName,id:el.id,class:el.className,width:el.getBoundingClientRect().width}))}));
     assert(!overflow.present,'horizontal overflow at '+width+': '+JSON.stringify(overflow.offenders));
     await page.screenshot({path:out+`quiet-${width}.png`,fullPage:true});
@@ -38,7 +38,13 @@ try {
     await page.getByLabel('Find a loadout').fill('no-such-loadout');
     assert(await page.getByRole('heading',{name:'No matching loadouts'}).isVisible());
     await page.getByRole('button',{name:'Clear filters'}).click();
-    assert.equal(await page.locator('.loadout').count(),8);
+    assert.equal(await page.locator('.loadout').count(),9);
+    await expect(page.locator('.loadout').first().locator('h3')).toHaveText('essentials');
+    await expect(page.locator('.loadout').first().getByText('recorded in evals/essentials-trial.md')).toBeVisible();
+    await expect(page.locator('.loadout',{hasText:'release-review'}).getByText('unmeasured')).toBeVisible();
+    for (const state of ['Reference knowledge','Selected guidance','Installed resource','Operational tool','Measured benefit'])
+      await expect(page.locator('#states dt',{hasText:state})).toBeVisible();
+    await expect(page.locator('#concept-count')).toHaveText('140');
     await page.getByLabel('Web',{exact:true}).check();
     assert.equal(await page.locator('.loadout').count(),2);
     await page.locator('summary').click();
@@ -80,7 +86,7 @@ try {
       await expect(note).toHaveValue('Check reading order!');
       await page.getByLabel('Find a loadout').fill('no-such-loadout');
       await page.getByRole('button',{name:'Clear filters'}).click();
-      await expect(page.locator('.loadout')).toHaveCount(8);
+      await expect(page.locator('.loadout')).toHaveCount(9);
       await expect(note).toHaveValue('Check reading order!');
       if ([320,1440].includes(width)) await page.screenshot({path:out+`note-edited-${palette}-${width}.png`,fullPage:true});
       await save.click();

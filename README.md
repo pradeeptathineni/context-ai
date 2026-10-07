@@ -2,7 +2,7 @@
 
 Context AI is a library of guidance for AI-assisted software work. Read one relevant file for a task, or pin a selected set of files (a **loadout**) in a project that will use them repeatedly. Your agent still follows that project's instructions and runs its checks.
 
-The library covers engineering, research, writing, web work, APIs, infrastructure, and evaluation. It also records where consequential guidance came from. The [project loadout tool](docs/loadouts.md) currently delivers selected files to Codex projects; it does not run an agent or install the tools those files discuss.
+The library covers engineering, research, writing, web work, APIs, infrastructure, and evaluation. It also records where consequential guidance came from. The [project loadout tool](docs/loadouts.md) delivers selected files to Codex and Claude Code projects; it does not run an agent or install the tools those files discuss. Each concern has one active owner (the native host, a pinned upstream or Context guidance), recorded in [`ownership.yaml`](ownership.yaml); the 140-concept index stays reference knowledge, not a checklist.
 
 ## Use it for a task
 
@@ -30,7 +30,8 @@ For recurring use, the agent can choose from:
 
 | Loadout | Select when |
 | --- | --- |
-| standard | Substantial development needs inspect/implement/test/review/delivery guidance |
+| essentials | Feature or bug-fix work: prior-art search with the reuse ladder, a test-first loop and spec/standards/complexity review |
+| standard | Substantial development needs inspect/implement/test/review/delivery guidance (composes essentials) |
 | context-authoring | Context authority, compression, provenance or compatibility is changing |
 | research-evidence | A decision needs primary evidence and comparative options |
 | web-experience | Web design, UX, accessibility or browser acceptance is changing |
@@ -39,7 +40,7 @@ For recurring use, the agent can choose from:
 | aws-infrastructure | Existing Terraform/AWS planning or validation is involved |
 | release-review | An authorized publication needs compatibility and release checks |
 
-Selections compose; `react-web` includes `web-experience`. `standard` defaults to direct review; `--option review_mode=fresh` selects one bounded native reader when the host and existing authority permit it. A bounded existing web edit can choose `--design-procedure lightweight`; substantial design work defaults to guided. The [loadout guide](docs/loadouts.md) describes options and composition.
+Selections compose; `standard` includes `essentials` and `react-web` includes `web-experience`. `standard` defaults to direct review; `--option review_mode=fresh` selects one bounded native reader when the host and existing authority permit it. A bounded existing web edit can choose `--design-procedure lightweight`; substantial design work defaults to guided. The [loadout guide](docs/loadouts.md) describes options and composition.
 
 Run these commands **from the Context source directory**, using Python 3.10+ and a source-local environment. The target is the consuming project's absolute directory:
 
@@ -48,14 +49,14 @@ python3 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r requirements.txt
 .venv/bin/python scripts/context_ai.py explain standard --option review_mode=direct
 .venv/bin/python scripts/context_ai.py tools --project /absolute/project
-.venv/bin/python scripts/context_ai.py plan standard --project /absolute/project
-.venv/bin/python scripts/context_ai.py apply standard --project /absolute/project
+.venv/bin/python scripts/context_ai.py plan standard --project /absolute/project --provider both
+.venv/bin/python scripts/context_ai.py apply standard --project /absolute/project --provider both
 .venv/bin/python scripts/context_ai.py verify --project /absolute/project
 ```
 
-Review the plan before applying: it shows selected files, local tool candidates and project changes. `tools` inspects declarations, local packages, workspace ownership and PATH without running scripts or fetching packages. Installed Playwright files do not prove browser readiness. Application copies selected resources into `.context-ai/`, creates skill routers and adds a managed block to the project's `AGENTS.md`. It protects existing instructions and edited files. `verify` checks the installation and required runtime probes; it reports project checks as **not run**. Run those checks from the **consumer directory** and inspect its diff. Report what you actually read, invoked, and checked; a structured use receipt is optional for a comparison or audit.
+Review the plan before applying: it shows selected files, local tool candidates and project changes. `tools` inspects declarations, local packages, workspace ownership and PATH without running scripts or fetching packages. Installed Playwright files do not prove browser readiness. Application copies selected resources into `.context-ai/`, creates thin skill routers (`.agents/skills` for Codex, `.claude/skills` for Claude Code, `--provider codex|claude|both`) and adds a managed block to the project's `AGENTS.md`; Claude Code reads that natively unless a CLAUDE.md shadows it, in which case an owned CLAUDE.md block is added. It protects existing instructions and edited files. `verify` checks the installation and required runtime probes; it reports project checks as **not run**. Run those checks from the **consumer directory** and inspect its diff. Report what you actually read, invoked, and checked; a structured use receipt is optional for a comparison or audit.
 
-`refresh` previews changes to a selection; `undo` removes unchanged owned files and preserves user edits. See the [command contract](docs/loadouts.md) for details, [compatibility and recovery](docs/compatibility.md) for moving or restoring a selection, and the [Codex adapter](providers/openai/codex.md) for discovery limits.
+`refresh` previews changes to a selection; `undo` removes unchanged owned files and preserves user edits. See the [command contract](docs/loadouts.md) for details, [compatibility and recovery](docs/compatibility.md) for moving or restoring a selection, and the [Codex](providers/openai/codex.md) and [Claude Code](providers/anthropic/claude-code.md) adapters for discovery limits.
 
 ## How the parts fit
 
@@ -107,7 +108,7 @@ The browser tests need the pinned Playwright Chromium runtime. Use an existing s
 
 ## Proof and limits
 
-Tests exercise all eight loadouts, portable file pins, edited-file protection and recovery from interrupted application. The [web exercise](examples/web/brief.md) includes browser, interaction and accessibility checks. These are automated and builder checks; human usefulness and model input savings remain unmeasured.
+Tests exercise all nine loadouts for both hosts, portable file pins, edited-file protection and recovery from interrupted application. The [web exercise](examples/web/brief.md) includes browser, interaction and accessibility checks. These are automated and builder checks. Same-task consumer trials are recorded in [essentials](evals/essentials-trial.md), [host activation](evals/host-activation.md) and [efficiency](evals/context-efficiency-trial.md); human usefulness remains unmeasured.
 
 Installation verification does not run consumer project tests. Fixture tests, local browser checks and reported file reads do not establish production behavior, human usefulness or native skill activation. The [loadout guide](docs/loadouts.md#evidence-discovery-and-limits) details these boundaries.
 

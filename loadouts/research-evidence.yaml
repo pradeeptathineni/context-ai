@@ -15,8 +15,8 @@ decisions:
 - D-012
 compose: []
 id: research-evidence
-description: Acquire primary evidence and actionable options through the Signals research
-  procedure.
+description: Acquire primary evidence and actionable options from official sources, direct
+  investigation or Signals when available.
 characteristics:
 - research
 - adoption

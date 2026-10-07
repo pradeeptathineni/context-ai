@@ -55,6 +55,11 @@ class Ownership(unittest.TestCase):
         self.assertNotIn('sourced/ecc/search-first/instruction.md',files)
         self.assertNotIn('archive/overlays/prior-art.md',files)
 
+    def test_web_catalog_is_generated_from_current_loadouts(self):
+        import subprocess
+        run=subprocess.run([sys.executable,str(ROOT/'scripts/build_catalog.py'),'--check'],capture_output=True,text=True)
+        self.assertEqual(run.returncode,0,run.stderr)
+
 original=c.read_yaml
 
 if __name__=='__main__':

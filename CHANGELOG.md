@@ -6,6 +6,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Added `ownership.yaml`: one active owner per concern (native host, pinned upstream or Context), validated against every loadout route; archived the duplicate prior-art overlay under `archive/` with a replacement pointer.
+- Added the `essentials` loadout (composed by `standard`): `core/prior-art.md` adapts ECC search-first and the Ponytail reuse ladder; pinned Matt Pocock TDD, code-review and research files and Ponytail review tags behind thin adapters; hold-scope product questions; exact-version docs with optional Context7.
+- Added Claude Code delivery (`--provider claude|both`) with `.claude/skills` routers to the same pinned copy, native AGENTS.md reading first and an owned CLAUDE.md block only when CLAUDE.md shadows it; import detection follows Claude's resolution rules.
+- `plan` previews additions, replacements, removals, conflicts, prerequisites, upstream pins, host routing and native-managed skills/plugins, and refuses duplicate concern owners; `verify` reports verification levels.
+- Made research independent of Signals; added an optional advisory `signals-recommendation-v1` extension and `scripts/adoption.py` project-fit decisions. Frozen schema-v1 bundles read unchanged.
+- Added Claude model profiles, host-scoped routes and dated runtime observations, including the October 7, 2026 withdrawal of Pro Agent SDK credit.
+- Recorded same-task Codex trials, native activation, Context7, Headroom, context-mode and Graphify results; no compressor became a default.
+- The web library is generated from the catalog and shows reference, selected, installed, operational and measured states.
+
 - Extended `context-loadout` to equip ordinary software tasks with explicit profiles and read-only execution packets; retained direct reads and optional recurring materialization.
 - Reused composition/options, resource/source closure, local capability discovery and literal model routing; added staged resource-capability hints, PACT/orchestration advice, verification expectations and unresolved boundaries without an agent runtime.
 - Recorded selection ownership HRR in D-004 revision 3; added six task examples, a no-extra-context control and contract/effect-boundary checks.
