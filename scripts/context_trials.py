@@ -237,11 +237,12 @@ def _profile(destination, runtime):
     # reads enable Python; writes are confined to the consumer. Network stays denied.
     quoted = lambda value: json.dumps(str(value))
     reads = ['/System', '/usr/lib', '/usr/share/locale', '/private/var/db/dyld', str(runtime)]
+    metadata = dict.fromkeys([*runtime.parents, *destination.parents])
     return '\n'.join([
         '(version 1)', '(deny default)', '(allow process-exec process-fork sysctl-read)',
         '(allow file-read* ' + ' '.join('(subpath '+quoted(p)+')' for p in reads) +
         ' (subpath '+quoted(destination)+') (literal "/") (literal "/usr/bin/git") (literal "/dev/null") (literal "/dev/random") (literal "/dev/urandom"))',
-        '(allow file-read-metadata ' + ' '.join('(literal '+quoted(p)+')' for p in runtime.parents) + ')',
+        '(allow file-read-metadata ' + ' '.join('(literal '+quoted(p)+')' for p in metadata) + ')',
         '(allow file-write* (subpath '+quoted(destination)+') (literal "/dev/null"))',
     ]) + '\n'
 

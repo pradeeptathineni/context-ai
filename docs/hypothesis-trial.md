@@ -1,5 +1,9 @@
 # Hypothesis for preservation testing
 
+Consumer adaptations need their own reviewed closed recipe and runtime declaration; `hypothesis-undo` authorizes only Context preservation work. Generated operation data must never become executable commands. A consumer may inspect and copy an already approved Node/Git runtime into its destination, preserving hashes and denial probes. On macOS `/usr/bin/git` can be a developer-tool launcher; declare the actual bounded runtime instead of widening reads to a developer-tool tree. Set `GIT_CONFIG_NOSYSTEM=1` and `GIT_CONFIG_GLOBAL=/dev/null` when ambient Git configuration is outside the trial. Failed real version probes remain failures.
+
+The native backend permits literal metadata on runtime and destination ancestors for path resolution. Ancestor contents and writes remain denied; every recipe still requires outside-read/write, personal-HOME and network denial probes. Signals supplied the reproducible Node/Python startup finding and a narrow proposed fix; Context rechecked the current backend and integrated that metadata-only change.
+
 Signals' `project-equipment-evidence-v1.json` supplied a specific need: generate Context delivery/edit/undo sequences and check that unmanaged instructions and edited managed files survive. The executable candidate is [Hypothesis 6.168.5](https://pypi.org/project/hypothesis/6.168.5/), MPL-2.0, with [sortedcontainers 2.4.0](https://pypi.org/project/sortedcontainers/2.4.0/), Apache-2.0. It supplements the existing deterministic unittest/RNG baseline. It is not a normal Context runtime dependency or an automatically adopted recommendation.
 
 ## Use

@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import platform
+import subprocess
 import shutil
 import sys
 import tempfile
@@ -99,6 +100,36 @@ class ControlledTrials(unittest.TestCase):
                     wheels.inspect_wheel(path, expected)
             with self.assertRaisesRegex(ValueError, 'missing or changed'):
                 wheels.inspect_wheel(path, {'filename': 'fixture.whl', 'sha256': '0'*64})
+
+    @unittest.skipUnless(platform.system() == 'Darwin' and shutil.which('sandbox-exec'), 'macOS native sandbox required')
+    def test_destination_node_resolution_preserves_outside_read_denial(self):
+        node = shutil.which('node')
+        if not node:
+            self.skipTest('existing approved Node runtime unavailable')
+        version = subprocess.run([node, '--version'], capture_output=True, text=True, timeout=3)
+        if version.returncode or int(version.stdout.strip().lstrip('v').split('.')[0]) < 20:
+            self.skipTest('existing Node20+ runtime required')
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp).resolve()
+            destination = root / 'consumer'
+            destination.mkdir()
+            runtime = Path(sys.base_prefix).resolve()
+            outside = root / 'outside.txt'
+            outside.write_text('non-secret read canary')
+            local_node = destination / 'node'
+            shutil.copy2(Path(node).resolve(), local_node)
+            driver = destination / 'main.js'
+            driver.write_text('const fs=require("node:fs"); let denied=false; '
+                              'try{fs.readFileSync(' + json.dumps(str(outside)) + ');}'
+                              'catch(e){denied=["EPERM","EACCES"].includes(e.code);}'
+                              'process.stdout.write("resolved:"+denied);')
+            policy = destination / 'sandbox.sb'
+            policy.write_text(trials._profile(destination, runtime))
+            result = trials._run(['/usr/bin/sandbox-exec', '-f', str(policy),
+                                  str(local_node), str(driver)], destination,
+                                 {'HOME': str(destination), 'PATH': '/usr/bin:/bin'}, 'node-resolution')
+            self.assertEqual(result['exit_status'], 0)
+            self.assertEqual(Path(result['stdout']).read_text(), 'resolved:true')
 
     def test_cache_replacement_cannot_change_inspected_or_extracted_bytes(self):
         with tempfile.TemporaryDirectory() as tmp:
