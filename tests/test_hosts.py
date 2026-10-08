@@ -233,7 +233,14 @@ class ClaudeAndBothHosts(unittest.TestCase):
                ('CLAUDE.md','Literal `` `@AGENTS.md` ``\n','managed-block'),
                ('CLAUDE.md','Notes\n```\n@AGENTS.md\n','managed-block'),
                ('CLAUDE.md','~~~~\n```\n~~~~\n@AGENTS.md\n','imports-agents'),
-               ('CLAUDE.md','`code` then @AGENTS.md\n','imports-agents')]
+               ('CLAUDE.md','`code` then @AGENTS.md\n','imports-agents'),
+               ('CLAUDE.md','Literal ``first line\n@AGENTS.md\nlast line``\n','managed-block'),
+               ('CLAUDE.md','`one\ntwo\n@AGENTS.md\nthree`\n','managed-block'),
+               ('CLAUDE.md','Open `span\n@AGENTS.md\n\nnever closed\n','managed-block'),
+               ('CLAUDE.md','```` \n```\n@AGENTS.md\n````\n','managed-block'),
+               ('CLAUDE.md','<!-- note\n@AGENTS.md -->\n','managed-block'),
+               ('CLAUDE.md','`closed span`\n\n@AGENTS.md\n','imports-agents'),
+               ('CLAUDE.md','```\ncode\n```\n@AGENTS.md\n','imports-agents')]
         for name,text,mode in cases:
             with self.subTest(name=name,text=text):
                 for leftover in ('CLAUDE.md','.claude/CLAUDE.md'):
@@ -272,6 +279,22 @@ class ClaudeAndBothHosts(unittest.TestCase):
             with self.subTest(bad=bad):
                 with self.assertRaisesRegex(c.Invalid,'--with accepts only'):c.resolve(['essentials'],self.project,'codex',extras=[bad])
         self.assertNotEqual(cli('explain','essentials','--with','context-portable-notes').returncode,0)
+
+    def test_code_wrapped_import_is_never_effective_for_any_span_shape(self):
+        import random
+        rng=random.Random(20261008)
+        for case in range(400):
+            n=rng.randint(1,4);ticks='`'*n
+            pre=rng.choice(['','Note: ','- ','> '])
+            lines=[rng.choice(['first','two words','x']) for _ in range(rng.randint(0,2))]
+            body='\n'.join([*lines[:1],'@AGENTS.md',*lines[1:]]) if lines else '@AGENTS.md'
+            pad=rng.choice(['',' '])
+            text=pre+ticks+pad+body+pad+ticks+rng.choice(['','.',' end'])+'\n'
+            with self.subTest(text=text):
+                self.assertNotIn('@AGENTS.md',c.outside_code(text))
+        for text in ('@AGENTS.md\n','See @AGENTS.md here\n','`a`\n@AGENTS.md\n','``a`b``\n\n@AGENTS.md\n'):
+            with self.subTest(valid=text):
+                self.assertIn('@AGENTS.md',c.outside_code(text))
 
 if __name__=='__main__':
     unittest.main()

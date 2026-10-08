@@ -89,6 +89,44 @@ class Adoption(unittest.TestCase):
                     {'cand-urllib3':{'capability':'x','revision':'1','verified':[]}}):
             with self.assertRaises(c.Invalid):decide(admitted,{'capability':'http-retry','assessments':bad})
 
+    def test_incomplete_assessment_does_not_claim_license_or_runtime_verification(self):
+        bundle=json.loads(FIXTURE.read_text())
+        admitted=admit(self.write(bundle))
+        base={'capability':'http-retry','revision':'2.8.0','verified':['installed Retry signature']}
+        need=lambda facts,**extra:{'capability':'http-retry','runtimes':['python'],'licenses_allowed':['MIT'],
+                                   'assessments':{'cand-urllib3':{**base,**({'facts':facts} if facts is not None else {})}},**extra}
+        def verdict(n):
+            return {d['candidate']:d for d in decide(admitted,n)['decisions']}['cand-urllib3']
+        # capability-only: producer fills the fields, labelled as producer-reported, state partial
+        for facts in (None,{}):
+            with self.subTest(facts=facts):
+                d=verdict(need(facts))
+                self.assertEqual(d['decision'],'trial');self.assertEqual(d['verification']['state'],'partial')
+                self.assertEqual(d['verification']['fact_origin'],{'license':'producer','runtime':'producer'})
+                text=' '.join(d['notes'])
+                self.assertIn('capability verified by Context',text);self.assertIn('license MIT is producer-reported and not verified by Context',text)
+                self.assertNotIn('license verified by Context',text);self.assertNotIn('runtime python verified by Context',text)
+        # partial: only runtime inspected
+        d=verdict(need({'runtime':'python'}))
+        self.assertEqual(d['verification']['fact_origin'],{'license':'producer','runtime':'context'})
+        self.assertEqual((d['verification']['state'],d['verification']['unverified_constraints']),('partial',['license']))
+        # complete
+        d=verdict(need({'runtime':'python','license':'MIT'}))
+        self.assertEqual((d['verification']['state'],d['verification']['unverified_constraints']),('complete',[]))
+        # assessed fact overrides a conflicting producer value
+        d=verdict(need({'runtime':'python','license':'GPL-3.0-only'}))
+        self.assertEqual(d['decision'],'reject');self.assertEqual(d['verification']['fact_origin']['license'],'context')
+        # no producer facts and no assessed facts: unknown, study, never "verified"
+        bare=json.loads(FIXTURE.read_text());del bare['extensions']['signals.recommendations']
+        d={x['candidate']:x for x in decide(admit(self.write(bare)),need(None))['decisions']}['cand-urllib3']
+        self.assertEqual(d['decision'],'study');self.assertEqual(d['verification']['fact_origin'],{'license':'unknown','runtime':'unknown'})
+        self.assertEqual(d['verification']['state'],'partial');self.assertNotIn('verified by Context at',' '.join(n for n in d['notes'] if 'license' in n or 'runtime' in n))
+        # unassessed candidates report no verification at all
+        none=[x for x in decide(admitted,need({}))['decisions'] if x['candidate']=='cand-popular'][0]
+        self.assertEqual(none['verification']['state'],'none')
+        for bad in ({'license':''},{'runtime':'  '},{'license':3},{'owner':'x'}):
+            with self.subTest(bad=bad),self.assertRaises(c.Invalid):decide(admitted,need(bad))
+
     def test_research_route_does_not_require_signals(self):
         text=(ROOT/'procedures/research-evidence.md').read_text()
         self.assertIn('never blocks a decision',text)

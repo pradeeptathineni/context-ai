@@ -27,6 +27,12 @@ Keep the current route as the owner of tool-output efficiency: save verbose outp
 
 Limits: one synthetic log and one small repository, deterministic tool calls, no model in the loop. Inputs, scripts and outputs are kept in the local planning folder.
 
+## End-task comparison (independent Codex review of 1fc6f94)
+
+One frozen 208,250-byte log (SHA-256 `b5d97b06…81fa9`), the same task and the same requested model for a native consumer and a consumer given `essentials --with context-diagnose`, one run each, under an oracle frozen beforehand. Both passed all nine checks (root cause, exact middle evidence, symptom, test, boundary repair, verification plan). Context used 293,645 input tokens against 160,866 (about 1.83x; uncached input about 1.24x), 164.6 s against 89.1 s and 17 commands (one failed) against 7. **Correct in both; no benefit shown; bounded-output adherence not demonstrated.**
+
+The traces show a concrete cause. Both consumers began with `nl -ba verbose.log`, a 229 KB dump into the conversation (step 3 native, step 5 Context). The Context consumer opened `procedures/diagnose.md` only afterwards (step 6), and that procedure did not contain the save-then-search recipe this trial and D-025 say it owns: it said only to keep discriminating output locally. The recipe is now in `procedures/diagnose.md`. No agent run has tested whether it changes behavior, so adherence stays unproven and no savings are claimed. The raw `aggregated_output` sizes are command stdout, not model-visible context accounting; actual model-visible bytes, unique tokens and cost are unknown.
+
 ## Exact-version documentation (Context7)
 
 For the consumer's installed urllib3 2.8.0, `GET context7.com/api/v2/libs/search?libraryName=urllib3` (no key) returned `/urllib3/urllib3` (indexed versions: 1.26.20 only) and `/websites/urllib3_readthedocs_io_en_stable`. A `context` query for `Retry status_forcelist backoff_factor` returned relevant main-branch user-guide snippets with source links, including `backoff_jitter`. Requesting `/urllib3/urllib3/2.8.0` returned HTTP 404 `version_not_found`. Inspecting the installed `urllib3.util.Retry.__init__` confirmed `backoff_jitter`, `backoff_max` and `status_forcelist` exist in 2.8.0. `procedures/current-docs.md` encodes exactly this: Context7 for discovery, the installed version as the authority, and a reported fallback when versions do not match. No query contained project code.

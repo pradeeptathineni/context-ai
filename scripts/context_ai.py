@@ -773,8 +773,16 @@ def instruction_block(text):
     return text[start:finish]
 
 def outside_code(text):
-    """Markdown text outside fenced blocks and code spans; an unclosed fence runs to EOF."""
-    kept=[];fence=None
+    """Markdown text an import can come from.
+
+    Follows CommonMark's block/inline split: fenced blocks (an unclosed fence runs to EOF) are removed
+    line by line and separate paragraphs; inside a paragraph a code span opens at a backtick run and
+    closes at the next run of exactly the same length, and may span lines. An opener that never closes is
+    literal in CommonMark, but whether Claude reads text after it as an import is not documented, so the
+    rest of that paragraph is conservatively not trusted; HTML comments are stripped by Claude before
+    use. When unsure the caller adds a managed block, which is harmless if the import is also real.
+    """
+    blocks=[[]];fence=None
     for line in text.splitlines():
         opening=re.match(r'^ {0,3}(`{3,}|~{3,})',line)
         if fence:
@@ -782,19 +790,24 @@ def outside_code(text):
                 fence=None
             continue
         if opening:
-            fence=opening.group(1);continue
+            fence=opening.group(1);blocks.append([]);continue
+        if not line.strip():
+            blocks.append([]);continue
+        blocks[-1].append(line)
+    kept=[]
+    for paragraph in blocks:
+        body=re.sub(r'<!--.*?-->','',' \n'.join(paragraph),flags=re.S)
         out=[];i=0
-        while i<len(line):
-            if line[i]!='`':
-                out.append(line[i]);i+=1;continue
-            run=re.match(r'`+',line[i:]).group(0)
-            close=re.search(r'(?<!`)'+run+r'(?!`)',line[i+len(run):])
+        while i<len(body):
+            if body[i]!='`':
+                out.append(body[i]);i+=1;continue
+            run=re.match(r'`+',body[i:]).group(0)
+            close=next((m for m in re.finditer(r'`+',body[i+len(run):]) if len(m.group(0))==len(run)),None)
             if close is None:
-                # An unmatched backtick run is literal, but the rest is ambiguous: skip it conservatively.
                 break
             i+=len(run)+close.end()
         kept.append(''.join(out))
-    return '\n'.join(kept)
+    return '\n\n'.join(kept)
 
 def imports_agents(project, path):
     """Claude imports resolve relative to the importing file and skip code spans/fences."""

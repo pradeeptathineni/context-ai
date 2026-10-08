@@ -9,6 +9,7 @@ from evidence import inspect_bundle
 
 FIT_KEYS=('capability','runtimes','licenses_allowed','existing_owner','excluded','assessments')
 ASSESSMENT_KEYS={'capability','facts','revision','verified'}
+FACT_KEYS={'license','runtime'}
 
 def decide(admitted, need):
     """Each candidate gets adopt/trial/study/reject from project fit plus supported claims.
@@ -26,6 +27,9 @@ def decide(admitted, need):
         if key not in known:raise Invalid('assessment names an unknown candidate: '+key)
         if not isinstance(value,dict) or set(value)-ASSESSMENT_KEYS or not {'capability','revision','verified'}<=set(value) or not value['verified']:
             raise Invalid('a Context assessment needs capability, inspected revision and what was verified')
+        facts=value.get('facts',{})
+        if not isinstance(facts,dict) or set(facts)-FACT_KEYS or any(not isinstance(v,str) or not v.strip() for v in facts.values()):
+            raise Invalid('assessment facts may state only non-empty '+' and '.join(sorted(FACT_KEYS))+'; omit a field that was not inspected')
     decisions=[]
     for candidate in admitted['recommendations']:
         reasons=[];blocked=[]
@@ -34,7 +38,12 @@ def decide(admitted, need):
         unknown=[]
         # Context's own inspection outranks producer-reported facts; both stay visible.
         assessment=assessments.get(candidate['id'])
-        facts=(assessment or {}).get('facts') or (item.get('facts',{}) if item else {})
+        # Each fact keeps its own origin: only fields Context inspected are 'context'; a producer
+        # value fills a gap but stays 'producer', and an absent field stays unknown.
+        assessed=(assessment or {}).get('facts') or {}
+        produced=item.get('facts',{}) if item else {}
+        facts={**produced,**assessed}
+        origin={key:'context' if key in assessed else 'producer' if key in produced else 'unknown' for key in sorted(FACT_KEYS)}
         addresses=assessment['capability'] if assessment else item['capability'] if item else None
         if addresses is not None and addresses!=need['capability']:
             blocked.append('addresses '+addresses+', not '+need['capability'])
@@ -47,9 +56,15 @@ def decide(admitted, need):
         if unknown:
             reasons.append('unknown '+' and '.join(unknown)+'; inspect the candidate before any trial')
         if assessment:
-            reasons.append('capability/license/runtime verified by Context at '+assessment['revision'])
-        elif facts:
-            reasons.append('license/runtime are producer-reported; verify at the exact version before adoption')
+            reasons.append('capability verified by Context at '+assessment['revision']+': '+'; '.join(assessment['verified']))
+        for key in sorted(FACT_KEYS):
+            if origin[key]=='context':
+                reasons.append(key+' '+facts[key]+' verified by Context at '+assessment['revision'])
+            elif origin[key]=='producer':
+                reasons.append(key+' '+facts[key]+' is producer-reported and not verified by Context; check it at the exact version before adoption')
+        constrained=[k for k,allowed in (('runtime',need.get('runtimes')),('license',need.get('licenses_allowed'))) if allowed]
+        gaps=[k for k in constrained if origin[k]!='context']
+        verification=('none' if not assessment else 'complete' if not gaps else 'partial')
         if need.get('existing_owner'):
             reasons.append('project already owns this with '+need['existing_owner']+'; adoption must beat it on a trial')
         if not supported:
@@ -67,6 +82,8 @@ def decide(admitted, need):
         decisions.append({'candidate':candidate['id'],'name':candidate['name'],'decision':decision,
                           'blocked_by':blocked,'notes':reasons,'supporting_claims':supported,
                           'context_assessment':assessment,
+                          'verification':{'state':verification,'fact_origin':origin,
+                                          'unverified_constraints':gaps if assessment else constrained},
                           'producer_disposition':candidate['disposition'],
                           'producer_signal':candidate.get('signal'),
                           'producer_action':item['action'] if item else None,

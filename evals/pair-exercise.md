@@ -10,4 +10,6 @@
 
 **Undo and independence.** `undo` refused while a pinned file had a user edit, preserved it, then removed everything once resolved; a user line added to AGENTS.md survived and the notes still passed the check. Context selection, apply, verify and undo ran with a minimal environment and no Signals checkout; a missing bundle fails only the adoption command. A crafted high-score `use` recommendation with proprietary license and app runtime was rejected, an unsupported claim stayed at study, and `--with neoma` was refused: evidence cannot install itself.
 
+**Assessment status.** Each Context assessment states only the facts it inspected. `adoption.py` reports a per-field origin (`context`, `producer` or `unknown`) and a verification state: `complete` when capability and every constrained field were inspected by Context, `partial` when a constraint rests on producer-reported or absent facts, `none` without an assessment. A field Context did not inspect is never described as verified. The Neoma assessment above states license and runtime, so its state is `complete`.
+
 **Limits.** One run, builder-designed task and check, documentation-only delivery; Neoma's browser UI and folder vaults were not exercised. This shows a working Signals-to-consumer path, not a measured benefit over plain Markdown.
