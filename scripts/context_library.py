@@ -214,7 +214,8 @@ def trial_plan(state, profile_value, recipe, wheel_cache):
     planned = run_trial(recipe, inside(state, 'trial-plan'), execute=False, cache=wheel_cache)
     key = digest(encoded({'recipe_sha256': planned['recipe_sha256'],
                           'runner_sha256': planned['runner_sha256'],
-                          'preparation': planned.get('preparation'),
+                          'preparation': {k: v for k, v in planned.get('preparation', {}).items()
+                                          if k not in ('cache', 'reason')},
                           'resources': planned['resources'], 'runtime': planned['runtime'],
                           'profile_snapshot': profile_value['snapshot'], 'policy': profile_value['policy']}))
     return inside(state, 'trials/' + key)

@@ -105,7 +105,7 @@ class PersonalLibrary(unittest.TestCase):
         executed = []
         def trial(recipe, destination, execute=False, cache=None):
             plan = {'recipe_sha256': 'r', 'runner_sha256': 's', 'resources': [],
-                    'runtime': {}, 'preparation': {'ready': ready}}
+                    'runtime': {}, 'preparation': {'ready': ready, 'cache': str(cache)}}
             if execute:
                 destination.mkdir(parents=True)
                 value = {'status': 'passed' if ready else 'blocked', **plan}
@@ -123,6 +123,9 @@ class PersonalLibrary(unittest.TestCase):
             self.assertEqual(result['status'], 'assessed-new-input')
             self.assertEqual(len(executed), before * 2)
             self.assertEqual(lib.maintenance(self.state, report, execute_trials=True)['status'], 'unchanged')
+
+            self.assertEqual(lib.maintenance(self.state, report, execute_trials=True, wheel_cache='/another/locator')['status'], 'unchanged')
+            self.assertEqual(len(executed), before * 2)
 
     def test_policy_blocks_unknown_option_and_fixture_active_selection(self):
         result = lib.maintenance(self.state, self.intake())
