@@ -16,7 +16,7 @@ The TDD recipe exercises red/green artifacts under pinned Matt Pocock guidance; 
 
 ## Evolution and migration
 
-Finite passes retain new observations and scoped proposals, skip identical bytes and semantically unchanged re-fetches, preserve selections when a peer is missing, and block fixture/policy-forbidden selection updates. These changed-input tests are labeled fixtures. Real Signals source batches were admitted separately with the existing v1 boundary; its exporter commit is known while the original research revision remains unknown.
+Finite passes retain new observations and scoped proposals, skip identical bytes and semantically unchanged re-fetches, preserve selections when a peer is missing, and block fixture/policy-forbidden selection updates. These changed-input tests are labeled fixtures. A separate real pass admitted Signals findings, recorded a hash-checked Hypothesis trial assessment, and allowed that option in the future Signals profile. The following identical-input pass skipped work; pause/resume and absent-peer paths preserved selection. No Signals consumer bytes were changed. Real Signals source batches were admitted separately with the existing v1 boundary; its exporter commit is known while the original research revision remains unknown.
 
 Migration used disposable consumers installed from the unchanged 4390ac6 source. The clean copy previewed/applied the corrected pin, verified integrity and undid while preserving user instructions/data. A copy with an edited output helper refused overwrite; undo retained that edited file and explicit pending ownership. Schema-2 consumer pins and history meanings remain unchanged.
 

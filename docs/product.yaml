@@ -1,7 +1,7 @@
 schema_version: 3
 project: context-ai
-mission: Maintain a personal, evidence-informed source of project equipment and standards, and help each
-  project select, use, and evolve the combinations that fit it.
+mission: Maintain a personal, evidence-informed source of project equipment and standards, and help each project
+  select, use, and evolve the combinations that fit it.
 scope: All listed features are required. Role describes contribution, not priority or optionality. Required
   support does not mean enabled by default.
 roles:
@@ -13,167 +13,380 @@ features:
   name: Core context & standards
   role: core
   type: knowledge
-  intent: Maintain the personal standards and reusable guidance that projects can share without requiring
-    the same setup or extra instructions for every task.
-  assessment: null
+  intent: Maintain the personal standards and reusable guidance that projects can share without requiring the
+    same setup or extra instructions for every task.
+  assessment:
+    delivery: working
+    value: 2
+    scope: Canonical provider-neutral standards and opt-in overlays retained.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - evals/selective-value.md
+    limitations:
+    - No general productivity or human acceptance claim.
 - id: skills
   name: Skills & procedures
   role: core
   type: delivery
   intent: Provide selected original or upstream procedures for recurring work such as research, implementation,
     testing, diagnosis, review, and release.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: Eight original loadout families retained; focused output/TDD routes and direct upstream alternatives
+      supported.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - docs/library.md
+    - evals/selective-value.md
+    limitations:
+    - Host discovery and actual invocation are distinct.
 - id: concepts
   name: Concepts library
   role: core
   type: knowledge
   intent: Keep a living map of relevant concerns and knowledge without turning every concept into a required
     task or research job.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: 140 concepts retained and linked to four unresolved-interest scopes.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - concepts.yaml
+    - library/interests.yaml
+    limitations:
+    - Concept coverage does not require 140 active instructions.
 - id: catalog
   name: Tooling & capability catalog
   role: core
   type: knowledge
-  intent: Catalog native facilities, upstream equipment, and Context’s own resources so their purpose,
-    availability, and useful differences are apparent.
-  assessment: null
+  intent: Catalog native facilities, upstream equipment, and Context’s own resources so their purpose, availability,
+    and useful differences are apparent.
+  assessment:
+    delivery: working
+    value: 2
+    scope: 18 options expose purpose, upstream pins, delivery boundary, alternatives and scoped evidence.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - library/catalog.yaml
+    limitations:
+    - Source-supported fit is distinct from comparative benefit.
 - id: project-profiles
   name: Project profiles & policies
   role: core
   type: configuration
   intent: Describe each project’s needs, environment, preferences, authorized actions, and selection policies
     so standardization does not mean uniformity.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: Six profiles select coherent concern owners from inspected source snapshots.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - library/profiles
+    - docs/project-suggestions.md
+    limitations:
+    - Simulation has no assumed repository; public snapshot revisions can age.
 - id: interests
   name: Interests & research queries
   role: core
   type: configuration
-  intent: Maintain research needs derived from concepts, projects, and unresolved choices; revisit what
-    can change a decision rather than every catalog entry.
-  assessment: null
+  intent: Maintain research needs derived from concepts, projects, and unresolved choices; revisit what can
+    change a decision rather than every catalog entry.
+  assessment:
+    delivery: working
+    value: 2
+    scope: Four due-query scopes link concepts to profile choices with finite refresh windows.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - library/interests.yaml
+    limitations:
+    - Host research requires native permissions; queries do not fetch themselves.
 - id: research-intake
   name: Research intake
   role: core
   type: integration
-  intent: Consume relevant new or updated Signals evidence and use independent research when Signals is
-    unavailable or insufficient.
-  assessment: null
+  intent: Consume relevant new or updated Signals evidence and use independent research when Signals is unavailable
+    or insufficient.
+  assessment:
+    delivery: working
+    value: 2
+    scope: Real Signals v1 findings admitted by exact digest with producer mode; missing-peer path preserves
+      choices.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - evals/greenfield.md
+    limitations:
+    - Research acquisition SHA is unknown; exporter SHA is not acquisition identity.
 - id: assessments
   name: Candidate assessments
   role: core
   type: assessment
   intent: Assess capabilities, prerequisites, fit, risks, strengths, and weaknesses for a specific workload
     before choosing reuse, adaptation, replacement, or building.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: Scoped source, trial and local artifact assessments are retained separately from selection.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - library/catalog.yaml
+    - schemas/library-assessment.schema.json
+    limitations:
+    - Local semantic judgments are not independent acceptance.
 - id: trials
   name: Controlled trials
   role: core
   type: assessment
   intent: Provision appropriate candidates in isolated consumers and test actual work, separating availability,
     installation, operation, and demonstrated benefit.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: Output/TDD recipes and exact pinned Hypothesis run under tested native deny rules. Failed attempts
+      retained.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - docs/hypothesis-trial.md
+    - evals/greenfield.md
+    limitations:
+    - macOS CPython3.12 x86_64 reviewed wheel boundary; unsupported hosts fail closed.
 - id: loadouts
   name: Loadout library
   role: core
   type: configuration
-  intent: Maintain reusable, project-specific combinations of selected guidance, tools, and settings,
-    including multiple specializations rather than one universal harness.
-  assessment: null
+  intent: Maintain reusable, project-specific combinations of selected guidance, tools, and settings, including
+    multiple specializations rather than one universal harness.
+  assessment:
+    delivery: working
+    value: 2
+    scope: Recurring profiles reuse existing pinned delivery; explicit original loadouts remain supported.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - docs/loadouts.md
+    - docs/library.md
+    limitations:
+    - Direct upstream installers are never run implicitly.
 - id: recommendations
   name: Loadout recommendations
   role: core
   type: assessment
-  intent: Choose coherent equipment for a project, explain the selections, and avoid redundant ownership
-    or conflicting behavior.
-  assessment: null
+  intent: Choose coherent equipment for a project, explain the selections, and avoid redundant ownership or
+    conflicting behavior.
+  assessment:
+    delivery: working
+    value: 2
+    scope: One concern owner per profile, reasons and optional deeper choices.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - library/profiles
+    - docs/project-suggestions.md
+    limitations:
+    - Suggestions need workload assessment before adoption.
 - id: activation
   name: Task routing & activation
   role: core
   type: integration
-  intent: Make selected guidance or tools available before the action they should improve, while leaving
-    ordinary work unobstructed when no addition is needed.
-  assessment: null
+  intent: Make selected guidance or tools available before the action they should improve, while leaving ordinary
+    work unobstructed when no addition is needed.
+  assessment:
+    delivery: working
+    value: 2
+    scope: Focused output guidance routes before shell commands; native ordinary tasks add zero guidance.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - procedures/output.md
+    - evals/greenfield.md
+    limitations:
+    - No automatic native Read/Grep interception; fresh host session may be needed.
 - id: setup
   name: Project setup
   role: core
   type: delivery
-  intent: Preview and safely deliver pinned selections through fitting native or upstream mechanisms,
-    accurately reporting what installation and readiness checks establish.
-  assessment: null
+  intent: Preview and safely deliver pinned selections through fitting native or upstream mechanisms, accurately
+    reporting what installation and readiness checks establish.
+  assessment:
+    delivery: working
+    value: 2
+    scope: Normal CLI profile preview/apply/verify uses exact pins and safe consumer writes.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - docs/library.md
+    - evals/greenfield.md
+    limitations:
+    - Verify reports integrity/runtime probes; project checks are not silently run.
 - id: lifecycle
   name: Updates & undo
   role: core
   type: delivery
   intent: Update, specialize, replace, or remove managed selections while preserving user edits, ownership,
     and recoverability.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 3
+    scope: Copy migration preserves unmanaged CRLF/Unicode and edited resources; failed overwrite and undo
+      ownership retained.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - evals/greenfield.md
+    - tests/test_hosts.py
+    limitations:
+    - Concrete CRLF defect corrected; no general superiority claim.
 - id: host-adapters
   name: AI-host adapters
   role: supporting
   type: integration
   intent: Deliver shared source material to supported hosts such as Codex and Claude through thin, explicit
     compatibility handling.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: Shared pinned source feeds thin Codex/Claude routers with explicit import ownership.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - docs/loadouts.md
+    - tests/test_hosts.py
+    limitations:
+    - Installed files do not establish current-chat activation or served model identity.
 - id: history
   name: Evidence & decision history
   role: core
   type: knowledge
   intent: Retain sources, trials, pins, and selection history, including why older, rejected, or superseded
     options may still fit elsewhere.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: Exact intake bundles, immutable decisions and hash-checked artifact copies retain old alternatives.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - docs/library.md
+    limitations:
+    - Private history is exported only on explicit state selection.
 - id: portal
   name: Catalog portal & showcase
   role: supporting
   type: ui
   intent: Browse what is known, selected, installed, tested, or superseded, and deliberately share personal
     standards and choices with their reasons.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: Public catalog/profile/opportunity browser with evidence disclosure and preserved legacy delivery
+      view.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - examples/web/index.html
+    limitations:
+    - Portal contains public committed choices, not live private consumer installation state.
 - id: interfaces
   name: CLI & exports
   role: supporting
   type: integration
-  intent: Expose selection, delivery, lifecycle, catalog, and evidence operations to people, agents, and
-    scripts without requiring the portal.
-  assessment: null
+  intent: Expose selection, delivery, lifecycle, catalog, and evidence operations to people, agents, and scripts
+    without requiring the portal.
+  assessment:
+    delivery: working
+    value: 2
+    scope: CLI catalog/select/suggest/trial/evolve/assess/decide and existing lifecycle/export available.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - docs/library.md
+    limitations:
+    - No web or producer recommendation grants execution authority.
 - id: ecosystem-suggestions
   name: Project suggestions
   role: core
   type: assessment
-  intent: Show named repositories and concrete improvements they could benefit from, with fit, evidence,
-    limitations, and next actions; do not silently modify them.
-  assessment: null
+  intent: Show named repositories and concrete improvements they could benefit from, with fit, evidence, limitations,
+    and next actions; do not silently modify them.
+  assessment:
+    delivery: working
+    value: 2
+    scope: Named Labs/home-lab/Signals/Principles needs plus pre-repository simulation opportunities.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - docs/project-suggestions.md
+    limitations:
+    - No downstream repository modified; user novelty/value not asserted.
 - id: evolution
   name: Library evolution
   role: core
   type: automation
   intent: Run configured research, inspection, trials, and reassessment to improve the catalog and specializations;
     update active selections only under their policies.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: Real intake, local assessment and allowed future-profile update; unchanged pass, pause/resume and
+      missing-peer work.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - examples/library-maintenance.yaml
+    - evals/greenfield.md
+    limitations:
+    - Native schedule configuration is supplied paused; production recurrence is not activated.
 - id: project-feedback
   name: Reciprocal use & feedback
   role: core
   type: integration
-  intent: Equip Signals and other projects, retain their practical results as first-party evidence, and
-    continue operating when a peer or optional provider is absent.
-  assessment: null
+  intent: Equip Signals and other projects, retain their practical results as first-party evidence, and continue
+    operating when a peer or optional provider is absent.
+  assessment:
+    delivery: partial
+    value: null
+    scope: Published exact peer pin; Context used real Signals findings to inspect and execute Hypothesis.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - evals/greenfield.md
+    limitations:
+    - Signals practical consumer receipt remains pending.
 - id: consumer-evaluations
   name: Consumer evaluations
   role: core
   type: evaluation
   intent: Compare native work, direct upstream use, and Context-delivered work; keep helpful specialization
     and remove unnecessary context or operating overhead.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: Historical 13 trajectories retained plus real executable preservation outcomes and failed attempt.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - evals/selective-value.md
+    - docs/hypothesis-trial.md
+    limitations:
+    - Unequal case counts, no speedup; current same-machine research contention disclosed in results.
 - id: product-ledger
   name: Product ledger
   role: supporting
   type: evaluation
   intent: Show intended features, delivery status, scoped value evidence, and unresolved weaknesses without
     treating installation or test counts as proof of benefit.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: This ledger is canonical and the product/suggestion views are generated.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - docs/product.yaml
+    - scripts/build_product.py
+    limitations:
+    - Feature delivery and scoped value are independent; unknown value stays null.
 - id: safeguards
   name: All
   role: guardrail
   type: security
   intent: Enforce licensing, privacy, permissions, trial isolation, ownership, and resource limits; recommendations
     and untrusted content cannot authorize their own actions.
-  assessment: null
+  assessment:
+    delivery: working
+    value: 2
+    scope: Hash pins, edit preservation, private state, policy gates and native sandbox denials.
+    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    evidence:
+    - docs/hypothesis-trial.md
+    - tests/test_library.py
+    limitations:
+    - Guardrails require pass/fail; evidence grades cannot compensate for failure.
