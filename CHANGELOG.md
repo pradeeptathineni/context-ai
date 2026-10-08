@@ -113,3 +113,9 @@ The premature v1.0.0 release/tag at `a0b6a3bbd2e1dc2c58629f6ea462e180bd12ce93` w
 [0.3.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/pradeeptathineni/context-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/pradeeptathineni/context-ai/tree/v0.1.0
+
+### Local value campaign (unreleased)
+
+- Default project setup can select zero task guidance; named loadouts remain opt-in and preserve their existing contents. Setup ownership is separate from task activation.
+- Optional `context-output` delivers a capture-once, bounded line-evidence operation with raw bytes and exit status preserved. No hook or service is installed.
+- Block comments crossing blank lines no longer count as effective Claude instruction imports. Existing instructions and lifecycle protections remain intact.

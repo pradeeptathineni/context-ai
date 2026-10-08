@@ -1,6 +1,6 @@
 # context-ai
 
-Context AI is a library of guidance for AI-assisted software work. Read one relevant file for a task, or pin a selected set of files (a **loadout**) in a project that will use them repeatedly. Your agent still follows that project's instructions and runs its checks.
+Context AI helps equip software projects with selected guidance and capabilities. Start with the project's instructions and native tools. Add one relevant resource for a task, or pin a **loadout** for repeated work when it answers a real need. Setup, refresh and undo remain available when the task needs no added guidance.
 
 The library covers engineering, research, writing, web work, APIs, infrastructure, and evaluation. It also records where consequential guidance came from. The [project loadout tool](docs/loadouts.md) delivers selected files to Codex and Claude Code projects; it does not run an agent or install the tools those files discuss. Each concern has one active owner (the native host, a pinned upstream or Context guidance), recorded in [`ownership.yaml`](ownership.yaml); the 140-concept index stays reference knowledge, not a checklist.
 
@@ -10,17 +10,18 @@ Give your agent the change you need and the Context source path:
 
 > Use Context AI at SOURCE_PATH to fix this failing integration. Inspect this project's instructions and tools, choose the smallest useful execution profile, complete the fix, and report what you used and verified.
 
-The [context-loadout skill](skills/context-loadout/SKILL.md) equips the task. The agent interprets the request; Context can validate its explicit choices and return a read-only [execution packet](docs/task-profiles.md). You do not need to name modules, options or model routes. Small tasks can still use a direct read with no setup.
+The ordinary outcome is **native-sufficient**: use the project's guidance and tools with zero additional Context reads. The [context-loadout skill](skills/context-loadout/SKILL.md) helps when several choices need resolution; a read-only [execution packet](docs/task-profiles.md) can validate explicit selections. You do not need to name modules, options or model routes. A profile or installation is optional for a one-off task.
 
 | Need | Start here |
 | --- | --- |
-| One task | Read a relevant file from an exact Context checkout or archive. A README change, for example, may benefit from [writing guidance](overlays/writing.md). No setup or receipt is required. |
+| Ordinary covered task | Use project guidance and native tools; select no added guidance. No setup or receipt is required. |
+| One capability gap | Read a relevant file from an exact Context checkout or archive. For verbose output, use [bounded capture and retrieval](procedures/output.md). |
 | Several choices in one task | Let the agent resolve a [task profile](docs/task-profiles.md), then read its selected guidance and use native tools. |
 | Repeated work in one project | Let the agent choose, preview, and pin a loadout. Read only the guidance for the current stage. |
 
 If the project's own guidance is enough, complete the task with that. For either route, check claims against the project and run its relevant tests.
 
-For a failing integration, read [diagnose and fix](procedures/diagnose.md). For a correctness/compatibility review, read [review](procedures/review.md). For a bounded interaction correction, read [lightweight design](procedures/web-design-lightweight.md) and [browser verification](domains/web/browser-verification.md). These procedures use the consumer's tools and preserve its instructions and visual identity.
+When the task needs a diagnostic method, read [diagnose and fix](procedures/diagnose.md). For a correctness/compatibility review, read [review](procedures/review.md). For a bounded interaction correction, read [lightweight design](procedures/web-design-lightweight.md) and [browser verification](domains/web/browser-verification.md). These procedures use the consumer's tools and preserve its instructions and visual identity.
 
 An ordinary agent request can be:
 
@@ -30,7 +31,7 @@ For recurring use, the agent can choose from:
 
 | Loadout | Select when |
 | --- | --- |
-| essentials | Feature or bug-fix work: prior-art search with the reuse ladder, a test-first loop and spec/standards/complexity review |
+| essentials | A consequential decision, regression risk or test-first task calls for prior-art search, TDD and spec/standards/complexity review |
 | standard | Substantial development needs inspect/implement/test/review/delivery guidance (composes essentials) |
 | context-authoring | Context authority, compression, provenance or compatibility is changing |
 | research-evidence | A decision needs primary evidence and comparative options |
@@ -47,14 +48,29 @@ Run these commands **from the Context source directory**, using Python 3.10+ and
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install --require-hashes -r requirements.txt
-.venv/bin/python scripts/context_ai.py explain standard --option review_mode=direct
 .venv/bin/python scripts/context_ai.py tools --project /absolute/project
-.venv/bin/python scripts/context_ai.py plan standard --project /absolute/project --provider both
-.venv/bin/python scripts/context_ai.py apply standard --project /absolute/project --provider both
+.venv/bin/python scripts/context_ai.py plan --project /absolute/project --provider both
+.venv/bin/python scripts/context_ai.py apply --project /absolute/project --provider both
 .venv/bin/python scripts/context_ai.py verify --project /absolute/project
 ```
 
-Review the plan before applying: it shows selected files, local tool candidates and project changes. `tools` inspects declarations, local packages, workspace ownership and PATH without running scripts or fetching packages. Installed Playwright files do not prove browser readiness. Application copies selected resources into `.context-ai/`, creates thin skill routers (`.agents/skills` for Codex, `.claude/skills` for Claude Code, `--provider codex|claude|both`) and adds a managed block to the project's `AGENTS.md`; Claude Code reads that natively unless a CLAUDE.md shadows it, in which case an owned CLAUDE.md block is added. It protects existing instructions and edited files. `verify` checks the installation and required runtime probes; it reports project checks as **not run**. Run those checks from the **consumer directory** and inspect its diff. Report what you actually read, invoked, and checked; a structured use receipt is optional for a comparison or audit.
+With no loadout IDs or `--with`, `plan` and `apply` select native-sufficient: no added task guidance or skill routers. They still manage a minimal project selection and its lifecycle. Explicit loadout IDs remain available; `refresh` without IDs preserves an existing selection. Review the plan before applying, including removals when changing an installed selection: it shows selected files, local tool candidates and project changes. `tools` inspects declarations, local packages, workspace ownership and PATH without running scripts or fetching packages. Installed Playwright files do not prove browser readiness. Application copies selected resources into `.context-ai/`, creates thin skill routers (`.agents/skills` for Codex, `.claude/skills` for Claude Code, `--provider codex|claude|both`) and adds a managed block to the project's `AGENTS.md`; Claude Code reads that natively unless a CLAUDE.md shadows it, in which case an owned CLAUDE.md block is added. It protects existing instructions and edited files. `verify` checks the installation and required runtime probes; it reports project checks as **not run**. Run those checks from the **consumer directory** and inspect its diff. Report what you actually read, invoked, and checked; a structured use receipt is optional for a comparison or audit.
+
+For a recurring verbose-output need, select only the operation:
+
+```sh
+.venv/bin/python scripts/context_ai.py plan --with context-output --project /absolute/project --provider both
+.venv/bin/python scripts/context_ai.py apply --with context-output --project /absolute/project --provider both
+```
+
+Then run from the consumer directory:
+
+```sh
+python3 .context-ai/resources/scripts/context_output.py run --log test-raw.log -- python3 -m unittest discover -s tests
+python3 .context-ai/resources/scripts/context_output.py inspect test-raw.log --query 'Caused by' --query error
+```
+
+The command runs once, keeps raw output in a new owned file and returns the producer's exit status. The partial view defaults to 4 KiB and 40 evidence lines; expand a relevant range or query when the cause is missing. Native Read/Grep/Glob need their own explicit limits. This stdlib operation installs no hooks or service. [Output handling](procedures/output.md) gives the full boundary.
 
 `refresh` previews changes to a selection; `undo` removes unchanged owned files and preserves user edits. See the [command contract](docs/loadouts.md) for details, [compatibility and recovery](docs/compatibility.md) for moving or restoring a selection, and the [Codex](providers/openai/codex.md) and [Claude Code](providers/anthropic/claude-code.md) adapters for discovery limits.
 

@@ -1,0 +1,9 @@
+schema_version: 1
+task: Diagnose a verbose local test failure without reading the full raw log first.
+capabilities:
+  context-output: required
+verification:
+- Execute the failing command once and preserve its raw output and original exit status.
+- Retrieve the root cause and enough surrounding evidence with bounded queries or ranges before proposing a fix.
+unresolved:
+- A partial view can omit relevant lines; expand the query or numbered range when cause evidence is missing.

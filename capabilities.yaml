@@ -1,5 +1,18 @@
 schema_version: 1
 capabilities:
+  context-output:
+    kind: resource
+    stages:
+    - inspect
+    - implement
+    - test
+    path: procedures/output.md
+    description: Before large logs or verbose commands, capture once and retrieve bounded
+      numbered evidence.
+    files:
+    - scripts/context_output.py
+    boundary: Opt-in stdlib operation; no hooks or implicit execution. Native reads
+      need explicit limits; raw output remains private.
   python-runtime:
     kind: command
     command: python3

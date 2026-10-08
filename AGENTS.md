@@ -18,6 +18,13 @@
 - For an unfamiliar or consequential AI/software engineering choice, find the decision with `ruby scripts/lookup.rb --search WORDS`, then look up its concept ID with the active provider and product. The command resolves matching signals and original sources. Treat signals as candidates, not mandatory tools.
 - For model or multi-agent choices, read `overlays/model-deliberation.md` or `overlays/orchestration.md` respectively. For reader-facing writing, code comments, or consequential claims, use the matching `overlays/` file listed in `overlays/README.md`.
 
+## Product work
+
+- Ordinary covered work uses project instructions and native tools with zero added guidance. Separate project setup from task activation; use [task profiles](docs/task-profiles.md) or [plan/apply](docs/loadouts.md) only when their selection/lifecycle behavior is needed.
+- Before changing an ordinary route, name the observable failure or outcome it should improve. Compare a consequential specialization with a strong native or direct-upstream route; retain failed/partial results and the same acceptance criteria. Keep required capabilities and data even when a specialization loses.
+- Before a verbose command or large log read, retain raw output outside context and retrieve bounded evidence. Use native tools or [bounded output](procedures/output.md); `python3 scripts/context_output.py` supplies the local capture/search operation. A partial view can omit the cause, so expand the relevant query/range before concluding.
+- Keep installed, operational, source-supported, independently checked and human-useful claims distinct. Use [existing evaluation guidance](evals/context-efficiency-trial.md) for comparisons; format compliance alone does not establish task benefit.
+
 ## Boundaries
 
 - `core/` is canonical and provider-independent.

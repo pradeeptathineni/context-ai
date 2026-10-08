@@ -101,11 +101,11 @@ class ClaudeAndBothHosts(unittest.TestCase):
     def test_edited_claude_block_is_preserved_on_undo_and_refused_on_apply(self):
         (self.project/'CLAUDE.md').write_text('Rules\n')
         lock,files=c.resolve(['essentials'],self.project,'claude');c.apply(self.project,lock,files)
-        p=self.project/'CLAUDE.md';p.write_text(p.read_text().replace('Load only','Edited: load only'))
+        p=self.project/'CLAUDE.md';p.write_text(p.read_text().replace(c.BEGIN,c.BEGIN+'\nUser edited instruction'))
         with self.assertRaisesRegex(c.Invalid,'edited managed CLAUDE.md block'):c.apply(self.project,lock,files)
         result=c.undo(self.project)
         self.assertFalse(result['undone']);self.assertIn('CLAUDE.md',result['preserved_conflicts'])
-        self.assertIn('Edited: load only',p.read_text())
+        self.assertIn('User edited instruction',p.read_text())
 
     def test_new_shadowing_claude_md_is_detected_and_refresh_routes_it(self):
         lock,files=c.resolve(['essentials'],self.project,'claude');c.apply(self.project,lock,files)
@@ -239,6 +239,11 @@ class ClaudeAndBothHosts(unittest.TestCase):
                ('CLAUDE.md','Open `span\n@AGENTS.md\n\nnever closed\n','managed-block'),
                ('CLAUDE.md','```` \n```\n@AGENTS.md\n````\n','managed-block'),
                ('CLAUDE.md','<!-- note\n@AGENTS.md -->\n','managed-block'),
+               ('CLAUDE.md','<!-- note\n\n@AGENTS.md\n-->\n','managed-block'),
+               ('CLAUDE.md','<!-- one --> <!-- two\n\n@AGENTS.md\n-->\n','managed-block'),
+               ('CLAUDE.md','<!-- note\n```\n-->\n@AGENTS.md\n','imports-agents'),
+               ('CLAUDE.md','<!-- note\n\n-->\n@AGENTS.md\n','imports-agents'),
+               ('CLAUDE.md','```md\n<!-- note\n```\n@AGENTS.md\n','imports-agents'),
                ('CLAUDE.md','`closed span`\n\n@AGENTS.md\n','imports-agents'),
                ('CLAUDE.md','```\ncode\n```\n@AGENTS.md\n','imports-agents')]
         for name,text,mode in cases:

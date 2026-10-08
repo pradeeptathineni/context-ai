@@ -5,6 +5,10 @@ schema_version: 1
 # reference. native_names: skill names that, if already installed in a consumer, would duplicate this
 # concern. The 140-concept taxonomy in concepts.yaml remains reference knowledge, not a runtime obligation.
 concerns:
+  output-boundary:
+    owner_kind: context
+    files:
+    - procedures/output.md
   engineering-judgment:
     owner_kind: context
     files: [core/engineering.md, overlays/patterns.md]

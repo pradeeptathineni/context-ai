@@ -1,6 +1,6 @@
 # Project loadouts
 
-For one task, start with project instructions and read only relevant guidance directly. No installation is required. For a recurring project selection, a manifest selects resources and a resolved lock pins their bytes. Report actual use and checks separately in the task result; a structured use receipt is optional unless the project requires one. Project instructions and explicit user authority take precedence.
+For one task, start with project instructions and native tools. Ordinary covered work is **native-sufficient**, with zero added guidance. Read a relevant resource only when it addresses a capability gap or consequential risk; no installation or profile is required. For a recurring project selection, a manifest selects resources and a resolved lock pins their bytes. Report actual use and checks separately in the task result; a structured use receipt is optional unless the project requires one. Project instructions and explicit user authority take precedence.
 
 The [context-loadout skill](../skills/context-loadout/SKILL.md) also equips ordinary tasks with several choices. Its [task profile](task-profiles.md) resolves a read-only execution packet through `packet --profile /absolute/task.yaml --project /absolute/project`; direct reads remain setup-free. Packet resolution does not pin or activate a selection.
 
@@ -8,7 +8,7 @@ The [context-loadout skill](../skills/context-loadout/SKILL.md) also equips ordi
 
 | ID | Use | Verification recipe |
 | --- | --- | --- |
-| essentials | Prior-art search with the reuse ladder, test-first loop, spec/standards/complexity review | Red-then-green test evidence, recorded prior-art disposition |
+| essentials | Explicit decision, regression-risk or TDD route: prior-art reuse, test-first loop, spec/standards/complexity review | Red-then-green test evidence, recorded prior-art disposition |
 | standard | Proportional inspect/implement/test/review/deliver; composes essentials | Project tests, actual diff, truthful completion |
 | context-authoring | Compression, authority, coherence, provenance and refresh | Metadata/links/schema, retained requirements, compatibility |
 | research-evidence | Primary evidence, comparative options, freshness, Signals exchange | Exact bytes, provenance, citations, honest mode and constraints |
@@ -30,6 +30,9 @@ python3 -m venv .venv
 .venv/bin/python scripts/context_ai.py list
 .venv/bin/python scripts/context_ai.py decisions
 .venv/bin/python scripts/context_ai.py tools --project /absolute/project
+.venv/bin/python scripts/context_ai.py plan --project /absolute/project --provider both
+.venv/bin/python scripts/context_ai.py apply --project /absolute/project --provider both
+.venv/bin/python scripts/context_ai.py plan --with context-output --project /absolute/project --provider both
 .venv/bin/python scripts/context_ai.py explain standard --option review_mode=fresh
 .venv/bin/python scripts/context_ai.py explain react-web --design-procedure lightweight
 .venv/bin/python scripts/context_ai.py plan standard react-web --project /absolute/project --provider both --brand "Warm paper, restrained ink, existing typography" --design-procedure lightweight
@@ -38,6 +41,10 @@ python3 -m venv .venv
 .venv/bin/python scripts/context_ai.py refresh --project /absolute/project
 .venv/bin/python scripts/context_ai.py undo --project /absolute/project
 ```
+
+`plan` and `apply` with no loadout IDs or `--with` select native-sufficient. No task guidance, capability or skill router is added; the minimal selection retains licensing and lifecycle ownership. Applying that empty selection to an already equipped project proposes removal of unchanged owned guidance, so inspect its plan first. An explicit loadout opts into its full composition. Setup makes resources available; task activation still depends on the current need.
+
+`--with context-output` adds only the [bounded-output procedure](../procedures/output.md) and `scripts/context_output.py`, plus the narrow router and required notices. Other registered `context-*` resource capabilities may be selected with repeated `--with`; this flag does not select command capabilities or install discussed upstream tools. It applies to `plan`, `apply` and `refresh`. `refresh` with no IDs or `--with` preserves the installed loadouts and extra capabilities.
 
 `explain` resolves the same ordered parents, stage routes, bounded options and decisions as `plan`, without writing or checking local tool availability. Its capabilities are declarations, not availability claims. `decisions` derives all current choices from the existing resolver; `decisions LOADOUT` narrows them to that composition. Historical predecessors are excluded from both views.
 

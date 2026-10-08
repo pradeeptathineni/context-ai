@@ -2,7 +2,7 @@
 
 Ask your existing agent to use Context for the task in ordinary language. It inspects the consuming project's scoped instructions, architecture, stack, tools and acceptance criteria, then chooses what would help. The [context-loadout skill](../skills/context-loadout/SKILL.md) owns this step. Project and user instructions always win.
 
-For one settled task, a direct read or the project's own guidance may suffice. When several choices need checking, the agent writes a small profile and resolves it from an exact Context source checkout:
+Ordinary covered work is **native-sufficient**: no extra guidance, capability, model recommendation or delegation. A profile is optional. For one capability gap, read a relevant resource directly. When several choices need checking, the agent writes a small profile and resolves it from an exact Context source checkout:
 
 ```sh
 .venv/bin/python scripts/context_ai.py packet --profile /absolute/task.yaml --project /absolute/project
@@ -14,33 +14,23 @@ The agent reads the packet's guidance, inspects unresolved boundaries and perfor
 
 ## Profile contract
 
-The [schema](../schemas/task-profile.schema.json) owns version 1. Required fields are `schema_version`, `task`, `pact` and `verification`. Other choices are omitted unless they help the current task.
+The [schema](../schemas/task-profile.schema.json) owns version 1. Required fields are `schema_version`, `task` and `verification`. Other choices are omitted unless they help the current task.
 
 ```yaml
 schema_version: 1
-task: Fix the service integration rejecting supported protocol replies.
-context:
-  mode: direct
-  resources:
-  - procedures/diagnose.md
-  - domains/service/api.md
-pact:
-  required: false
-  reason: The protocol contract and component ownership are settled.
+task: Correct a README command already specified by the project's instructions.
 verification:
-- Reproduce the rejection before the fix; verify supported replies and incompatible-version failures afterward.
-unresolved:
-- Live producer credentials are unavailable; local contract tests cannot establish live integration.
+- Check the command against project instructions and run the relevant documentation checks.
 ```
 
 | Field | Decision and default |
 | --- | --- |
 | `task` | Agent-interpreted outcome, preserved for review. No keyword routing. |
-| `context` | Omitted means direct with no additional reads. `direct.resources` chooses guidance paths. `loadout.loadouts`, `stages` and optional `options` reuse the existing composition/option vocabulary. |
+| `context` | Omitted means native-sufficient unless another explicit choice adds guidance or capability advice. Direct mode has no additional reads by default. `direct.resources` chooses guidance paths. `loadout.loadouts`, `stages` and optional `options` reuse the existing composition/option vocabulary. |
 | `capabilities` | Explicit existing capability IDs mapped to `required` or `optional`; omitted means none beyond the selected loadout. Resource capabilities select instructions; commands receive static discovery. |
 | `model` | Optional literal attributes for existing first-match [model routing](../models/routing.yaml). Omitted preserves the session without a recommendation; `{}` requests the policy fallback. Only attribute keys used by the current routes are accepted. |
 | `orchestration` | `single_agent` by default; `separate_investigations`, `separate_implementation` or `fresh_review` select advisory guidance. No delegation or model changes occur. |
-| `pact` | Explicit `required` boolean and reason. Required adds canonical prior-art guidance; the agent applies PACT/HRR and records the decision in the consuming project's existing artifact. |
+| `pact` | Optional; omitted means no prior-art activation. When included, requires a `required` boolean and reason. Required adds canonical prior-art guidance; the agent applies PACT/HRR and records the decision in the consuming project's existing artifact. |
 | `verification` | Nonempty observable expectations. Text is never executable configuration. |
 | `unresolved` | Known gaps, such as missing live credentials or an unclear acceptance criterion. The packet adds untested tool and host boundaries. |
 
@@ -49,6 +39,19 @@ Use task facts to make these choices, rather than copying them into another inve
 For model routing, supplied values match literally; omitted attributes never match a required literal. `*` belongs to policy and matches present or absent attributes. Unknown values can fall through to the policy fallback; the agent must inspect the returned route and correct mistaken interpretation. The binding is dated advice: verify the available model/reasoning controls on the active surface and preserve explicit session settings. The resolver does not select a new session or escalate automatically.
 
 ## Direct reads and recurring selections
+
+A focused output task can select the operation without a full loadout:
+
+```yaml
+schema_version: 1
+task: Diagnose a verbose local test failure without reading the full raw log first.
+capabilities:
+  context-output: required
+verification:
+- Execute the command once, retain raw output and exit status, and retrieve the cause with bounded surrounding evidence.
+```
+
+This resolves the procedure and stdlib helper from the source checkout; it executes nothing. To pin the same capability for recurring work, use `plan --with context-output` and then `apply --with context-output`. See [loadouts](loadouts.md).
 
 Direct profiles select only their resources, explicit resource-capability prerequisites/notices and guidance justified by PACT/model/orchestration choices. For example, select `context-web-design-lightweight` for a bounded existing page correction and separately include browser verification. Direct mode has no loadout options: select the named resource alternative, or use a staged loadout for its bounded options.
 
@@ -98,4 +101,4 @@ The [D-004 revision 3 decision](../decisions/composition.yaml) retains one selec
 
 The deciding prior art was [native skill selection](https://learn.chatgpt.com/docs/build-skills), [Agent Skills progressive disclosure](https://agentskills.io/specification), and [Superpowers explicit planning](https://github.com/obra/superpowers/blob/8ca22dba9a94f28898bbce59f2537ff4d87c747d/skills/writing-plans/SKILL.md), reviewed 2026-10-05. Native skill descriptions and model judgment already handle semantic routing. Learn from explicit constraints/verification; importing a mandatory planning/execution lifecycle would overlap current owners. No external dependency or new skill/concept is needed.
 
-[Example profiles](../examples/task-profiles) cover the six ordinary requests and a project-guidance-only edit. They are inspectable agent judgments under stated assumptions, not a classifier's outputs or proof of human usefulness. [Evaluation evidence](../evals/task-profiles.md) separates resolver checks from actual use.
+[Example profiles](../examples/task-profiles) cover the six requests, a [native-sufficient edit](../examples/task-profiles/project-guidance.yaml) and a [focused output task](../examples/task-profiles/output.yaml). They are inspectable agent judgments under stated assumptions, not a classifier's outputs or proof of human usefulness. [Evaluation evidence](../evals/task-profiles.md) separates resolver checks from actual use.

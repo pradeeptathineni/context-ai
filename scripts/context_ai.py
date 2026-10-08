@@ -386,8 +386,6 @@ def selection(ids, options=None):
         ordered.append(id)
     for id in ids:
         visit(id)
-    if not ordered:
-        raise Invalid('select at least one loadout')
     stages, skills, capabilities, checks, decisions = {}, [], {}, [], []
     resolved_options = {}
     declarations = capability_registry()['options']
@@ -515,7 +513,8 @@ def task_packet(profile, project):
             if definition['kind']=='command' or set(definition.get('stages',context['stages'])) & set(context['stages']):
                 selected[key]='required' if 'required' in (selected.get(key),requirement) else 'optional'
     orchestration=profile.get('orchestration','single_agent')
-    if profile['pact']['required']:
+    pact=profile.get('pact',{'required':False,'reason':'No unresolved capability decision was requested.'})
+    if pact['required']:
         roots.append('core/prior-art.md')
     if 'model' in profile:
         roots.append('overlays/model-deliberation.md')
@@ -572,7 +571,8 @@ def task_packet(profile, project):
                        'procedures':[p for p in files if p.startswith('procedures/')]},
             'capabilities':states,'native_host_tools':'Host-reported separately; local discovery cannot establish native readiness.',
             'model':model,'orchestration':{'recommendation':orchestration,'applied':False},
-            'pact':profile['pact'],'verification':{'expectations':profile['verification'],
+            'selection_outcome':'focused' if files or selected or 'model' in profile or orchestration!='single_agent' else 'native-sufficient',
+            'pact':pact,'verification':{'expectations':profile['verification'],
                 'suggested_checks':checks,'project_checks':'not_run'},
             'unresolved':list(dict.fromkeys(unresolved)),
             'decisions':{key:{'revision':record['revision'],'concept':record['concept']}
@@ -627,8 +627,7 @@ def resolve(ids, project, provider, options=None, extras=()):
     # Machine observations belong to local reports, never portable resource pins.
     for entry in states.values():
         entry.pop('discovery',None)
-    files = resources([p for paths in selected['stages'].values() for p in paths]+['skills/context-loadout/SKILL.md','LICENSE']
-                      +[ADAPTER_DOCS[host] for host in hosts(provider)])
+    files = resources([p for paths in selected['stages'].values() for p in paths]+(['skills/context-loadout/SKILL.md','LICENSE']+[ADAPTER_DOCS[host] for host in hosts(provider)] if selected['loadouts'] else ['LICENSE']))
     for c in selected['capabilities']:
         if registry[c]['kind']=='resource':
             files.update(resources([registry[c]['path']]))
@@ -646,10 +645,13 @@ def resolve(ids, project, provider, options=None, extras=()):
     return lock,files
 
 def router(lock):
-    lines = [BEGIN,'## Context AI project loadout',
-             'Project instructions and explicit task authority take precedence. Use the pinned `.context-ai/lock.json`.',
-             'Read `.context-ai/resources/skills/context-loadout/SKILL.md` when changing the selection; report actual reads and checks in the task result.',
-             'Load only the modules for the current stage:']
+    lines = [BEGIN,'## Context AI project selection',
+             'Project instructions and explicit task authority take precedence. Ordinary covered work uses native tools; activate selected guidance only for a relevant risk or capability gap.']
+    if not lock['stages'] and not lock['capabilities']:
+        return '\n'.join(lines+['Selection: native-sufficient; no additional task guidance. Context manages setup/refresh/undo separately.',END])+'\n'
+    if 'context-output' in lock['capabilities']:
+        lines.append('Before reading a large log or running a verbose command, keep raw output outside context. Use `python3 .context-ai/resources/scripts/context_output.py inspect LOG --query error` for bounded line evidence, or `run --log NEW_LOG -- COMMAND ...` to capture once and preserve its exit status. Retrieve another query/range before concluding; omitted lines are not evidence of absence. Native Read/Grep/Glob bypass shell filters: bound those reads too.')
+    lines.append('Selected modules below are available by stage; read only what the current task needs:')
     staged=set()
     for stage, paths in lock['stages'].items():
         staged.update(paths)
@@ -782,13 +784,27 @@ def outside_code(text):
     rest of that paragraph is conservatively not trusted; HTML comments are stripped by Claude before
     use. When unsure the caller adds a managed block, which is harmless if the import is also real.
     """
-    blocks=[[]];fence=None
+    blocks=[[]];fence=None;comment=False
     for line in text.splitlines():
         opening=re.match(r'^ {0,3}(`{3,}|~{3,})',line)
         if fence:
             if opening and opening.group(1)[0]==fence[0] and len(opening.group(1))>=len(fence) and not line.strip(' '+fence[0]):
                 fence=None
             continue
+        # A block comment can cross blank lines or contain fence markers. Remove it before
+        # paragraph/fence detection, while keeping comment-looking text inside fences literal.
+        if comment:
+            end=line.find('-->')
+            if end<0:continue
+            line=line[end+3:].lstrip(' ');comment=False
+        while re.match(r'^ {0,3}<!--',line):
+            blocks.append([])
+            end=line.find('-->')
+            if end<0:
+                comment=True;break
+            line=line[end+3:].lstrip(' ')
+        if comment:continue
+        opening=re.match(r'^ {0,3}(`{3,}|~{3,})',line)
         if opening:
             fence=opening.group(1);blocks.append([]);continue
         if not line.strip():
@@ -1006,7 +1022,8 @@ def apply(project,lock,files):
             raise Invalid('application interrupted; recovery bytes retained in .context-ai/pending.json') from recovery_error
         raise
     journal.unlink()
-    return {'applied':lock['loadouts'],'provider':lock['provider'],'resource_count':len(files),
+    return {'selection_outcome':'focused' if lock['stages'] or lock['capabilities'] else 'native-sufficient',
+            'applied':lock['loadouts'],'provider':lock['provider'],'resource_count':len(files),
             'lock_sha256':digest(desired['.context-ai/lock.json']),'host_routing':check['host_routing']}
 
 def upstream_pins(files):
@@ -1024,7 +1041,8 @@ def plan(project, lock, files):
     old=previous['resolution']['resources'] if previous else {}
     old_owned=check['old_owned']; targets=check['targets']
     registry={key:entry for key,entry in lock['capabilities'].items()}
-    return {'resolution':lock,
+    return {'selection_outcome':'focused' if lock['stages'] or lock['capabilities'] else 'native-sufficient',
+            'resolution':lock,
             'writes':sorted(set(targets)|{name for name,value in check['desired'].items() if value is not None}),
             'additions':sorted(set(targets)-set(old_owned)),
             'replacements':sorted(name for name in set(targets)&set(old_owned) if digest(targets[name])!=old_owned[name]),
@@ -1040,7 +1058,7 @@ def plan(project, lock, files):
             'native_managed':check['inventory'],
             'host_management':'Context owns only listed writes; native skills/plugins above stay host-managed and are never modified.',
             'upstream_pins':upstream_pins(files),
-            'concerns':selected_concerns([p for paths in lock['stages'].values() for p in paths]),
+            'concerns':selected_concerns(files),
             'activation':'proposed'}
 
 def verify(project, allow_rebind=False):

@@ -140,7 +140,6 @@
         "type": "array",
         "uniqueItems": true
       },
-      "minProperties": 1,
       "propertyNames": {
         "enum": [
           "inspect",

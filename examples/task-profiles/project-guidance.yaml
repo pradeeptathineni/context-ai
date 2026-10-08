@@ -1,7 +1,4 @@
 schema_version: 1
 task: Correct a README command already specified by the project's scoped instructions.
-pact:
-  required: false
-  reason: A settled reversible documentation edit needs no responsibility review.
 verification:
 - Check the corrected command against the project instructions and run its documentation checks.
