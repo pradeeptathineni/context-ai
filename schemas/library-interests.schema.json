@@ -1,0 +1,72 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "interests": {
+      "type": "array",
+      "maxItems": 300,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "query": {
+            "type": "string",
+            "minLength": 1
+          },
+          "concepts": {
+            "type": "array",
+            "maxItems": 300,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "profiles": {
+            "type": "array",
+            "maxItems": 300,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "refresh_days": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 366
+          },
+          "due": {
+            "type": "string",
+            "format": "date"
+          },
+          "last_seen": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "query",
+          "concepts",
+          "profiles",
+          "refresh_days",
+          "due",
+          "last_seen"
+        ],
+        "additionalProperties": true
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "interests"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

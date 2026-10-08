@@ -1,8 +1,16 @@
 # context-ai
 
-Context AI helps equip software projects with selected guidance and capabilities. Start with the project's instructions and native tools. Add one relevant resource for a task, or pin a **loadout** for repeated work when it answers a real need. Setup, refresh and undo remain available when the task needs no added guidance.
+Context AI is my personal library of project equipment, standards, choices and evidence. Browse what fits a project, keep older alternatives with their limits, and pin only the guidance or tools that earn a role. Ordinary work starts with the project's instructions and native tools.
 
-The library covers engineering, research, writing, web work, APIs, infrastructure, and evaluation. It also records where consequential guidance came from. The [project loadout tool](docs/loadouts.md) delivers selected files to Codex and Claude Code projects; it does not run an agent or install the tools those files discuss. Each concern has one active owner (the native host, a pinned upstream or Context guidance), recorded in [`ownership.yaml`](ownership.yaml); the 140-concept index stays reference knowledge, not a checklist.
+The [catalog and profiles](docs/library.md) show actual selections for Labs, home-lab, Signals, Principles and an exploratory simulation interest. [Project opportunities](docs/project-suggestions.md) connect inspected needs to a concrete next action. The [local portal](examples/web/index.html) brings options, reasons and evidence together; it installs nothing.
+
+```sh
+.venv/bin/python scripts/context_ai.py catalog
+.venv/bin/python scripts/context_ai.py select labs
+.venv/bin/python scripts/context_ai.py suggestions
+```
+
+[Safe delivery and maintenance](docs/library.md) provide preview, pinned setup, refresh, verified controlled trials, finite evidence intake, policy-bound future selections and undo. Shared resources feed Codex and Claude through thin adapters. The [140-concept index](concepts.yaml), original loadout scope and upstream attribution remain available without becoming required reading for every task. [Product scope](docs/PRODUCT.md) separates implemented behavior from demonstrated benefit.
 
 ## Use it for a task
 

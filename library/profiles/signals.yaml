@@ -1,0 +1,108 @@
+schema_version: 1
+id: signals
+project: https://github.com/pradeeptathineni/signals-ai
+snapshot:
+  revision: 135cd3537901b956d4c7decd1bbb7d97ab805e8e
+  files:
+  - path: README.md
+    sha256: de06fd8f23c6085285405448dcc9fd8fd0c7aecb9e2415903f803300308b0d4c
+  - path: package.json
+    sha256: 052b1332e9c3afaf52b00928a5a4365d78b827f2fa78884ab7db000777eee926
+  - path: AGENTS.md
+    sha256: ae0c01ce8f56c3e1d82386142ff9169c79f7cbb9e102f9142330de00e4b6684c
+purpose: Acquire and retain source-bound findings while keeping private research state separate from public
+  Corpus.
+environment:
+  language: Node.js >=24.19.0 <25 / TypeScript
+  package_manager: npm >=12.1.0 <13; exact package lock
+  checks:
+  - npm run verify
+  snapshot_scope: Public source inspection at the recorded revision; peer greenfield owner may supersede
+    it.
+priorities:
+- Preserve evidence and historical policy.
+- No candidate execution by Signals.
+- Bound acquisition and diagnostics; do not mask failed checks.
+policy:
+  trials:
+  - context-output
+  - context-tdd
+  - hypothesis
+  updates:
+  - context-output
+  - context-tdd
+  - hypothesis
+  schedule: false
+selections:
+- option: native
+  reason: Signals already owns native research, evidence validation, its CLI and Corpus.
+  concern: ordinary-work
+- option: context-output
+  reason: Give the reciprocal consumer one narrow output capability, invoked explicitly before its command.
+  concern: output-handling
+- option: research-evidence
+  reason: Use at source assessment and interchange boundaries while preserving producer mode and missing
+    revisions.
+  concern: research
+suggestions:
+- area: Reciprocal consumer / output
+  opportunity: Compare retained failure diagnosis through native output and the focused Context capability.
+  option: context-output
+  why: Signals exposes a verbose verification command and keeps raw-output recovery as a documented requirement.
+  evidence:
+  - 'AGENTS.md: broad analysis/noisy validation and raw_ref recovery'
+  - 'package.json: verify command'
+  limitations:
+  - This snapshot does not establish the new peer implementation.
+  - Source-only fit; joint operation and timing require a versioned consumer receipt.
+  next_action: Have the Signals owner run an actual approved check in its disposable consumer under the
+    pinned focused selection; retain raw output, exact status, invocation and useful recovered cause.
+  status: suggested
+  checked_ref: 135cd3537901b956d4c7decd1bbb7d97ab805e8e
+  date: '2026-10-08'
+- area: Research intake
+  opportunity: Refresh Context interests from a bounded public Signals export while keeping source findings
+    advisory.
+  option: research-evidence
+  why: README separates acquisition, export time, producer mode and retained original observations.
+  evidence:
+  - 'README.md: native exchange provenance and fixture separation'
+  limitations:
+  - No imported producer result becomes independent corroboration of itself.
+  - A missing or unsupported peer artifact must leave independent research available.
+  next_action: Consume a versioned local export through Context intake; tie changed evidence to one unresolved
+    profile choice and skip duplicate evidence on the second finite pass.
+  status: suggested
+  checked_ref: 135cd3537901b956d4c7decd1bbb7d97ab805e8e
+  date: '2026-10-08'
+- area: Claim support
+  opportunity: Challenge a consequential research claim against its cited source before admitting it.
+  option: nist-citation-probes
+  why: NIST distinguishes source faithfulness, completeness and sufficiency; matching a substring alone
+    is insufficient.
+  evidence:
+  - https://www.nist.gov/programs-projects/building-evaluation-probes-agentic-ai
+  limitations:
+  - NIST supplies a methodology; the archived demonstrator is not selected for execution.
+  - Peer export research revision remains unknown; source inspected directly on 2026-10-08.
+  next_action: Use the three source questions in one real claim assessment; retain the source text, finding
+    and scope instead of adding a judge pipeline.
+  status: conditional
+  checked_ref: 2026-10-08-primary-source
+  date: '2026-10-08'
+- area: Store correction invariants
+  opportunity: Use a generated input sequence to challenge one real Signals save/correction invariant
+    in its isolated consumer.
+  option: hypothesis
+  why: Context has exercised exact wheel behavior and denied host access; Signals can assess the technique
+    against its own actual record semantics.
+  evidence:
+  - docs/hypothesis-trial.md
+  limitations:
+  - Context lifecycle trial does not prove Signals storage behavior.
+  - Peer consumer receipt still required; no automatic dependency adoption.
+  next_action: Use the versioned Context peer selection and run one source-frozen local consumer invariant;
+    retain red/green failures and deterministic baseline.
+  status: suggested
+  checked_ref: hypothesis-6.168.5
+  date: '2026-10-08'

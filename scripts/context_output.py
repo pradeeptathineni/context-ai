@@ -44,9 +44,60 @@ def inspect(path, queries=(), start=None, lines=40, context=2, max_bytes=4096):
             'view':'partial; search considers bounded line prefixes, retrieve another query/range as needed',
             'evidence':rows}
     while len(json.dumps(report,ensure_ascii=False).encode())>max_bytes and report['evidence']:
-        report['evidence'].pop()
+        if len(report['evidence'])>1:
+            report['evidence'].pop()
+        else:
+            row=report['evidence'][0]
+            if not row['text']:
+                report['evidence'].pop();continue
+            row['text']=row['text'][:len(row['text'])//2];row['line_prefix_only']=True
     if len(json.dumps(report,ensure_ascii=False).encode())>max_bytes:
         raise ValueError('metadata exceeds byte budget; increase --max-bytes or shorten path/query')
+    return report
+
+
+def failure_view(path, report, lines, max_bytes):
+    """Prefer complete failures that fit; otherwise retain evidence and the final tail."""
+    if report['raw_bytes']<=max_bytes:
+        parts=path.read_bytes().split(b'\n')
+        if parts[-1]==b'':parts.pop()
+        rows=[{'line':i,'text':part.decode('utf-8',errors='replace').rstrip('\r'),
+               'line_prefix_only':False} for i,part in enumerate(parts,1)]
+        complete={**report,'view':'complete failed output; UTF-8 replacement decoding, raw bytes retained',
+                  'evidence':rows}
+        if len(json.dumps(complete,ensure_ascii=False).encode())<=max_bytes:return complete
+
+    # Read from the end so a giant last line cannot hide its terminal diagnosis.
+    with path.open('rb') as raw:
+        offset=max(0,report['raw_bytes']-max_bytes)
+        raw.seek(max(0,offset-1));preceding=raw.read(1) if offset else b''
+        raw.seek(offset);parts=raw.read(max_bytes).split(b'\n')
+    if parts[-1]==b'':parts.pop()
+    first=report['raw_lines']-len(parts)+1
+    tail=[{'line':first+i,'text':part.decode('utf-8',errors='replace').rstrip('\r'),
+           'line_suffix_only':i==0 and offset>0 and preceding!=b'\n'} for i,part in enumerate(parts)][-lines:]
+    report={**report,'view':'partial failed output; selected evidence plus final tail',
+            'evidence':list(report['evidence']),
+            'tail':{'label':'failure tail; final lines, clipped lines show suffixes','evidence':tail},
+            'retrieval':'inspect RAW --query TERM or --start LINE; search uses line prefixes, raw bytes retained'}
+    # Keep the first selected match and the last tail line before clipping either.
+    while len(json.dumps(report,ensure_ascii=False).encode())>max_bytes:
+        evidence=report['evidence']
+        choices=[(evidence,False),(tail,True)]
+        multiple=[(rows,end) for rows,end in choices if len(rows)>1]
+        if multiple:
+            rows,end=max(multiple,key=lambda pair:len(json.dumps(pair[0],ensure_ascii=False).encode()))
+            rows.pop(0 if end else -1)
+            continue
+        single=[(rows,end) for rows,end in choices if rows]
+        if not single:raise ValueError('metadata exceeds byte budget; increase --max-bytes')
+        rows,end=max(single,key=lambda pair:len(pair[0][0]['text'].encode()))
+        row=rows[0];length=len(row['text'])
+        if length==0:
+            rows.pop();continue
+        keep=length//2
+        row['text']=(row['text'][-keep:] if end else row['text'][:keep]) if keep else ''
+        row['line_suffix_only' if end else 'line_prefix_only']=True
     return report
 
 
@@ -101,6 +152,8 @@ def main():
         report=inspect(path,args.query or ['error','fail','warn','caused by','traceback'],args.start,args.lines,args.context,args.max_bytes)
         if exit_status is not None:
             report['exit_status']=exit_status;report['execution_receipt']=str(receipt)
+        if exit_status is not None and exit_status!=0:
+            report=failure_view(path,report,args.lines,args.max_bytes)
         while len(json.dumps(report,ensure_ascii=False).encode())>args.max_bytes and report['evidence']:
             report['evidence'].pop()
         if len(json.dumps(report,ensure_ascii=False).encode())>args.max_bytes:

@@ -1,0 +1,212 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "snapshot": {
+      "type": "object",
+      "properties": {
+        "revision": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "files": {
+          "type": "array",
+          "maxItems": 300,
+          "items": {
+            "type": "object",
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            },
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "additionalProperties": false
+          }
+        }
+      },
+      "required": [
+        "revision",
+        "files"
+      ],
+      "additionalProperties": false
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "environment": {
+      "type": "object"
+    },
+    "priorities": {
+      "type": "array",
+      "maxItems": 300,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "policy": {
+      "type": "object",
+      "properties": {
+        "trials": {
+          "type": "array",
+          "maxItems": 300,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "updates": {
+          "type": "array",
+          "maxItems": 300,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "schedule": {
+          "const": false
+        }
+      },
+      "required": [
+        "trials",
+        "updates",
+        "schedule"
+      ],
+      "additionalProperties": false
+    },
+    "selections": {
+      "type": "array",
+      "maxItems": 300,
+      "items": {
+        "type": "object",
+        "properties": {
+          "option": {
+            "type": "string",
+            "minLength": 1
+          },
+          "reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "concern": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "required": [
+          "option",
+          "reason",
+          "concern"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "suggestions": {
+      "type": "array",
+      "maxItems": 300,
+      "items": {
+        "type": "object",
+        "properties": {
+          "area": {
+            "type": "string",
+            "minLength": 1
+          },
+          "opportunity": {
+            "type": "string",
+            "minLength": 1
+          },
+          "option": {
+            "type": "string",
+            "minLength": 1
+          },
+          "why": {
+            "type": "string",
+            "minLength": 1
+          },
+          "evidence": {
+            "type": "array",
+            "maxItems": 300,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "limitations": {
+            "type": "array",
+            "maxItems": 300,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "next_action": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "minLength": 1
+          },
+          "checked_ref": {
+            "type": "string",
+            "minLength": 1
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          }
+        },
+        "required": [
+          "area",
+          "opportunity",
+          "option",
+          "why",
+          "evidence",
+          "limitations",
+          "next_action",
+          "status",
+          "checked_ref",
+          "date"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "id",
+    "project",
+    "snapshot",
+    "purpose",
+    "environment",
+    "priorities",
+    "policy",
+    "selections",
+    "suggestions"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -36,3 +36,13 @@ The Signals evidence-bundle v1 input schema is unchanged. Real imports now rejec
 `plan` and `apply` without loadout IDs now select no additional task guidance. The empty stage map is accepted by lock schema 2; earlier nonempty locks and all named loadouts retain their meaning. The default writes an owned routing block and license pin for lifecycle management, with no skills or tool probes. Explicit `--with context-*` resources can be delivered without a composed loadout or its setup guide. Refresh preserves installed selections; switching to no IDs with `plan` previews removals before `apply`.
 
 Task profile schema 1 now makes `pact` optional, defaulting to no prior-art pass; an explicit true disposition is preserved. `packet`, `plan` and `apply` add `selection_outcome` (`native-sufficient` or `focused`). This reports declared selection, not semantic task classification, observed activation or human value. Exact older readers may reject the new empty map; reproduce old pins from their old source and use the current source for new native-sufficient pins. No installation is silently migrated.
+
+## Greenfield personal library (unreleased)
+
+Catalog, project profile, interest, assessment and private event documents use independent schema version 1. `docs/product.yaml` is the bundle's schema-3 product ledger. Existing loadout, task-packet, evidence-bundle and schema-2 installation/portable-lock contracts keep their meanings. No published tag changes.
+
+`--profile` on plan/apply/refresh selects a catalog project profile by ID or basename; packet continues to read a supplied task-profile file. Existing explicit loadout and `--with` commands remain the delivery primitive. Refresh without a new selection preserves the installed set.
+
+Claude unmanaged prose imports are delegated to the host. Context uses an explicit owned block when CLAUDE.md shadows AGENTS.md, except a verified filesystem alias to AGENTS.md. It no longer interprets arbitrary Markdown to suppress delivery. Existing managed blocks remain refreshable/removable; standalone imports retain their original bytes and may cause duplicate reading on a host that also resolves them. No claim of native discovery follows from this routing choice.
+
+Private immutable evidence/history and future selections survive missing peers. Production schedules are paused configuration, with finite native-host activation documented separately. No candidate-supplied command or policy field is executed.

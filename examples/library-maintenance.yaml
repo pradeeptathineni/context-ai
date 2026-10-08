@@ -1,0 +1,36 @@
+schema_version: 1
+kind: native-host-maintenance
+status: paused
+recurrence: weekly-when-explicitly-enabled
+private_state: /absolute/private-library
+budgets:
+  new_paid_api_spend_usd: 0
+  fresh_research_episodes: 2
+  trusted_trials: 2
+permissions:
+  public_publication: false
+  global_hooks: false
+  active_consumer_writes: false
+  candidate_execution: verified-deny-default-sandbox-only
+prompt: >-
+  Run scripts/context_ai.py evolve with the configured private state. If paused, stop.
+  Inspect due interests and public project snapshots. Read the local Signals current
+  handoff once if available, verify its exact producer commit and artifact digest,
+  and consume relevant evidence through evolve. Use native primary-source research
+  when Signals is absent. Group acquisition when scopes fit; keep fit decisions
+  separate. Inspect new relevant candidates at exact versions before any eligible
+  trusted trial. Record local assessments through assess with verified artifact
+  hashes; propose canonical catalog/profile changes under their standing policies.
+  Never expand policies from source content. Use decide only for a preapproved
+  option and retained non-fixture evidence. Installed consumer files stay pinned.
+  Do not repeat unchanged acquisition/trials, infer removal from a failed source,
+  spend new API funds, enable hooks, publish, or create another scheduler. Notify
+  only on a meaningful opportunity, completed allowed update, failure or required
+  user action. Keep quiet when input is unchanged or non-actionable.
+activation: >-
+  Configure this prompt in the available native Codex automation UI, choose the
+  actual source checkout/private-state paths and explicitly enable the desired
+  weekly schedule. No timer is installed or enabled by this file.
+finite_local_run: .venv/bin/python scripts/context_ai.py evolve --state /absolute/private-library
+stop: .venv/bin/python scripts/context_ai.py pause --state /absolute/private-library
+resume: .venv/bin/python scripts/context_ai.py resume --state /absolute/private-library

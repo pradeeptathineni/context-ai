@@ -1,0 +1,50 @@
+schema_version: 1
+id: simulation
+project: null
+snapshot:
+  revision: null
+  files: []
+purpose: Explore a future simulation question without inventing a repository, stack or approved runtime.
+environment:
+  snapshot_scope: No repository or declared runtime; exploratory interest only.
+priorities:
+- Define an observable question before choosing a simulator.
+- Separate model validity from executable plumbing.
+policy:
+  trials: []
+  updates: []
+  schedule: false
+selections:
+- option: native
+  reason: A scoped question and native research suffice until a concrete simulator and environment are
+    declared.
+  concern: ordinary-work
+suggestions:
+- area: Exploratory simulation
+  opportunity: Specify one observable scenario and validation criterion before adopting a simulator.
+  option: research-evidence
+  why: The assignment names simulation as an allowed interest; no implementation or runtime was supplied.
+  evidence: []
+  limitations:
+  - No repository, simulator, license, approved runtime or use result exists in this profile.
+  next_action: State the system, perturbation and measurable outcome; research original sources for the
+    smallest eligible simulator and propose a bounded isolated trial.
+  status: suggested
+  checked_ref: unknown
+  date: '2026-10-08'
+- area: Waiting-time experiment
+  opportunity: Compare waiting time with one service counter vs two for arrivals every three minutes and
+    five-minute service.
+  option: simpy-queue
+  why: SimPy models events and shared resources; this creates a concrete bottleneck experiment without
+    assuming a future repository.
+  evidence:
+  - https://simpy.readthedocs.io/en/latest/
+  limitations:
+  - The example question is a suggested exploratory task.
+  - No execution, stable package pin, model validity or human interest confirmation claimed.
+  next_action: Inspect a pinned stable SimPy resource example; propose a no-network isolated model with
+    a fixed time horizon and a small parameter table.
+  status: conditional
+  checked_ref: 2026-10-08-primary-source
+  date: '2026-10-08'

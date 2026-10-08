@@ -1,0 +1,85 @@
+schema_version: 1
+id: labs
+project: https://github.com/pradeeptathineni/labs
+snapshot:
+  revision: 5967c563e783e190ee8723a4446dd700c588870b
+  files:
+  - path: README.md
+    sha256: 38342e3f01fbb01de0521ec853bdfede02de854687e87a83d9309d4940cc0a52
+  - path: .meta/README.md
+    sha256: 3dfcd8c2a41ed8fdea37ce69ab861937db65bef3bcc5e888f71136057bbf2359
+  - path: .meta/site/README.md
+    sha256: 843bd0067df16989b13f2a995534ead7107351ee1bda66f58934c9a3ef3434c5
+  - path: niches/code/devops/orchestration/kubernetes/ckad/ck-x/ckad-002/README.md
+    sha256: 2e6295847ae1a69cc104cfde02c44599fb23e8b2964b6c0d1e8997f1caf8c92d
+  - path: niches/code/devops/orchestration/kubernetes/ckad/ck-x/ckad-002/lab.json
+    sha256: b6587576836557e75225ab1c3883a3c0e7c317ce7a2e40e2602808b88971e123
+purpose: Practice problems, retain personal reasoning and track source-aware learning without claiming
+  imported exercises are completed.
+environment:
+  language: Python metadata tooling; static HTML/CSS/JavaScript catalog
+  checks:
+  - python3 .meta/scripts/catalog.py --check
+  - python3 .meta/scripts/lab_sync.py --check
+  - python3 -m unittest discover -s .meta/tests
+  snapshot_scope: Committed public project files; no runtime probe.
+priorities:
+- Keep exercise status distinct from import and content dates.
+- Respect source-specific copy/run permissions.
+policy:
+  trials:
+  - context-tdd
+  updates: []
+  schedule: false
+selections:
+- option: native
+  reason: The project already owns metadata, source registry, catalog and status commands.
+  concern: ordinary-work
+- option: research-evidence
+  reason: Use only for source/license and environment decisions before an imported lab is run.
+  concern: research
+suggestions:
+- area: Kubernetes / CKAD practice
+  opportunity: Turn the unstarted CKAD-002 link into one deliberately scoped practice attempt.
+  option: research-evidence
+  why: The lab preserves 20 task IDs, points to simulator dependencies and requires a BSL review before
+    copying or running.
+  evidence:
+  - niches/code/devops/orchestration/kubernetes/ckad/ck-x/ckad-002/README.md
+  - 'niches/code/devops/orchestration/kubernetes/ckad/ck-x/ckad-002/lab.json: tracking.status=not-started'
+  limitations:
+  - No simulator execution, official exam alignment or readiness was verified.
+  - Context research guidance does not grant permission to run CK-X.
+  next_action: Read the pinned CK-X license and environment metadata; select one task and an approved
+    disposable environment, then record commands and incomplete results under its existing ID.
+  status: suggested
+  checked_ref: 5967c563e783e190ee8723a4446dd700c588870b
+  date: '2026-10-08'
+- area: Catalog delivery
+  opportunity: Use the existing browser smoke check for a catalog interaction change.
+  option: native
+  why: The catalog is static and already provides desktop/mobile and no-JavaScript checks.
+  evidence:
+  - .meta/site/README.md
+  limitations:
+  - No catalog defect or browser result was established in this inspection.
+  next_action: For the next UI change, build the existing site and run .meta/site/browser_smoke.py with
+    its declared environment; retain any failing interaction before fixing it.
+  status: conditional
+  checked_ref: 5967c563e783e190ee8723a4446dd700c588870b
+  date: '2026-10-08'
+- area: Scheduler prediction lab
+  opportunity: Predict why a pod cannot fit one of two differently sized nodes, then inspect filter plugin
+    results.
+  option: scheduler-simulator
+  why: The existing Kubernetes study area can use exposed scheduler decisions as a learning artifact.
+  evidence:
+  - https://github.com/kubernetes-sigs/kube-scheduler-simulator
+  limitations:
+  - No runtime trial or completed Labs exercise claimed.
+  - Home-lab defers Kubernetes; this suggestion does not propose a home-lab migration.
+  next_action: Review the upstream runtime/images and license boundary, then run one isolated two-node
+    prediction/inspection activity and retain the expected vs observed filters.
+  status: conditional
+  checked_ref: 2026-10-08-primary-source
+  date: '2026-10-08'

@@ -80,11 +80,29 @@ class ClaudeAndBothHosts(unittest.TestCase):
         self.assertEqual(preview['host_routing']['claude']['mode'],'native-agents')
         self.assertNotIn('CLAUDE.md',preview['writes'])
 
-    def test_claude_md_importing_agents_is_left_alone(self):
-        (self.project/'CLAUDE.md').write_text('Team notes\n@AGENTS.md\n')
+    def test_unmanaged_instruction_bytes_survive_apply_refresh_undo(self):
+        for original in (b'User rules\r\nsecond line\r\n', b'No final newline', b'Unicode \xc3\xa9\r\n'):
+            with self.subTest(original=original):
+                (self.project/'AGENTS.md').write_bytes(original)
+                (self.project/'CLAUDE.md').write_bytes(original)
+                lock,files=c.resolve([],self.project,'both')
+                c.apply(self.project,lock,files);c.verify(self.project)
+                c.apply(self.project,lock,files)
+                for name in ('AGENTS.md','CLAUDE.md'):
+                    path=self.project/name
+                    path.write_bytes(b'Preface\r\n'+path.read_bytes()+b'Footer\r\n')
+                c.undo(self.project)
+                for name in ('AGENTS.md','CLAUDE.md'):
+                    self.assertEqual((self.project/name).read_bytes(),b'Preface\r\n'+original+b'Footer\r\n')
+
+    def test_arbitrary_import_prose_gets_explicit_owned_route(self):
+        original='Team notes\n@AGENTS.md\n'
+        (self.project/'CLAUDE.md').write_text(original)
         lock,files=c.resolve(['essentials'],self.project,'claude');c.apply(self.project,lock,files)
-        self.assertEqual((self.project/'CLAUDE.md').read_text(),'Team notes\n@AGENTS.md\n')
-        self.assertEqual(c.verify(self.project)['host_routing']['claude']['mode'],'imports-agents')
+        self.assertTrue((self.project/'CLAUDE.md').read_text().startswith(original))
+        self.assertEqual(c.verify(self.project)['host_routing']['claude']['mode'],'managed-block')
+        c.undo(self.project)
+        self.assertEqual((self.project/'CLAUDE.md').read_text(),original)
 
     def test_shadowing_claude_md_gets_owned_block_preserving_user_edits(self):
         (self.project/'CLAUDE.md').write_text('Claude-only user rules\n')
@@ -223,36 +241,17 @@ class ClaudeAndBothHosts(unittest.TestCase):
         with self.assertRaisesRegex(c.Invalid,'unapproved'):c.transaction_path(self.project,'.claude/settings.json')
         with self.assertRaisesRegex(c.Invalid,'unsafe'):c.inside(self.project,'.claude/../../x')
 
-    def test_import_detection_follows_claude_resolution_rules(self):
-        cases=[('CLAUDE.md','Examples:\n```md\n@AGENTS.md\n```\n','managed-block'),
-               ('CLAUDE.md','Mention `@AGENTS.md` literally\n','managed-block'),
-               ('.claude/CLAUDE.md','@AGENTS.md\n','managed-block'),
-               ('.claude/CLAUDE.md','@../AGENTS.md\n','imports-agents'),
-               ('CLAUDE.md','See @./AGENTS.md for shared rules\n','imports-agents'),
-               ('CLAUDE.md','Literal ``@AGENTS.md``\n','managed-block'),
-               ('CLAUDE.md','Literal `` `@AGENTS.md` ``\n','managed-block'),
-               ('CLAUDE.md','Notes\n```\n@AGENTS.md\n','managed-block'),
-               ('CLAUDE.md','~~~~\n```\n~~~~\n@AGENTS.md\n','imports-agents'),
-               ('CLAUDE.md','`code` then @AGENTS.md\n','imports-agents'),
-               ('CLAUDE.md','Literal ``first line\n@AGENTS.md\nlast line``\n','managed-block'),
-               ('CLAUDE.md','`one\ntwo\n@AGENTS.md\nthree`\n','managed-block'),
-               ('CLAUDE.md','Open `span\n@AGENTS.md\n\nnever closed\n','managed-block'),
-               ('CLAUDE.md','```` \n```\n@AGENTS.md\n````\n','managed-block'),
-               ('CLAUDE.md','<!-- note\n@AGENTS.md -->\n','managed-block'),
-               ('CLAUDE.md','<!-- note\n\n@AGENTS.md\n-->\n','managed-block'),
-               ('CLAUDE.md','<!-- one --> <!-- two\n\n@AGENTS.md\n-->\n','managed-block'),
-               ('CLAUDE.md','<!-- note\n```\n-->\n@AGENTS.md\n','imports-agents'),
-               ('CLAUDE.md','<!-- note\n\n-->\n@AGENTS.md\n','imports-agents'),
-               ('CLAUDE.md','```md\n<!-- note\n```\n@AGENTS.md\n','imports-agents'),
-               ('CLAUDE.md','`closed span`\n\n@AGENTS.md\n','imports-agents'),
-               ('CLAUDE.md','```\ncode\n```\n@AGENTS.md\n','imports-agents')]
-        for name,text,mode in cases:
-            with self.subTest(name=name,text=text):
-                for leftover in ('CLAUDE.md','.claude/CLAUDE.md'):
-                    if (self.project/leftover).exists():(self.project/leftover).unlink()
-                path=self.project/name;path.parent.mkdir(exist_ok=True);path.write_text(text)
+    def test_arbitrary_markdown_never_suppresses_explicit_route(self):
+        cases=['@AGENTS.md\n','```md\n@AGENTS.md\n```\n',
+               '`one\n@AGENTS.md\nthree`\n','<!-- note\n\n@AGENTS.md\n-->\n',
+               '```` \n```\n@AGENTS.md\n````\n','Open `span\n@AGENTS.md\n']
+        for text in cases:
+            with self.subTest(text=text):
+                (self.project/'CLAUDE.md').write_text(text)
                 lock,files=c.resolve(['essentials'],self.project,'claude')
-                self.assertEqual(c.plan(self.project,lock,files)['host_routing']['claude']['mode'],mode)
+                self.assertEqual(c.plan(self.project,lock,files)['host_routing']['claude']['mode'],'managed-block')
+                c.apply(self.project,lock,files);c.verify(self.project);c.undo(self.project)
+                self.assertEqual((self.project/'CLAUDE.md').read_text(),text)
 
     def test_symlinked_claude_md_to_agents_counts_as_import(self):
         (self.project/'CLAUDE.md').symlink_to('AGENTS.md')
@@ -284,22 +283,6 @@ class ClaudeAndBothHosts(unittest.TestCase):
             with self.subTest(bad=bad):
                 with self.assertRaisesRegex(c.Invalid,'--with accepts only'):c.resolve(['essentials'],self.project,'codex',extras=[bad])
         self.assertNotEqual(cli('explain','essentials','--with','context-portable-notes').returncode,0)
-
-    def test_code_wrapped_import_is_never_effective_for_any_span_shape(self):
-        import random
-        rng=random.Random(20261008)
-        for case in range(400):
-            n=rng.randint(1,4);ticks='`'*n
-            pre=rng.choice(['','Note: ','- ','> '])
-            lines=[rng.choice(['first','two words','x']) for _ in range(rng.randint(0,2))]
-            body='\n'.join([*lines[:1],'@AGENTS.md',*lines[1:]]) if lines else '@AGENTS.md'
-            pad=rng.choice(['',' '])
-            text=pre+ticks+pad+body+pad+ticks+rng.choice(['','.',' end'])+'\n'
-            with self.subTest(text=text):
-                self.assertNotIn('@AGENTS.md',c.outside_code(text))
-        for text in ('@AGENTS.md\n','See @AGENTS.md here\n','`a`\n@AGENTS.md\n','``a`b``\n\n@AGENTS.md\n'):
-            with self.subTest(valid=text):
-                self.assertIn('@AGENTS.md',c.outside_code(text))
 
 if __name__=='__main__':
     unittest.main()

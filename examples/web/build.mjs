@@ -8,5 +8,5 @@ for (const name of ['index.html', 'style.css', 'catalog.js', 'app.js']) {
   await copyFile(`${dir}${name}`, `${out}${name}`);
   bytes += (await stat(`${out}${name}`)).size;
 }
-if (bytes > 24000) throw new Error(`Static fixture exceeds its 24 KB budget: ${bytes}`);
-console.log(JSON.stringify({output:out,bytes,budget:24000}));
+if (bytes > 80000) throw new Error(`Static fixture exceeds its 80 KB budget: ${bytes}`);
+console.log(JSON.stringify({output:out,bytes,budget:80000}));

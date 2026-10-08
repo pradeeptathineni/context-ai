@@ -1,0 +1,220 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "options": {
+      "type": "array",
+      "maxItems": 300,
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "purpose": {
+            "type": "string",
+            "minLength": 1
+          },
+          "concern": {
+            "type": "string",
+            "minLength": 1
+          },
+          "delivery": {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "enum": [
+                  "native",
+                  "loadout",
+                  "capability",
+                  "direct-upstream"
+                ]
+              },
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          "upstream": {
+            "type": "object",
+            "properties": {
+              "url": {
+                "type": "string",
+                "minLength": 1
+              },
+              "revision": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "license": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "license_source": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "url",
+              "revision",
+              "license",
+              "license_source"
+            ],
+            "additionalProperties": false
+          },
+          "domains": {
+            "type": "array",
+            "maxItems": 300,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "requirements": {
+            "type": "array",
+            "maxItems": 300,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "permissions": {
+            "type": "array",
+            "maxItems": 300,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "references": {
+            "type": "array",
+            "maxItems": 300,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "status": {
+            "enum": [
+              "retained",
+              "preferred",
+              "experimental",
+              "conditional"
+            ]
+          },
+          "limits": {
+            "type": "array",
+            "maxItems": 300,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "assessments": {
+            "type": "array",
+            "maxItems": 300,
+            "items": {
+              "type": "object",
+              "properties": {
+                "scope": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "evidence": {
+                  "type": "array",
+                  "maxItems": 300,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "strengths": {
+                  "type": "array",
+                  "maxItems": 300,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "weaknesses": {
+                  "type": "array",
+                  "maxItems": 300,
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "checked_ref": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "grade": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 4
+                }
+              },
+              "required": [
+                "scope",
+                "evidence",
+                "strengths",
+                "weaknesses",
+                "checked_ref",
+                "grade"
+              ],
+              "additionalProperties": true
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "purpose",
+          "concern",
+          "delivery",
+          "upstream",
+          "domains",
+          "requirements",
+          "permissions",
+          "references",
+          "status",
+          "limits",
+          "assessments"
+        ],
+        "additionalProperties": false
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "options"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

@@ -22,6 +22,8 @@ jobs:
         run: |
           ruby scripts/validate.rb
           python scripts/check_loadouts.py
+          python scripts/build_product.py --check
+          python scripts/build_catalog.py --check
           ruby scripts/lookup.rb context.skills --provider openai --product codex > /dev/null
       - name: Lint Python semantics
         run: ruff check scripts tests

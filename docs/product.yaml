@@ -1,0 +1,179 @@
+schema_version: 3
+project: context-ai
+mission: Maintain a personal, evidence-informed source of project equipment and standards, and help each
+  project select, use, and evolve the combinations that fit it.
+scope: All listed features are required. Role describes contribution, not priority or optionality. Required
+  support does not mean enabled by default.
+roles:
+  core: Direct product capability.
+  supporting: Required access, integration, operation, or maintenance.
+  guardrail: Mandatory boundary for acceptable operation.
+features:
+- id: core-context
+  name: Core context & standards
+  role: core
+  type: knowledge
+  intent: Maintain the personal standards and reusable guidance that projects can share without requiring
+    the same setup or extra instructions for every task.
+  assessment: null
+- id: skills
+  name: Skills & procedures
+  role: core
+  type: delivery
+  intent: Provide selected original or upstream procedures for recurring work such as research, implementation,
+    testing, diagnosis, review, and release.
+  assessment: null
+- id: concepts
+  name: Concepts library
+  role: core
+  type: knowledge
+  intent: Keep a living map of relevant concerns and knowledge without turning every concept into a required
+    task or research job.
+  assessment: null
+- id: catalog
+  name: Tooling & capability catalog
+  role: core
+  type: knowledge
+  intent: Catalog native facilities, upstream equipment, and Context’s own resources so their purpose,
+    availability, and useful differences are apparent.
+  assessment: null
+- id: project-profiles
+  name: Project profiles & policies
+  role: core
+  type: configuration
+  intent: Describe each project’s needs, environment, preferences, authorized actions, and selection policies
+    so standardization does not mean uniformity.
+  assessment: null
+- id: interests
+  name: Interests & research queries
+  role: core
+  type: configuration
+  intent: Maintain research needs derived from concepts, projects, and unresolved choices; revisit what
+    can change a decision rather than every catalog entry.
+  assessment: null
+- id: research-intake
+  name: Research intake
+  role: core
+  type: integration
+  intent: Consume relevant new or updated Signals evidence and use independent research when Signals is
+    unavailable or insufficient.
+  assessment: null
+- id: assessments
+  name: Candidate assessments
+  role: core
+  type: assessment
+  intent: Assess capabilities, prerequisites, fit, risks, strengths, and weaknesses for a specific workload
+    before choosing reuse, adaptation, replacement, or building.
+  assessment: null
+- id: trials
+  name: Controlled trials
+  role: core
+  type: assessment
+  intent: Provision appropriate candidates in isolated consumers and test actual work, separating availability,
+    installation, operation, and demonstrated benefit.
+  assessment: null
+- id: loadouts
+  name: Loadout library
+  role: core
+  type: configuration
+  intent: Maintain reusable, project-specific combinations of selected guidance, tools, and settings,
+    including multiple specializations rather than one universal harness.
+  assessment: null
+- id: recommendations
+  name: Loadout recommendations
+  role: core
+  type: assessment
+  intent: Choose coherent equipment for a project, explain the selections, and avoid redundant ownership
+    or conflicting behavior.
+  assessment: null
+- id: activation
+  name: Task routing & activation
+  role: core
+  type: integration
+  intent: Make selected guidance or tools available before the action they should improve, while leaving
+    ordinary work unobstructed when no addition is needed.
+  assessment: null
+- id: setup
+  name: Project setup
+  role: core
+  type: delivery
+  intent: Preview and safely deliver pinned selections through fitting native or upstream mechanisms,
+    accurately reporting what installation and readiness checks establish.
+  assessment: null
+- id: lifecycle
+  name: Updates & undo
+  role: core
+  type: delivery
+  intent: Update, specialize, replace, or remove managed selections while preserving user edits, ownership,
+    and recoverability.
+  assessment: null
+- id: host-adapters
+  name: AI-host adapters
+  role: supporting
+  type: integration
+  intent: Deliver shared source material to supported hosts such as Codex and Claude through thin, explicit
+    compatibility handling.
+  assessment: null
+- id: history
+  name: Evidence & decision history
+  role: core
+  type: knowledge
+  intent: Retain sources, trials, pins, and selection history, including why older, rejected, or superseded
+    options may still fit elsewhere.
+  assessment: null
+- id: portal
+  name: Catalog portal & showcase
+  role: supporting
+  type: ui
+  intent: Browse what is known, selected, installed, tested, or superseded, and deliberately share personal
+    standards and choices with their reasons.
+  assessment: null
+- id: interfaces
+  name: CLI & exports
+  role: supporting
+  type: integration
+  intent: Expose selection, delivery, lifecycle, catalog, and evidence operations to people, agents, and
+    scripts without requiring the portal.
+  assessment: null
+- id: ecosystem-suggestions
+  name: Project suggestions
+  role: core
+  type: assessment
+  intent: Show named repositories and concrete improvements they could benefit from, with fit, evidence,
+    limitations, and next actions; do not silently modify them.
+  assessment: null
+- id: evolution
+  name: Library evolution
+  role: core
+  type: automation
+  intent: Run configured research, inspection, trials, and reassessment to improve the catalog and specializations;
+    update active selections only under their policies.
+  assessment: null
+- id: project-feedback
+  name: Reciprocal use & feedback
+  role: core
+  type: integration
+  intent: Equip Signals and other projects, retain their practical results as first-party evidence, and
+    continue operating when a peer or optional provider is absent.
+  assessment: null
+- id: consumer-evaluations
+  name: Consumer evaluations
+  role: core
+  type: evaluation
+  intent: Compare native work, direct upstream use, and Context-delivered work; keep helpful specialization
+    and remove unnecessary context or operating overhead.
+  assessment: null
+- id: product-ledger
+  name: Product ledger
+  role: supporting
+  type: evaluation
+  intent: Show intended features, delivery status, scoped value evidence, and unresolved weaknesses without
+    treating installation or test counts as proof of benefit.
+  assessment: null
+- id: safeguards
+  name: All
+  role: guardrail
+  type: security
+  intent: Enforce licensing, privacy, permissions, trial isolation, ownership, and resource limits; recommendations
+    and untrusted content cannot authorize their own actions.
+  assessment: null

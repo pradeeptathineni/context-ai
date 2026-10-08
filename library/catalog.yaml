@@ -1,0 +1,692 @@
+schema_version: 1
+options:
+- id: native
+  name: Project instructions and native tools
+  purpose: Use the repository's instructions, search and existing commands for ordinary covered work.
+  concern: ordinary-work
+  delivery:
+    kind: native
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai/blob/4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904/AGENTS.md
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - software
+  - learning
+  requirements:
+  - Read the current project instructions and actual manifests.
+  permissions:
+  - Only actions authorized for the task.
+  references:
+  - AGENTS.md
+  - core/context.md
+  status: preferred
+  limits:
+  - Host availability varies; native-sufficient is a task choice, not a guarantee for every workload.
+  - Upstream pin identifies the Context selection policy, not the host tool implementation.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - 'AGENTS.md: ordinary covered work uses project instructions and native tools.'
+    strengths:
+    - No additional setup or generic workflow imposed.
+    weaknesses:
+    - A specific unmet capability needs its own selection.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: aws-infrastructure
+  name: Aws Infrastructure
+  purpose: Plan and validate existing AWS/Terraform infrastructure safely.
+  concern: loadout:aws-infrastructure
+  delivery:
+    kind: loadout
+    id: aws-infrastructure
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - aws
+  - terraform
+  - static-hosting
+  requirements:
+  - python-runtime
+  - git
+  permissions:
+  - Project-local managed file delivery only; selection does not authorize commands or publication.
+  references:
+  - loadouts/aws-infrastructure.yaml
+  - docs/loadouts.md
+  status: retained
+  limits:
+  - Opt in only when its selection and lifecycle behavior is needed.
+  - Stage guidance is not proof that a host read or invoked it.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - loadouts/aws-infrastructure.yaml at 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    strengths:
+    - Retains the existing concern and explicit stage resources.
+    weaknesses:
+    - Broader than a focused capability for a one-off need.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: context-authoring
+  name: Context Authoring
+  purpose: Maintain concise coherent context with retained requirements and provenance.
+  concern: loadout:context-authoring
+  delivery:
+    kind: loadout
+    id: context-authoring
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - context
+  - instructions
+  - configuration
+  requirements:
+  - python-runtime
+  - git
+  - context-pact-hrr
+  permissions:
+  - Project-local managed file delivery only; selection does not authorize commands or publication.
+  references:
+  - loadouts/context-authoring.yaml
+  - docs/loadouts.md
+  status: retained
+  limits:
+  - Opt in only when its selection and lifecycle behavior is needed.
+  - Stage guidance is not proof that a host read or invoked it.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - loadouts/context-authoring.yaml at 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    strengths:
+    - Retains the existing concern and explicit stage resources.
+    weaknesses:
+    - Broader than a focused capability for a one-off need.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: essentials
+  name: Essentials
+  purpose: Smallest selected route for feature work - prior-art search with the reuse ladder, a test-first
+    loop, and spec/standards/complexity review.
+  concern: loadout:essentials
+  delivery:
+    kind: loadout
+    id: essentials
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - software
+  - essentials
+  requirements:
+  - context-pact-hrr
+  - context-tdd
+  - context-review
+  permissions:
+  - Project-local managed file delivery only; selection does not authorize commands or publication.
+  references:
+  - loadouts/essentials.yaml
+  - docs/loadouts.md
+  status: retained
+  limits:
+  - Opt in only when its selection and lifecycle behavior is needed.
+  - Stage guidance is not proof that a host read or invoked it.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - loadouts/essentials.yaml at 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    strengths:
+    - Retains the existing concern and explicit stage resources.
+    weaknesses:
+    - Broader than a focused capability for a one-off need.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: react-web
+  name: React Web
+  purpose: Apply stack-matched React guidance with web experience.
+  concern: loadout:react-web
+  delivery:
+    kind: loadout
+    id: react-web
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - react
+  - nextjs-or-vite
+  requirements:
+  - python-runtime
+  - git
+  - context-react-review
+  - node
+  permissions:
+  - Project-local managed file delivery only; selection does not authorize commands or publication.
+  references:
+  - loadouts/react-web.yaml
+  - docs/loadouts.md
+  status: retained
+  limits:
+  - Opt in only when its selection and lifecycle behavior is needed.
+  - Stage guidance is not proof that a host read or invoked it.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - loadouts/react-web.yaml at 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    strengths:
+    - Retains the existing concern and explicit stage resources.
+    weaknesses:
+    - Broader than a focused capability for a one-off need.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: release-review
+  name: Release Review
+  purpose: Review, test and publish an explicitly authorized immutable release.
+  concern: loadout:release-review
+  delivery:
+    kind: loadout
+    id: release-review
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - release
+  - compatibility
+  - publication
+  requirements:
+  - python-runtime
+  - git
+  permissions:
+  - Project-local managed file delivery only; selection does not authorize commands or publication.
+  references:
+  - loadouts/release-review.yaml
+  - docs/loadouts.md
+  status: retained
+  limits:
+  - Opt in only when its selection and lifecycle behavior is needed.
+  - Stage guidance is not proof that a host read or invoked it.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - loadouts/release-review.yaml at 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    strengths:
+    - Retains the existing concern and explicit stage resources.
+    weaknesses:
+    - Broader than a focused capability for a one-off need.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: research-evidence
+  name: Research Evidence
+  purpose: Acquire primary evidence and actionable options from official sources, direct investigation
+    or Signals when available.
+  concern: research
+  delivery:
+    kind: loadout
+    id: research-evidence
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - research
+  - adoption
+  requirements:
+  - python-runtime
+  - git
+  permissions:
+  - Project-local managed file delivery only; selection does not authorize commands or publication.
+  references:
+  - loadouts/research-evidence.yaml
+  - docs/loadouts.md
+  status: retained
+  limits:
+  - Opt in only when its selection and lifecycle behavior is needed.
+  - Stage guidance is not proof that a host read or invoked it.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - loadouts/research-evidence.yaml at 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    strengths:
+    - Retains the existing concern and explicit stage resources.
+    weaknesses:
+    - Broader than a focused capability for a one-off need.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: service-api
+  name: Service Api
+  purpose: Test API contracts, trust and persistence on the actual service stack.
+  concern: loadout:service-api
+  delivery:
+    kind: loadout
+    id: service-api
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - api
+  - service
+  - persistence
+  requirements:
+  - python-runtime
+  - git
+  permissions:
+  - Project-local managed file delivery only; selection does not authorize commands or publication.
+  references:
+  - loadouts/service-api.yaml
+  - docs/loadouts.md
+  status: retained
+  limits:
+  - Opt in only when its selection and lifecycle behavior is needed.
+  - Stage guidance is not proof that a host read or invoked it.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - loadouts/service-api.yaml at 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    strengths:
+    - Retains the existing concern and explicit stage resources.
+    weaknesses:
+    - Broader than a focused capability for a one-off need.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: standard
+  name: Standard
+  purpose: Proportional development using existing project tools; composes the essentials route.
+  concern: loadout:standard
+  delivery:
+    kind: loadout
+    id: standard
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - software
+  - maintenance
+  requirements:
+  - python-runtime
+  - git
+  - context-diagnose
+  - context-review
+  permissions:
+  - Project-local managed file delivery only; selection does not authorize commands or publication.
+  references:
+  - loadouts/standard.yaml
+  - docs/loadouts.md
+  status: retained
+  limits:
+  - Opt in only when its selection and lifecycle behavior is needed.
+  - Stage guidance is not proof that a host read or invoked it.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - loadouts/standard.yaml at 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    strengths:
+    - Retains the existing concern and explicit stage resources.
+    weaknesses:
+    - Broader than a focused capability for a one-off need.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: web-experience
+  name: Web Experience
+  purpose: Build and critique a coherent accessible responsive web experience.
+  concern: loadout:web-experience
+  delivery:
+    kind: loadout
+    id: web-experience
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - website
+  - frontend
+  - non-react-supported
+  requirements:
+  - python-runtime
+  - git
+  - context-web-design
+  - context-web-audit
+  permissions:
+  - Project-local managed file delivery only; selection does not authorize commands or publication.
+  references:
+  - loadouts/web-experience.yaml
+  - docs/loadouts.md
+  status: retained
+  limits:
+  - Opt in only when its selection and lifecycle behavior is needed.
+  - Stage guidance is not proof that a host read or invoked it.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - loadouts/web-experience.yaml at 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    strengths:
+    - Retains the existing concern and explicit stage resources.
+    weaknesses:
+    - Broader than a focused capability for a one-off need.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: context-output
+  name: Capture and inspect command output
+  purpose: Retain a verbose command once, recover bounded diagnostic evidence and preserve its exit status.
+  concern: output-handling
+  delivery:
+    kind: capability
+    id: context-output
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - software
+  - operations
+  requirements:
+  - Python 3.10+
+  - Reviewed command argv
+  - Private consumer-owned log path
+  permissions:
+  - Execute only the approved argv.
+  - Write raw output and status receipt to declared consumer paths.
+  references:
+  - procedures/output.md
+  - scripts/context_output.py
+  - capabilities.yaml
+  status: preferred
+  limits:
+  - Explicit wrapper; native reads and unwrapped commands need separate bounds.
+  - Raw output can contain private data.
+  - Source behavior and greenfield trial evidence must be checked separately.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - procedures/output.md and capabilities.yaml inspected at 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    strengths:
+    - No filter service, model or global hooks required.
+    - Retains raw bytes and exact command exit status.
+    weaknesses:
+    - Literal evidence selection can miss a cause; inspect relevant ranges.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: context-tdd
+  name: Focused test-first loop
+  purpose: Pin a feature or bug at a stable public seam using the existing project test runner.
+  concern: test-first-development
+  delivery:
+    kind: capability
+    id: context-tdd
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - software
+  requirements:
+  - An agreed observable seam
+  - An existing locally usable test runner
+  permissions:
+  - Only task-authorized test and implementation changes.
+  references:
+  - procedures/tdd.md
+  - sourced/mattpocock/tdd/instruction.md
+  - sources.lock.json
+  status: retained
+  limits:
+  - Skip prose, configuration-only work, exploratory spikes and unexercisable changes.
+  - Guidance delivery alone does not prove test quality or usefulness.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - procedures/tdd.md inspected; Matt Pocock source pin f3fc5632f401156837ee3872f14fe33ccf1024ea
+    strengths:
+    - Reuses the pinned Matt Pocock discipline with small Context-specific deltas.
+    weaknesses:
+    - Adds guidance where native work may already follow the same loop.
+    checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    grade: null
+- id: matt-pocock-tdd
+  name: Matt Pocock TDD directly
+  purpose: Use the pinned upstream TDD skill as the direct-upstream comparison for an executable test-first
+    task.
+  concern: test-first-development
+  delivery:
+    kind: direct-upstream
+    path: sourced/mattpocock/tdd/instruction.md
+  upstream:
+    url: https://github.com/mattpocock/skills
+    revision: f3fc5632f401156837ee3872f14fe33ccf1024ea
+    license: MIT
+    license_source: sourced/mattpocock/LICENSE
+  domains:
+  - software
+  requirements:
+  - Existing test runner
+  - Resolve upstream codebase-design references against the consumer's own design authority.
+  permissions:
+  - Guidance only; project commands retain their own authority.
+  references:
+  - sources.lock.json
+  - sourced/mattpocock/tdd/instruction.md
+  status: retained
+  limits:
+  - Not selected alongside context-tdd for the same concern.
+  - Pinned copied instruction is independently usable; installation and actual invocation remain separate.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - 'sources.lock.json: mattpocock entry and retained license bytes'
+    strengths:
+    - Strong direct-upstream baseline; no Context delivery is needed to read the upstream instruction.
+    weaknesses:
+    - Upstream related-skill references may not exist in the consumer.
+    checked_ref: f3fc5632f401156837ee3872f14fe33ccf1024ea
+    grade: null
+- id: ecc-whole-harness
+  name: ECC integrated harness
+  purpose: Consider a complete upstream engineering profile when its workflow, hooks and native lifecycle
+    fit a specific project.
+  concern: engineering-harness
+  delivery:
+    kind: direct-upstream
+    id: ecc@ecc
+  upstream:
+    url: https://github.com/affaan-m/ECC
+    revision: ef648e01899ba3e8dc6371642deaaf64b4477775
+    license: MIT
+    license_source: https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/LICENSE
+  domains:
+  - software
+  requirements:
+  - Exact-version package and dependency inspection
+  - Compatible host runtime
+  - A declared isolated execution policy before trial
+  permissions:
+  - Review installer destinations, hook runtime, network, authentication and native plugin trust before
+    any execution.
+  references:
+  - https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/README.md
+  - https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/install.sh
+  - docs/greenfield-prior-art.md
+  status: conditional
+  limits:
+  - No installation, execution or comparative benefit is established here.
+  - The inspected shell wrapper installs Node dependencies when absent.
+  - Native Codex plugin scope differs from Claude project/local scope.
+  - Do not stack copied skills and a native whole plugin for the same concern.
+  assessments:
+  - scope: Source inspection; project-specific fit is proposed unless a linked trial establishes operation.
+    evidence:
+    - Exact-pin README, install.sh and MIT LICENSE fetched and read on 2026-10-08.
+    strengths:
+    - Upstream owns native install/update mechanics and a coherent full workflow.
+    weaknesses:
+    - Broader authority and operating surface than a focused resource; unneeded for ordinary tasks.
+    checked_ref: ef648e01899ba3e8dc6371642deaaf64b4477775
+    grade: null
+- id: nist-citation-probes
+  name: NIST citation support questions
+  purpose: Check source support, omitted material and evidentiary sufficiency at a consequential claim
+    boundary.
+  concern: citation-assessment
+  delivery:
+    kind: direct-upstream
+  upstream:
+    url: https://www.nist.gov/programs-projects/building-evaluation-probes-agentic-ai
+    revision: null
+    license: null
+    license_source: null
+  domains:
+  - research
+  requirements: []
+  permissions:
+  - Read public documentation; execution requires reviewed pinned runtime and isolation
+  references:
+  - https://www.nist.gov/programs-projects/building-evaluation-probes-agentic-ai
+  status: conditional
+  limits:
+  - The demonstrator is study material, not an installed evaluation runtime.
+  - No effectiveness comparison or independent corroboration claimed.
+  assessments:
+  - scope: Source inspection for the named project opportunity
+    evidence:
+    - https://www.nist.gov/programs-projects/building-evaluation-probes-agentic-ai
+    strengths:
+    - Check source support, omitted material and evidentiary sufficiency at a consequential claim boundary.
+    weaknesses:
+    - The demonstrator is study material, not an installed evaluation runtime.
+    - No effectiveness comparison or independent corroboration claimed.
+    checked_ref: 2026-10-08-documentation
+    grade: null
+- id: scheduler-simulator
+  name: Kubernetes scheduler simulator
+  purpose: Predict scheduling filters for two nodes and a resource request, then inspect scheduler plugin
+    decisions.
+  concern: scheduler-learning
+  delivery:
+    kind: direct-upstream
+  upstream:
+    url: https://github.com/kubernetes-sigs/kube-scheduler-simulator
+    revision: null
+    license: null
+    license_source: null
+  domains:
+  - kubernetes
+  - learning
+  requirements:
+  - Approved Docker/images or a compatible isolated environment
+  permissions:
+  - Read public documentation; execution requires reviewed pinned runtime and isolation
+  references:
+  - https://github.com/kubernetes-sigs/kube-scheduler-simulator
+  status: conditional
+  limits:
+  - Does not exercise real workload, CNI or disks.
+  - Runtime/images and exact execution license boundary still require review; not installed.
+  assessments:
+  - scope: Source inspection for the named project opportunity
+    evidence:
+    - https://github.com/kubernetes-sigs/kube-scheduler-simulator
+    strengths:
+    - Predict scheduling filters for two nodes and a resource request, then inspect scheduler plugin decisions.
+    weaknesses:
+    - Does not exercise real workload, CNI or disks.
+    - Runtime/images and exact execution license boundary still require review; not installed.
+    checked_ref: 2026-10-08-documentation
+    grade: null
+- id: simpy-queue
+  name: SimPy queue model
+  purpose: Explore waiting time and service capacity with a small discrete-event queue model.
+  concern: queue-simulation
+  delivery:
+    kind: direct-upstream
+  upstream:
+    url: https://simpy.readthedocs.io/en/latest
+    revision: null
+    license: null
+    license_source: null
+  domains:
+  - simulation
+  requirements:
+  - Reviewed Python runtime and pinned SimPy package
+  permissions:
+  - Read public documentation; execution requires reviewed pinned runtime and isolation
+  references:
+  - https://simpy.readthedocs.io/en/latest
+  status: conditional
+  limits:
+  - No simulator executed; stable runtime pin not yet selected.
+  - Queue models do not represent continuous dynamics or interacting-agent behavior.
+  assessments:
+  - scope: Source inspection for the named project opportunity
+    evidence:
+    - https://simpy.readthedocs.io/en/latest
+    strengths:
+    - Explore waiting time and service capacity with a small discrete-event queue model.
+    weaknesses:
+    - No simulator executed; stable runtime pin not yet selected.
+    - Queue models do not represent continuous dynamics or interacting-agent behavior.
+    checked_ref: 2026-10-08-documentation
+    grade: null
+- id: hypothesis
+  name: Hypothesis preservation properties
+  purpose: Generate lifecycle edit/undo cases against exact Context resource bytes and retain failing
+    examples.
+  concern: preservation-testing
+  delivery:
+    kind: direct-upstream
+    path: scripts/context_trials.py
+  upstream:
+    url: https://hypothesis.readthedocs.io/en/latest
+    revision: 6.168.5 wheel ddee1ef4bab47e315b705e42d2f4354e789973d11f9620d2df242aef4cfa42b2
+    license: MPL-2.0
+    license_source: https://pypi.org/project/hypothesis/6.168.5/
+  domains:
+  - testing
+  - lifecycle
+  requirements:
+  - Reviewed CPython 3.12 macOS x86_64 wheels
+  - sortedcontainers 2.4.0 Apache-2.0
+  - Verified sandbox-exec denial probes
+  permissions:
+  - Explicit acquisition of pinned wheels; no candidate import during acquisition
+  - Candidate executes only inside verified no-network destination sandbox
+  references:
+  - docs/hypothesis-trial.md
+  - scripts/context_trial_wheels.py
+  - evals/greenfield.md
+  status: conditional
+  limits:
+  - Trial only; no normal runtime dependency or global installation.
+  - Generated arm took longer than 24-case deterministic baseline.
+  - No human benefit or superior defect-finding claim.
+  - First attempt hit the initial CPU ceiling and remains retained.
+  assessments:
+  - scope: Actual Context edit/undo preservation seam, corrected snapshot 52bc7ef19c0be5f21ad8aeb7ad93df84d09953640a08673e0a3a95c014bc4c7b
+    evidence:
+    - docs/hypothesis-trial.md
+    - evals/greenfield.md
+    strengths:
+    - 32 generated lifecycle cases passed; pinned wheel executed under real denial probes
+    weaknesses:
+    - 21.94 seconds including import vs 14.75 seconds for 24 deterministic cases; unequal case counts,
+      no speed comparison claim
+    checked_ref: 52bc7ef19c0be5f21ad8aeb7ad93df84d09953640a08673e0a3a95c014bc4c7b
+    grade: 2

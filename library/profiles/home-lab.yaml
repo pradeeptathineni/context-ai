@@ -1,0 +1,74 @@
+schema_version: 1
+id: home-lab
+project: https://github.com/pradeeptathineni/home-lab
+snapshot:
+  revision: 7768131dc21f5a3bb1e46aeebce16fe8972cc887
+  files:
+  - path: README.md
+    sha256: df73545405b4844e5f4e4244f34a609a0d77678e563f5e7043bb72d1200e5006
+  - path: pyproject.toml
+    sha256: abf87cb76cd0b64d4b454dc901aa7338706ad64bba06e9e7d601deae96f3c76f
+  - path: Makefile
+    sha256: e1955767606c6000aa80a317b3b11443fa6d07409801d8e38b05ce312df77b4c
+  - path: docs/knowledge.md
+    sha256: 9dd25692271f38b2eae3a8306c22b2075d940efc41bd7fc1bfe95380d99dd1c1
+  - path: docs/recovery.md
+    sha256: 44f7beb54789f237a91ff8f85d8b38dde88250b0970dfa0aae84d0f488857631
+purpose: Operate a private optional Mac/Linux lab and prove safe recovery and experiments.
+environment:
+  language: Python >=3.12
+  runtime: Mac host with Lima Linux VM; runtime state not probed
+  checks:
+  - python -m pytest
+  - python -m ruff check .
+  - ./bin/labctl validate
+  snapshot_scope: Committed public HEAD only; uncommitted changes and private runtime data were not inspected.
+priorities:
+- Private services and explicit secrets/data boundaries.
+- Recoverability before more services.
+- Kubernetes remains deliberately deferred.
+policy:
+  trials: []
+  updates: []
+  schedule: false
+selections:
+- option: native
+  reason: The existing labctl, tests and operations own service and recovery actions.
+  concern: ordinary-work
+- option: context-output
+  reason: Opt in before verbose validate/test commands to retain failures without repeating service actions.
+  concern: output-handling
+suggestions:
+- area: Backup / recovery
+  opportunity: Close the independent-backup-destination gap using the existing restore workflow.
+  option: native
+  why: README and recovery documentation explicitly distinguish a same-Mac fixture proof from resilient
+    backup.
+  evidence:
+  - README.md
+  - docs/recovery.md
+  limitations:
+  - No destination, credentials or current backup runtime was inspected.
+  - The checkout has uncommitted changes beyond this snapshot.
+  next_action: Choose an explicitly authorized independent destination, then use the existing backup check
+    and fixture restore-test to record checksum recovery; keep service quiesce/export requirements.
+  status: suggested
+  checked_ref: 7768131dc21f5a3bb1e46aeebce16fe8972cc887
+  date: '2026-10-08'
+- area: Operational diagnostics
+  opportunity: Retain validation output once before retrieving the failing cause.
+  option: context-output
+  why: The project has explicit validate/test commands; recoverable logs can avoid rerunning potentially
+    stateful operations.
+  evidence:
+  - Makefile
+  - pyproject.toml
+  - docs/greenfield-prior-art.md
+  limitations:
+  - No large-output failure or speed benefit was measured for home-lab.
+  - Native reads bypass the explicit wrapper.
+  next_action: In a disposable approved consumer, compare native redirect/search with context-output on
+    an existing validation command before changing the operational route.
+  status: conditional
+  checked_ref: 7768131dc21f5a3bb1e46aeebce16fe8972cc887
+  date: '2026-10-08'

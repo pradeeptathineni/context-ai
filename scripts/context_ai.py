@@ -774,68 +774,9 @@ def instruction_block(text):
         finish+=1
     return text[start:finish]
 
-def outside_code(text):
-    """Markdown text an import can come from.
-
-    Follows CommonMark's block/inline split: fenced blocks (an unclosed fence runs to EOF) are removed
-    line by line and separate paragraphs; inside a paragraph a code span opens at a backtick run and
-    closes at the next run of exactly the same length, and may span lines. An opener that never closes is
-    literal in CommonMark, but whether Claude reads text after it as an import is not documented, so the
-    rest of that paragraph is conservatively not trusted; HTML comments are stripped by Claude before
-    use. When unsure the caller adds a managed block, which is harmless if the import is also real.
-    """
-    blocks=[[]];fence=None;comment=False
-    for line in text.splitlines():
-        opening=re.match(r'^ {0,3}(`{3,}|~{3,})',line)
-        if fence:
-            if opening and opening.group(1)[0]==fence[0] and len(opening.group(1))>=len(fence) and not line.strip(' '+fence[0]):
-                fence=None
-            continue
-        # A block comment can cross blank lines or contain fence markers. Remove it before
-        # paragraph/fence detection, while keeping comment-looking text inside fences literal.
-        if comment:
-            end=line.find('-->')
-            if end<0:continue
-            line=line[end+3:].lstrip(' ');comment=False
-        while re.match(r'^ {0,3}<!--',line):
-            blocks.append([])
-            end=line.find('-->')
-            if end<0:
-                comment=True;break
-            line=line[end+3:].lstrip(' ')
-        if comment:continue
-        opening=re.match(r'^ {0,3}(`{3,}|~{3,})',line)
-        if opening:
-            fence=opening.group(1);blocks.append([]);continue
-        if not line.strip():
-            blocks.append([]);continue
-        blocks[-1].append(line)
-    kept=[]
-    for paragraph in blocks:
-        body=re.sub(r'<!--.*?-->','',' \n'.join(paragraph),flags=re.S)
-        out=[];i=0
-        while i<len(body):
-            if body[i]!='`':
-                out.append(body[i]);i+=1;continue
-            run=re.match(r'`+',body[i:]).group(0)
-            close=next((m for m in re.finditer(r'`+',body[i+len(run):]) if len(m.group(0))==len(run)),None)
-            if close is None:
-                break
-            i+=len(run)+close.end()
-        kept.append(''.join(out))
-    return '\n\n'.join(kept)
-
 def imports_agents(project, path):
-    """Claude imports resolve relative to the importing file and skip code spans/fences."""
-    target=(project/'AGENTS.md').resolve()
-    if path.is_symlink():
-        return path.resolve()==target
-    for match in re.finditer(r'(?<![\w`])@((?:\\ |[^\s`])+)',outside_code(path.read_text())):
-        reference=match.group(1).replace('\\ ',' ')
-        if reference.startswith('~'):continue
-        if (path.parent/reference).resolve()==target:
-            return True
-    return False
+    """Only filesystem identity proves a shared instruction owner; prose is host-owned."""
+    return path.is_symlink() and path.resolve() == (project/'AGENTS.md').resolve()
 
 def claude_route(project, previous=None):
     """Native first: Claude Code reads AGENTS.md unless a CLAUDE.md shadows it."""
@@ -937,7 +878,7 @@ def preflight(project, lock, files):
         elif name in old_owned:
             conflicts.append('missing owned file: '+name)
     agents=inside(project,'AGENTS.md')
-    text=agents.read_text() if agents.exists() else ''
+    text=agents.read_bytes().decode("utf-8") if agents.exists() else ''
     old_block=previous['routing_block'] if previous else None
     updated=None
     if old_block:
@@ -957,7 +898,7 @@ def preflight(project, lock, files):
     want=routing.get('claude',{}).get('mode')=='managed-block'
     if old_claude and (not want or routing['claude']['path']!=old_claude['path']):
         p=inside(project,old_claude['path'])
-        ctext=p.read_text() if p.exists() else ''
+        ctext=p.read_bytes().decode("utf-8") if p.exists() else ''
         try:current=instruction_block(ctext)
         except Invalid:current=None
         if current!=old_claude['block']:
@@ -970,7 +911,7 @@ def preflight(project, lock, files):
     if want:
         name=routing['claude']['path']
         p=inside(project,name)
-        ctext=p.read_text() if p.exists() else ''
+        ctext=p.read_bytes().decode("utf-8") if p.exists() else ''
         if old_claude:
             try:current=instruction_block(ctext)
             except Invalid:current=None
@@ -1071,12 +1012,12 @@ def verify(project, allow_rebind=False):
         p=inside(project,name)
         if not p.is_file() or digest(p.read_bytes())!=sha:
             raise Invalid('managed file drift: '+name)
-    if instruction_block(inside(project,'AGENTS.md').read_text()) != state['routing_block']:
+    if instruction_block(inside(project,'AGENTS.md').read_bytes().decode('utf-8')) != state['routing_block']:
         raise Invalid('routing block drift')
     claude=state.get('claude_routing')
     if claude:
         p=inside(project,claude['path'])
-        if not p.is_file() or instruction_block(p.read_text())!=claude['block']:
+        if not p.is_file() or instruction_block(p.read_bytes().decode('utf-8'))!=claude['block']:
             raise Invalid('routing block drift: '+claude['path'])
     resolution=state['resolution']
     probes, optional_unavailable, discovery, observed_versions = [], [], {}, {}
@@ -1165,7 +1106,7 @@ def pinned_files(lock):
 
 def remove_block(project, name, block, created, added_newline):
     path=inside(project,name)
-    text=path.read_text() if path.exists() else ''
+    text=path.read_bytes().decode("utf-8") if path.exists() else ''
     try:
         current=instruction_block(text)
     except Invalid:
@@ -1212,10 +1153,20 @@ def undo(project):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover'])
+    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover','catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess'])
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
-    parser.add_argument('--profile',type=Path,help='Explicit JSON/YAML task profile for read-only packet resolution')
+    parser.add_argument('--profile',type=Path,help='Task profile for packet, or catalog project profile for delivery')
+    parser.add_argument('--state',type=Path,help='Private local library assessment/evolution state')
+    parser.add_argument('--input',type=Path,help='Exact pinned Signals evidence bundle')
+    parser.add_argument('--sha256')
+    parser.add_argument('--producer')
+    parser.add_argument('--commit')
+    parser.add_argument('--interest')
+    parser.add_argument('--fixture',action='store_true',help='Allow labeled fixture evidence for mechanical checks only')
+    parser.add_argument('--wheel-cache',type=Path,help='Inspected exact wheel cache for a trusted executable trial')
+    parser.add_argument('--destination',type=Path,help='New disposable trial directory')
+    parser.add_argument('--execute',action='store_true',help='Execute trusted eligible trials after isolation probes')
     parser.add_argument('--lock',type=Path,help='Apply an exact portable lock against this source checkout')
     parser.add_argument('--provider',choices=sorted(PROVIDERS),help='Host adapter: codex (default), claude or both; refresh keeps the installed host')
     parser.add_argument('--brand',help='Project visual intent, 1-2000 characters')
@@ -1223,6 +1174,22 @@ def main():
     parser.add_argument('--option',action='append',default=[],metavar='KEY=VALUE',help='Explicit supported alternative; repeat for different options')
     parser.add_argument('--with',dest='extras',action='append',default=[],metavar='CAPABILITY',help='Add a registered context-* resource procedure to this project selection')
     args=parser.parse_args()
+    if args.command in ('catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess'):
+        from context_library import dispatch
+        result=dispatch(args)
+        print(encoded(result).decode(),end='')
+        if args.command=='trial' and result['status'] not in ('planned','passed'):
+            sys.exit(2)
+        return
+    if args.profile is not None and args.command in ('plan','apply','refresh'):
+        if args.loadouts or args.lock or args.extras or args.option or args.brand or args.design_procedure:
+            raise Invalid('profile selections cannot be mixed with delivery overrides')
+        from context_library import delivery
+        if not args.project:
+            raise Invalid('profile delivery needs --project')
+        result=delivery(args.profile.stem,args.project,args.provider or 'both',args.command,args.state)
+        print(encoded(result).decode(),end='')
+        return
     if args.extras and args.command not in ('plan','apply','refresh'):
         raise Invalid('--with applies only to plan, apply and refresh')
     if (args.command=='packet') != (args.profile is not None):
