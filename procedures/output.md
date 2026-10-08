@@ -10,7 +10,7 @@ python3 .context-ai/resources/scripts/context_output.py inspect build-raw.log --
 python3 .context-ai/resources/scripts/context_output.py inspect build-raw.log --start 120 --lines 20
 ```
 
-`run` executes the argv once, merges stdout/stderr into a new file, reports the actual exit status and returns it. Existing files, including symlinks, are refused. No shell expansion is performed: use a reviewed script for compound commands. A missing parent directory must be created explicitly. Raw output may contain private data; keep it in the consumer's private workspace.
+`run` executes the argv once, merges stdout/stderr into a new file, reports the actual exit status and returns it. The adjacent `NEW_LOG.status.json` durably retains running/completed/failed-to-start state and the actual status before a view is rendered. A view error returns the command’s status and a bounded retrieval cue. Existing raw or receipt files, including symlinks, are refused. No shell expansion is performed: use a reviewed script for compound commands. A missing parent directory must be created explicitly. Raw output may contain private data; keep it in the consumer's private workspace.
 
 The view defaults to 4 KiB and 40 evidence lines. It gives raw path, SHA256, byte/line counts and numbered matching context. It is partial: literal searches inspect bounded line prefixes, so long-line suffixes, unmatched causes and omitted matches need another range or native bounded search. A short result is never proof that no error occurred. Read the cause and relevant context before proposing a fix; verify the result with the actual project test.
 

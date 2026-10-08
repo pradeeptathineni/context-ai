@@ -4,6 +4,7 @@ import argparse
 from collections import deque
 import hashlib
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -71,19 +72,48 @@ def main():
     if args.operation=='run':
         if args.file or not args.log or not command:parser.error('run requires --log NEW_FILE -- COMMAND ...')
         path=args.log
-        # Exclusive creation prevents overwriting user data and refuses symlink targets.
+        # Reserve both new paths before executing; never overwrite raw data or an old receipt.
+        receipt=path.with_name(path.name+'.status.json')
         with path.open('xb') as raw:
-            result=subprocess.run(command,stdout=raw,stderr=subprocess.STDOUT,check=False)
-        exit_status=result.returncode
+            try:
+                status=receipt.open('x',encoding='utf-8')
+            except OSError:
+                path.unlink()  # Exclusively created here; the command has not run.
+                raise
+            with status:
+                status.write(json.dumps({'execution':'running','exit_status':None,'raw':str(path)}))
+                status.flush();os.fsync(status.fileno())
+                try:
+                    result=subprocess.run(command,stdout=raw,stderr=subprocess.STDOUT,check=False)
+                except OSError:
+                    status.seek(0);status.truncate()
+                    status.write(json.dumps({'execution':'failed_to_start','exit_status':None,'raw':str(path)}))
+                    status.flush();os.fsync(status.fileno())
+                    raise
+                exit_status=result.returncode
+                status.seek(0);status.truncate()
+                status.write(json.dumps({'execution':'completed','exit_status':exit_status,'raw':str(path)}))
+                status.flush();os.fsync(status.fileno())
     else:
         if not args.file or args.log or command:parser.error('inspect requires FILE and no command')
         path=args.file
-    report=inspect(path,args.query or ['error','fail','warn','caused by','traceback'],args.start,args.lines,args.context,args.max_bytes)
-    if exit_status is not None:report['exit_status']=exit_status
-    # Include execution metadata within the same total byte budget.
-    while len(json.dumps(report,ensure_ascii=False).encode())>args.max_bytes and report['evidence']:report['evidence'].pop()
+    try:
+        report=inspect(path,args.query or ['error','fail','warn','caused by','traceback'],args.start,args.lines,args.context,args.max_bytes)
+        if exit_status is not None:
+            report['exit_status']=exit_status;report['execution_receipt']=str(receipt)
+        while len(json.dumps(report,ensure_ascii=False).encode())>args.max_bytes and report['evidence']:
+            report['evidence'].pop()
+        if len(json.dumps(report,ensure_ascii=False).encode())>args.max_bytes:
+            raise ValueError('metadata exceeds byte budget')
+    except (OSError,ValueError) as error:
+        if exit_status is None:raise
+        # A failed view must not replace a command's outcome. The adjacent durable receipt
+        # retains the raw path and status even if that path cannot fit the display budget.
+        report={'exit_status':exit_status,'view_error':str(error)[:160],
+                'retrieval':'Raw file and adjacent .status.json retained; shorten query or increase byte budget.'}
     print(json.dumps(report,ensure_ascii=False))
     if exit_status is not None:sys.exit(exit_status if exit_status>=0 else 128-exit_status)
+
 
 
 if __name__=='__main__':

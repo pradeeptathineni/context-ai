@@ -61,3 +61,20 @@ class NativeOutput(unittest.TestCase):
             self.assertLessEqual(len(json.dumps(result,ensure_ascii=False).encode()),1024)
             self.assertEqual(result['raw_lines'],2);self.assertEqual(result['matches_in_scanned_prefixes'],1)
             self.assertIn('partial',result['view'])
+
+    def test_view_failure_cannot_replace_producer_status(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp);raw=p/'raw';counter=p/'count'
+            code=f"from pathlib import Path;import sys;Path({str(counter)!r}).write_text('once');print('FAILED cause');sys.exit(17)"
+            args=[sys.executable,str(ROOT/'scripts/context_output.py'),'run','--log',str(raw),'--max-bytes','512','--query','x'*600,'--',sys.executable,'-c',code]
+            result=subprocess.run(args,capture_output=True)
+            self.assertEqual(result.returncode,17);self.assertEqual(counter.read_text(),'once')
+            self.assertEqual(json.loads(result.stdout)['exit_status'],17)
+            self.assertLessEqual(len(result.stdout),513)
+            receipt=raw.with_name('raw.status.json');self.assertEqual(json.loads(receipt.read_text())['exit_status'],17)
+            self.assertEqual(raw.read_bytes(),b'FAILED cause\n')
+    def test_existing_receipt_refused_before_execution(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp);raw=p/'raw';receipt=p/'raw.status.json';receipt.write_text('user data')
+            result=subprocess.run([sys.executable,str(ROOT/'scripts/context_output.py'),'run','--log',str(raw),'--',sys.executable,'-c',"raise SystemExit(23)"],capture_output=True)
+            self.assertEqual(result.returncode,2);self.assertEqual(receipt.read_text(),'user data');self.assertFalse(raw.exists())
