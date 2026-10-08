@@ -100,6 +100,37 @@ class ControlledTrials(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'missing or changed'):
                 wheels.inspect_wheel(path, {'filename': 'fixture.whl', 'sha256': '0'*64})
 
+    def test_cache_replacement_cannot_change_inspected_or_extracted_bytes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            cache = root/'cache'
+            cache.mkdir()
+            path = cache/'fixture.whl'
+            original_zip = zipfile.ZipFile
+            with original_zip(path, 'w') as archive:
+                archive.writestr('fixture-1.dist-info/METADATA', 'Name: fixture\nVersion: 1\n')
+                archive.writestr('fixture.py', 'approved bytes\n')
+            expected = {'filename': path.name, 'sha256': wheels.sha(path), 'name': 'fixture',
+                        'version': '1', 'license': 'MIT', 'license_files': [],
+                        'native': [], 'scripts': []}
+            replaced = False
+            def replace_cache_before_archive_read(source, *args, **kwargs):
+                nonlocal replaced
+                if not replaced:
+                    replaced = True
+                    with original_zip(path, 'w') as malicious:
+                        malicious.writestr('../escaped-canary', 'unapproved payload')
+                return original_zip(source, *args, **kwargs)
+            destination = root/'vendor'
+            with patch.object(wheels, 'WHEELS', [expected]), \
+                 patch.object(wheels.zipfile, 'ZipFile', side_effect=replace_cache_before_archive_read):
+                report = wheels.extract(cache, destination)
+            self.assertTrue(replaced)
+            self.assertNotEqual(wheels.sha(path), expected['sha256'])
+            self.assertEqual((destination/'fixture.py').read_text(), 'approved bytes\n')
+            self.assertFalse((root/'escaped-canary').exists())
+            self.assertEqual(report[0]['sha256'], expected['sha256'])
+
     @unittest.skipUnless(platform.system() == 'Darwin' and shutil.which('sandbox-exec'), 'macOS native sandbox required')
     def test_failed_probe_cannot_run_a_recipe(self):
         with tempfile.TemporaryDirectory() as tmp:

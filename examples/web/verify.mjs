@@ -37,7 +37,8 @@ try {
     await page.getByLabel('Project or interest').selectOption('labs');
     await expect(page.locator('.profile-card')).toHaveCount(1);
     await expect(page.locator('.profile-card h3')).toHaveText('labs');
-    await expect(page.locator('.opportunity-card')).toHaveCount(2);
+    const labsSuggestions=await page.evaluate(()=>window.CONTEXT_CATALOG.suggestions.filter(s=>s.profile==='labs').length);
+    await expect(page.locator('.opportunity-card')).toHaveCount(labsSuggestions);
     await page.getByLabel('Project or interest').selectOption('all');
     await page.getByLabel('Find equipment').fill('no-such-equipment');
     await expect(page.getByRole('heading',{name:'No matching equipment'})).toBeVisible();

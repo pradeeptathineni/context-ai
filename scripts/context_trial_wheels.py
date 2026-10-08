@@ -3,6 +3,7 @@
 import argparse
 import email
 import hashlib
+import io
 import json
 from pathlib import Path
 import stat
@@ -177,12 +178,15 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def inspect_wheel(path, expected):
-    """Check identities and archive boundaries without importing wheel code."""
+def _validated_wheel(path, expected):
+    """Return one pinned byte snapshot and its inspection; never reopen the path."""
     path = Path(path)
-    if path.is_symlink() or not path.is_file() or sha(path) != expected['sha256']:
+    if path.is_symlink() or not path.is_file():
         raise ValueError('reviewed wheel missing or changed: ' + expected['filename'])
-    with zipfile.ZipFile(path) as archive:
+    blob = path.read_bytes()
+    if hashlib.sha256(blob).hexdigest() != expected['sha256']:
+        raise ValueError('reviewed wheel missing or changed: ' + expected['filename'])
+    with zipfile.ZipFile(io.BytesIO(blob)) as archive:
         if sum(item.file_size for item in archive.infolist()) > 20_000_000:
             raise ValueError('wheel exceeds inspection size boundary')
         for item in archive.infolist():
@@ -197,12 +201,17 @@ def inspect_wheel(path, expected):
         metadata = email.message_from_bytes(archive.read(name))
         if metadata['Name'] != expected['name'] or metadata['Version'] != expected['version']:
             raise ValueError('wheel package identity differs from pin')
-        return {'filename': expected['filename'], 'sha256': expected['sha256'],
+        return blob, {'filename': expected['filename'], 'sha256': expected['sha256'],
                 'name': metadata['Name'], 'version': metadata['Version'],
                 'requires': metadata.get_all('Requires-Dist', []),
                 'license': expected['license'], 'license_files': expected['license_files'],
                 'native': expected['native'], 'entrypoint_metadata': expected['scripts'],
                 'executed': False}
+
+
+def inspect_wheel(path, expected):
+    """Check identities and archive boundaries without importing wheel code."""
+    return _validated_wheel(path, expected)[1]
 
 
 def verified(cache):
@@ -212,11 +221,12 @@ def verified(cache):
 
 def extract(cache, destination):
     """Only verified archive bytes are expanded; no installer or hook runs."""
-    reports = verified(cache)
+    cache = Path(cache).resolve()
+    reviewed = [_validated_wheel(cache/entry['filename'], entry) for entry in WHEELS]
     destination = Path(destination)
     destination.mkdir(parents=True, exist_ok=False)
-    for entry in WHEELS:
-        with zipfile.ZipFile(Path(cache)/entry['filename']) as archive:
+    for blob, report in reviewed:
+        with zipfile.ZipFile(io.BytesIO(blob)) as archive:
             for item in archive.infolist():
                 target = destination/item.filename
                 if item.is_dir():
@@ -225,7 +235,7 @@ def extract(cache, destination):
                 target.parent.mkdir(parents=True, exist_ok=True)
                 with target.open('xb') as output:
                     output.write(archive.read(item))
-    return reports
+    return [report for blob, report in reviewed]
 
 
 def prepare(cache):

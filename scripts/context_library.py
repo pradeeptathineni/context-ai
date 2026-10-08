@@ -102,7 +102,7 @@ def save_event(state, value):
     directory = inside(state, 'events')
     directory.mkdir(exist_ok=True, mode=0o700)
     existing = list(directory.glob('*-' + key + '.json'))
-    index = len(list(directory.glob('*.json'))) + 1
+    index = max((int(p.name.split('-', 1)[0]) for p in directory.glob('*.json')), default=0) + 1
     path = existing[0] if existing else inside(state, 'events/' + f'{index:08d}-' + key + '.json')
     if path.exists() and path.read_bytes() != encoded(value):
         raise Invalid('event identity conflict')
@@ -155,7 +155,7 @@ def selection(id, state=None):
             'direct_limit': 'Direct upstream selection records fit and pin. Its installer is never executed implicitly.'}
 
 
-def delivery(id, project, provider='both', action='plan', state=None):
+def delivery(id, project, provider=None, action='plan', state=None):
     from context_ai import resolve, plan, apply, installed
     if action not in ('plan', 'apply', 'refresh'):
         raise Invalid('unsupported profile delivery action')
@@ -166,8 +166,9 @@ def delivery(id, project, provider='both', action='plan', state=None):
     if picked['direct_upstream'] and action == 'apply':
         raise Invalid('direct-upstream profile requires its inspected native installer; no implicit execution')
     previous = installed(project)
-    if action == 'refresh' and previous:
+    if previous and (action == 'refresh' or provider is None):
         provider = previous['resolution']['provider']
+    provider = provider or 'both'
     lock, files = resolve(picked['loadouts'], project, provider, extras=picked['capabilities'])
     preview = plan(project, lock, files)
     result = apply(project, lock, files) if action == 'apply' else preview
@@ -248,6 +249,8 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
                                      'sources': [{k: v for k, v in source.items() if k != 'observed_at'} for source in report['sources']]}))
         if any(e.get('semantic_sha') == semantic_sha for e in prior):
             event = {'schema_version': 1, 'interest': scope['id'], 'intake_sha': sha,
+                     'evidence_report': report, 'bundle_ref': 'bundles/' + sha + '.json',
+                     'producer': report['producer'], 'mode': report['mode'],
                      'semantic_sha': semantic_sha, 'date': today.isoformat(),
                      'next_due': (today + timedelta(days=scope['refresh_days'])).isoformat(),
                      'status': 'refetch-no-material-change', 'assessments': [], 'profile_updates': []}
@@ -278,6 +281,8 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
                         plan_destination = inside(state, 'trial-plan')
                         planned = run_trial(recipe, plan_destination, execute=False, cache=wheel_cache)
                         trial_key = digest(encoded({'recipe_sha256': planned['recipe_sha256'],
+                                                    'runner_sha256': planned['runner_sha256'],
+                                                    'preparation': planned.get('preparation'),
                                                     'resources': planned['resources'],
                                                     'runtime': planned['runtime'],
                                                     'profile_snapshot': p['snapshot'],
@@ -342,10 +347,11 @@ def record_assessment(state, path):
             artifact = Path(reference['path'])
             if not artifact.is_absolute() or artifact.is_symlink() or not artifact.is_file():
                 raise Invalid('assessment artifact needs a local absolute regular file')
-            if digest(artifact.read_bytes()) != reference['sha256']:
+            raw = artifact.read_bytes()
+            if digest(raw) != reference['sha256']:
                 raise Invalid('assessment artifact digest mismatch')
             name = 'artifacts/' + reference['sha256'] + '.json'
-            atomic(inside(state, name), artifact.read_bytes())
+            atomic(inside(state, name), raw)
             inside(state, name).chmod(0o600)
             refs.append(name)
         assessment = {**value, 'retained_artifacts': refs}

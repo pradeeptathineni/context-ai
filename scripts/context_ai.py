@@ -1187,7 +1187,7 @@ def main():
         from context_library import delivery
         if not args.project:
             raise Invalid('profile delivery needs --project')
-        result=delivery(args.profile.stem,args.project,args.provider or 'both',args.command,args.state)
+        result=delivery(args.profile.stem,args.project,args.provider,args.command,args.state)
         print(encoded(result).decode(),end='')
         return
     if args.extras and args.command not in ('plan','apply','refresh'):

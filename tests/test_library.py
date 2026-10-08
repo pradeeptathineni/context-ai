@@ -49,6 +49,16 @@ class PersonalLibrary(unittest.TestCase):
         c.undo(project)
         self.assertEqual((project / 'AGENTS.md').read_text(), 'Preface\nUser rules\n')
 
+    def test_profile_refresh_apply_keeps_installed_provider_without_override(self):
+        project = Path(self.temp.name).resolve() / 'one-host'
+        project.mkdir()
+        lib.delivery('home-lab', project, provider='codex', action='apply')
+        preview = lib.delivery('home-lab', project, action='refresh')
+        self.assertEqual(preview['delivery']['resolution']['provider'], 'codex')
+        lib.delivery('home-lab', project, action='apply')
+        self.assertEqual(c.installed(project)['resolution']['provider'], 'codex')
+        self.assertFalse((project / 'CLAUDE.md').exists())
+
     def test_missing_peer_does_not_remove_selections(self):
         before = lib.selection('signals')
         result = lib.maintenance(self.state, today=date(2026, 10, 8))
@@ -84,6 +94,28 @@ class PersonalLibrary(unittest.TestCase):
         with self.assertRaisesRegex(c.Invalid, 'unknown option'):
             lib.approve_selection(self.state, 'signals', 'arbitrary-shell-command', 'a' * 64)
         self.assertTrue(result['event'])
+
+    def test_history_sequence_survives_missing_earlier_event(self):
+        with lib.locked(self.state):
+            lib.save_event(self.state, {'step': 1})
+            lib.save_event(self.state, {'step': 2})
+            first = sorted((self.state / 'events').glob('*.json'))[0]
+            first.unlink()
+            lib.save_event(self.state, {'step': 3})
+        names = [p.name.split('-', 1)[0] for p in sorted((self.state / 'events').glob('*.json'))]
+        self.assertEqual(names, ['00000002', '00000003'])
+
+    def test_semantic_refetch_keeps_intake_provenance(self):
+        report = self.intake()
+        lib.maintenance(self.state, report)
+        report = copy.deepcopy(report)
+        report.pop('_raw_bundle')
+        report['evidence']['bundle_sha256'] = 'b' * 64
+        lib.maintenance(self.state, report)
+        event = lib.events(self.state)[-1]
+        self.assertEqual(event['mode'], 'fixture')
+        self.assertEqual(event['evidence_report'], report['evidence'])
+        self.assertEqual(event['bundle_ref'], 'bundles/' + 'b' * 64 + '.json')
 
     def test_pause_resume_and_lock(self):
         lib.control(self.state, True)
