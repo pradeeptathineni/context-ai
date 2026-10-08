@@ -7,12 +7,12 @@ Generated from product.yaml. Delivery and scoped value are separate.
 | Feature | Delivery | Value | Scope and limits |
 | --- | --- | --- | --- |
 | Core context & standards | working | 2 | Canonical provider-neutral standards and opt-in overlays retained. No general productivity or human acceptance claim. |
-| Skills & procedures | working | 2 | Eight original loadout families retained; focused output/TDD routes and direct upstream alternatives supported. Host discovery and actual invocation are distinct. |
+| Skills & procedures | working | 2 | Original families retained; pinned Labs research guidance read and used in a real source claim check; output/TDD routes remain opt-in. Host discovery and actual invocation are distinct. |
 | Concepts library | working | 2 | 140 concepts retained and linked to four unresolved-interest scopes. Concept coverage does not require 140 active instructions. |
 | Tooling & capability catalog | working | 2 | 18 options expose purpose, upstream pins, delivery boundary, alternatives and scoped evidence. Source-supported fit is distinct from comparative benefit. |
 | Project profiles & policies | working | 2 | Six profiles select coherent concern owners from inspected source snapshots. Simulation has no assumed repository; public snapshot revisions can age. |
 | Interests & research queries | working | 2 | Four due-query scopes link concepts to profile choices with finite refresh windows. Host research requires native permissions; queries do not fetch themselves. |
-| Research intake | working | 2 | Real Signals v1 findings admitted by exact digest with producer mode; missing-peer path preserves choices. Research acquisition SHA is unknown; exporter SHA is not acquisition identity. |
+| Research intake | working | 2 | Three real Signals interest batches admitted by exact digest; identical passes skip and missing-peer fallback preserves choices. Research acquisition SHA is unknown; exporter SHA is not acquisition identity. |
 | Candidate assessments | working | 2 | Scoped source, trial and local artifact assessments are retained separately from selection. Local semantic judgments are not independent acceptance. |
 | Controlled trials | working | 2 | Output/TDD recipes and exact pinned Hypothesis run under tested native deny rules. Failed attempts retained. macOS CPython3.12 x86_64 reviewed wheel boundary; unsupported hosts fail closed. |
 | Loadout library | working | 2 | Recurring profiles reuse existing pinned delivery; explicit original loadouts remain supported. Direct upstream installers are never run implicitly. |

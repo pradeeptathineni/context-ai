@@ -46,3 +46,5 @@ Catalog, project profile, interest, assessment and private event documents use i
 Claude unmanaged prose imports are delegated to the host. Context uses an explicit owned block when CLAUDE.md shadows AGENTS.md, except a verified filesystem alias to AGENTS.md. It no longer interprets arbitrary Markdown to suppress delivery. Existing managed blocks remain refreshable/removable; standalone imports retain their original bytes and may cause duplicate reading on a host that also resolves them. No claim of native discovery follows from this routing choice.
 
 Private immutable evidence/history and future selections survive missing peers. Production schedules are paused configuration, with finite native-host activation documented separately. No candidate-supplied command or policy field is executed.
+
+The public static catalog budget is 90 KB after adding real scoped source/use assessments (formerly 80 KB); the complete current output is about80 KB. This bounds the expanded catalog data, without changing browser dependencies or asserting measured field performance.

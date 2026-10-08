@@ -8,6 +8,9 @@ import re
 
 from context_ai import ROOT, Invalid, read_yaml, encoded, digest, inside, atomic, validate_schema
 
+# Trusted local activation limit; candidate data cannot enlarge it.
+TRIALS_PER_ACTIVATION = 2
+
 
 def document(name):
     value = read_yaml(inside(ROOT, 'library/' + name + '.yaml'))
@@ -279,6 +282,7 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
             key = save_event(state, event)
             return {'status': 'refetch-no-material-change', 'event': key, 'actions': [], 'trials': []}
         assessments, proposals, trials = [], [], []
+        attempts = 0
         for candidate in report['recommendations']:
             matched = [o for o in opts.values() if o['upstream']['url'].rstrip('/') == candidate['canonical_uri'].rstrip('/')]
             if not matched:
@@ -304,7 +308,11 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
                         if destination.exists():
                             result['status'] = 'already-attempted' if (destination / 'trial.json').is_file() else 'interrupted-review-required'
                             result['trial_ref'] = destination.relative_to(state).as_posix() + '/trial.json'
+                        elif attempts >= TRIALS_PER_ACTIVATION:
+                            result['status'] = 'blocked-budget'
+                            result['reason'] = 'Two trusted trial attempts per activation; pending work remains eligible on a later finite pass.'
                         else:
+                            attempts += 1
                             try:
                                 trials.append(run_trial(recipe, destination, execute=True, cache=wheel_cache))
                             except (ValueError, OSError) as error:

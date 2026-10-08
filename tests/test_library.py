@@ -127,6 +127,26 @@ class PersonalLibrary(unittest.TestCase):
             self.assertEqual(lib.maintenance(self.state, report, execute_trials=True, wheel_cache='/another/locator')['status'], 'unchanged')
             self.assertEqual(len(executed), before * 2)
 
+    def test_activation_budget_defers_pending_recipes_without_losing_retry(self):
+        report = self.intake()
+        report['evidence']['recommendations'][0]['canonical_uri'] = lib.inventory()['context-output']['upstream']['url']
+        executed = []
+        def trial(recipe, destination, execute=False, cache=None):
+            plan = {'recipe_sha256': recipe, 'runner_sha256': 'r', 'resources': [], 'runtime': {}}
+            if execute:
+                destination.mkdir(parents=True)
+                (destination / 'trial.json').write_text(json.dumps({'status': 'passed'}))
+                executed.append(recipe)
+                return {'status': 'passed'}
+            return plan
+        with patch('context_trials.run_trial', side_effect=trial):
+            first = lib.maintenance(self.state, report, execute_trials=True)
+            self.assertEqual(len(executed), 2)
+            self.assertTrue(any(a['status'] == 'blocked-budget' for a in first['actions']))
+            lib.maintenance(self.state, report, execute_trials=True)
+            self.assertGreater(len(executed), 2)
+            self.assertEqual(lib.maintenance(self.state, report, execute_trials=True)['status'], 'unchanged')
+
     def test_policy_blocks_unknown_option_and_fixture_active_selection(self):
         result = lib.maintenance(self.state, self.intake())
         with self.assertRaisesRegex(c.Invalid, 'standing policy'):

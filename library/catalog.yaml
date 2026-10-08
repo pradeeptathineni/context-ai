@@ -582,9 +582,9 @@ options:
     kind: direct-upstream
   upstream:
     url: https://github.com/kubernetes-sigs/kube-scheduler-simulator
-    revision: null
-    license: null
-    license_source: null
+    revision: e55795dfbad65357a6353621bfa560a0ed652aab
+    license: Apache-2.0
+    license_source: https://github.com/kubernetes-sigs/kube-scheduler-simulator/blob/e55795dfbad65357a6353621bfa560a0ed652aab/LICENSE
   domains:
   - kubernetes
   - learning
@@ -608,6 +608,16 @@ options:
     - Does not exercise real workload, CNI or disks.
     - Runtime/images and exact execution license boundary still require review; not installed.
     checked_ref: 2026-10-08-documentation
+    grade: null
+  - scope: Actual Labs-profile research guidance read and primary-source claim check; no simulator execution.
+    evidence:
+    - evals/greenfield.md
+    - https://github.com/kubernetes-sigs/kube-scheduler-simulator/blob/e55795dfbad65357a6353621bfa560a0ed652aab/README.md
+    strengths:
+    - Primary README supports KWOK and per-plugin Pod annotations.
+    weaknesses:
+    - Runtime/images untested; no causal guidance or learner benefit claim.
+    checked_ref: e55795dfbad65357a6353621bfa560a0ed652aab
     grade: null
 - id: simpy-queue
   name: SimPy queue model

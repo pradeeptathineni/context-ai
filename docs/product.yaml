@@ -33,8 +33,8 @@ features:
   assessment:
     delivery: working
     value: 2
-    scope: Eight original loadout families retained; focused output/TDD routes and direct upstream alternatives
-      supported.
+    scope: Original families retained; pinned Labs research guidance read and used in a real source claim check;
+      output/TDD routes remain opt-in.
     assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
     evidence:
     - docs/library.md
@@ -112,8 +112,8 @@ features:
   assessment:
     delivery: working
     value: 2
-    scope: Real Signals v1 findings admitted by exact digest with producer mode; missing-peer path preserves
-      choices.
+    scope: Three real Signals interest batches admitted by exact digest; identical passes skip and missing-peer
+      fallback preserves choices.
     assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
     evidence:
     - evals/greenfield.md
