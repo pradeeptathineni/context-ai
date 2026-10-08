@@ -44,7 +44,7 @@ options:
     id: aws-infrastructure
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -82,7 +82,7 @@ options:
     id: context-authoring
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -122,7 +122,7 @@ options:
     id: essentials
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -160,7 +160,7 @@ options:
     id: react-web
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -199,7 +199,7 @@ options:
     id: release-review
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -230,15 +230,15 @@ options:
     grade: null
 - id: research-evidence
   name: Research Evidence
-  purpose: Acquire primary evidence and actionable options from official sources, direct investigation
-    or Signals when available.
+  purpose: Acquire primary evidence and actionable options from official sources, direct investigation or Signals
+    when available.
   concern: research
   delivery:
     kind: loadout
     id: research-evidence
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -275,7 +275,7 @@ options:
     id: service-api
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -313,7 +313,7 @@ options:
     id: standard
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -352,7 +352,7 @@ options:
     id: web-experience
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -392,7 +392,7 @@ options:
     id: context-output
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -434,7 +434,7 @@ options:
     id: context-tdd
   upstream:
     url: https://github.com/pradeeptathineni/context-ai
-    revision: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
+    revision: current source checkout; exact resource hashes in delivery preview and lock
     license: MIT
     license_source: LICENSE
   domains:
@@ -501,8 +501,8 @@ options:
     grade: null
 - id: ecc-whole-harness
   name: ECC integrated harness
-  purpose: Consider a complete upstream engineering profile when its workflow, hooks and native lifecycle
-    fit a specific project.
+  purpose: Consider a complete upstream engineering profile when its workflow, hooks and native lifecycle fit
+    a specific project.
   concern: engineering-harness
   delivery:
     kind: direct-upstream
@@ -519,8 +519,8 @@ options:
   - Compatible host runtime
   - A declared isolated execution policy before trial
   permissions:
-  - Review installer destinations, hook runtime, network, authentication and native plugin trust before
-    any execution.
+  - Review installer destinations, hook runtime, network, authentication and native plugin trust before any
+    execution.
   references:
   - https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/README.md
   - https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/install.sh
@@ -543,8 +543,7 @@ options:
     grade: null
 - id: nist-citation-probes
   name: NIST citation support questions
-  purpose: Check source support, omitted material and evidentiary sufficiency at a consequential claim
-    boundary.
+  purpose: Check source support, omitted material and evidentiary sufficiency at a consequential claim boundary.
   concern: citation-assessment
   delivery:
     kind: direct-upstream
@@ -577,8 +576,7 @@ options:
     grade: null
 - id: scheduler-simulator
   name: Kubernetes scheduler simulator
-  purpose: Predict scheduling filters for two nodes and a resource request, then inspect scheduler plugin
-    decisions.
+  purpose: Predict scheduling filters for two nodes and a resource request, then inspect scheduler plugin decisions.
   concern: scheduler-learning
   delivery:
     kind: direct-upstream
@@ -647,8 +645,7 @@ options:
     grade: null
 - id: hypothesis
   name: Hypothesis preservation properties
-  purpose: Generate lifecycle edit/undo cases against exact Context resource bytes and retain failing
-    examples.
+  purpose: Generate lifecycle edit/undo cases against exact Context resource bytes and retain failing examples.
   concern: preservation-testing
   delivery:
     kind: direct-upstream
@@ -686,7 +683,7 @@ options:
     strengths:
     - 32 generated lifecycle cases passed; pinned wheel executed under real denial probes
     weaknesses:
-    - 21.94 seconds including import vs 14.75 seconds for 24 deterministic cases; unequal case counts,
-      no speed comparison claim
+    - 21.94 seconds including import vs 14.75 seconds for 24 deterministic cases; unequal case counts, no speed
+      comparison claim
     checked_ref: 52bc7ef19c0be5f21ad8aeb7ad93df84d09953640a08673e0a3a95c014bc4c7b
     grade: 2

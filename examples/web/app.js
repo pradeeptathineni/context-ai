@@ -123,7 +123,7 @@ function renderEquipment() {
     if (alternatives.length) card.append(el('p', `Other routes for this concern: ${alternatives.map(other => other.name).join('; ')}`, 'note'));
     card.append(disclosure('Fit, limits and source evidence', [
       sourceLink('Upstream source', item.upstream.url),
-      factsList([['Pin', item.upstream.revision], ['License', item.upstream.license],
+      factsList([['Source/version', item.upstream.revision], ['License', item.upstream.license],
         ['License source', item.upstream.license_source], ['Requirements', item.requirements],
         ['Permissions', item.permissions], ['Limits', item.limits], ['References', item.references]]),
       ...assessmentDetails(item)

@@ -209,6 +209,17 @@ def intake(path, sha, producer, commit, interest, fixture=False):
             'authority': 'advisory; no commands or profile changes authorized by intake'}
 
 
+def trial_plan(state, profile_value, recipe, wheel_cache):
+    from context_trials import run_trial
+    planned = run_trial(recipe, inside(state, 'trial-plan'), execute=False, cache=wheel_cache)
+    key = digest(encoded({'recipe_sha256': planned['recipe_sha256'],
+                          'runner_sha256': planned['runner_sha256'],
+                          'preparation': planned.get('preparation'),
+                          'resources': planned['resources'], 'runtime': planned['runtime'],
+                          'profile_snapshot': profile_value['snapshot'], 'policy': profile_value['policy']}))
+    return inside(state, 'trials/' + key)
+
+
 def maintenance(state, intake_report=None, today=None, execute_trials=False, wheel_cache=None):
     today = today or date.today()
     opts, ps = inventory(), profiles()
@@ -241,13 +252,23 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
                 raise Invalid('retained bundle changed')
             atomic(raw_path, raw)
             raw_path.chmod(0o600)
-        if sha in seen:
-            return {'status': 'unchanged', 'actions': [], 'due_research': due}
         scope = next(i for i in interests if i['id'] == intake_report['interest'])
+        retry = False
+        if execute_trials:
+            for candidate in report['recommendations']:
+                for option in opts.values():
+                    recipe = {'context-output': 'output-helper', 'context-tdd': 'tdd-consumer', 'hypothesis': 'hypothesis-undo'}.get(option['id'])
+                    if recipe and option['upstream']['url'].rstrip('/') == candidate['canonical_uri'].rstrip('/'):
+                        for profile_id in scope['profiles']:
+                            p = ps[profile_id]
+                            if option['id'] in p['policy']['trials'] and not trial_plan(state, p, recipe, wheel_cache).exists():
+                                retry = True
+        if sha in seen and not retry:
+            return {'status': 'unchanged', 'actions': [], 'due_research': due}
         semantic_sha = digest(encoded({'interest': scope['id'], 'claims': report['claims'],
                                      'candidates': report['recommendations'],
                                      'sources': [{k: v for k, v in source.items() if k != 'observed_at'} for source in report['sources']]}))
-        if any(e.get('semantic_sha') == semantic_sha for e in prior):
+        if any(e.get('semantic_sha') == semantic_sha for e in prior) and not retry:
             event = {'schema_version': 1, 'interest': scope['id'], 'intake_sha': sha,
                      'evidence_report': report, 'bundle_ref': 'bundles/' + sha + '.json',
                      'producer': report['producer'], 'mode': report['mode'],
@@ -278,26 +299,17 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
                               'reason': 'Only declared trusted recipes run; producer recommendations cannot expand trial policy.'}
                     if execute_trials and permitted and recipe:
                         from context_trials import run_trial
-                        plan_destination = inside(state, 'trial-plan')
-                        planned = run_trial(recipe, plan_destination, execute=False, cache=wheel_cache)
-                        trial_key = digest(encoded({'recipe_sha256': planned['recipe_sha256'],
-                                                    'runner_sha256': planned['runner_sha256'],
-                                                    'preparation': planned.get('preparation'),
-                                                    'resources': planned['resources'],
-                                                    'runtime': planned['runtime'],
-                                                    'profile_snapshot': p['snapshot'],
-                                                    'policy': p['policy']}))
-                        destination = inside(state, 'trials/' + trial_key)
+                        destination = trial_plan(state, p, recipe, wheel_cache)
                         if destination.exists():
                             result['status'] = 'already-attempted' if (destination / 'trial.json').is_file() else 'interrupted-review-required'
-                            result['trial_ref'] = 'trials/' + trial_key + '/trial.json'
+                            result['trial_ref'] = destination.relative_to(state).as_posix() + '/trial.json'
                         else:
                             try:
                                 trials.append(run_trial(recipe, destination, execute=True, cache=wheel_cache))
                             except (ValueError, OSError) as error:
                                 trials.append({'status': 'blocked-setup', 'reason': str(error), 'recipe': recipe})
                             result['status'] = trials[-1]['status']
-                            result['trial_ref'] = 'trials/' + trial_key + '/trial.json'
+                            result['trial_ref'] = destination.relative_to(state).as_posix() + '/trial.json'
                             assessment['trial_ref'] = result['trial_ref']
                             assessment['trial_status'] = result['status']
                     proposals.append(result)

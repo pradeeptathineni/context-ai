@@ -49,7 +49,8 @@ try {
     await expect(page.locator('#equipment-context-output')).toHaveCount(0);
     await page.getByLabel('Selection',{exact:true}).selectOption('all');
     await page.getByLabel('Domain',{exact:true}).selectOption('learning');
-    await expect(page.locator('.equipment-card')).toHaveCount(1);
+    const learningOptions=await page.evaluate(()=>window.CONTEXT_CATALOG.library.options.filter(o=>o.domains.includes('learning')).length);
+    await expect(page.locator('.equipment-card')).toHaveCount(learningOptions);
     await page.getByLabel('Domain',{exact:true}).selectOption('all');
     // Source strings must remain text even when they resemble executable markup.
     const originalName=await page.evaluate(()=>window.CONTEXT_CATALOG.library.options[0].name);

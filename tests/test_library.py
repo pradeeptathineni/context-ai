@@ -1,6 +1,7 @@
 import copy
 from datetime import date
 import hashlib
+import json
 from pathlib import Path
 import sys
 import tempfile
@@ -86,6 +87,32 @@ class PersonalLibrary(unittest.TestCase):
         trial.assert_not_called()
         self.assertTrue(any(a['status'] == 'eligible' for a in result['actions']))
         self.assertTrue(any(a['status'] == 'blocked-policy' for a in result['actions']))
+
+    def test_unchanged_intake_retries_changed_preparation_then_skips_completed_work(self):
+        report = self.intake()
+        report['evidence']['recommendations'][0]['canonical_uri'] = lib.inventory()['hypothesis']['upstream']['url']
+        ready = False
+        executed = []
+        def trial(recipe, destination, execute=False, cache=None):
+            plan = {'recipe_sha256': 'r', 'runner_sha256': 's', 'resources': [],
+                    'runtime': {}, 'preparation': {'ready': ready}}
+            if execute:
+                destination.mkdir(parents=True)
+                value = {'status': 'passed' if ready else 'blocked', **plan}
+                (destination / 'trial.json').write_text(json.dumps(value))
+                executed.append(value['status'])
+                return value
+            return plan
+        with patch('context_trials.run_trial', side_effect=trial):
+            lib.maintenance(self.state, report, execute_trials=True)
+            before = len(executed)
+            self.assertGreater(before, 0)
+            self.assertEqual(lib.maintenance(self.state, report, execute_trials=True)['status'], 'unchanged')
+            ready = True
+            result = lib.maintenance(self.state, report, execute_trials=True)
+            self.assertEqual(result['status'], 'assessed-new-input')
+            self.assertEqual(len(executed), before * 2)
+            self.assertEqual(lib.maintenance(self.state, report, execute_trials=True)['status'], 'unchanged')
 
     def test_policy_blocks_unknown_option_and_fixture_active_selection(self):
         result = lib.maintenance(self.state, self.intake())
