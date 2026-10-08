@@ -553,3 +553,76 @@ decisions:
   rollback: undo the consumer selection; drop the opt-in capability and the pinned documentation.
   revisit_when: Neoma's compatibility documentation changes materially, its license changes, or the
     consumer stops using Neoma.
+
+- id: D-023
+  revision: 2
+  supersedes: 1
+  concept: research.prior_art
+  action: retain
+  selection: Native-sufficient for ordinary covered work; pinned essentials and individual upstream
+    procedures remain explicit selections for consequential decisions or regression risk
+  rationale: Earlier consumers reached the same correct outcomes with higher consumption when
+    essentials was selected. A required Context decision record cannot establish task advantage.
+    Empty selection now operates without task guidance, probes or prior-art obligations; focused
+    resource delivery preserves upstream bytes, license and safe lifecycle management.
+  evidence:
+  - evals/essentials-trial.md
+  - evals/selective-value.md
+  - tests/test_native_output.py
+  - docs/loadouts.md
+  applicability: Setup selects only needed recurring resources; ordinary settled tasks stay native.
+    Existing project and user instructions retain authority over this selection advice.
+  alternatives:
+  - Require essentials and a decision record on every feature task
+  - Read a relevant pinned upstream directly with native tools
+  - Deliver only a focused resource through Context ownership and both host routers
+  unknowns:
+  - Human usefulness and population-level productivity are unassessed; small operational comparisons
+    do not establish general savings or a served-model identity.
+  validation:
+  - Frozen native/direct-upstream/Context CSV arms reach the same external correctness outcome;
+    ordinary typo controls avoid TDD guidance, including the native-sufficient delivered selection.
+  - The unchanged nine loadouts and selected original source bytes remain available; native and
+    Context lifecycle paths preserve edited helpers and user instructions.
+  rollback: Use an earlier exact source/pin or explicitly select essentials; no installed project
+    is automatically refreshed or removed.
+  revisit_when: A consequential task shows a concrete avoided defect or useful coverage improvement
+    that earns the extra guidance and survives a fair native/direct-upstream comparison.
+
+- id: D-025
+  revision: 2
+  supersedes: 1
+  concept: context.compression
+  action: adapt
+  selection: Native saved logs and bounded search remain incumbent; opt-in context-output supplies
+    capture-once, durable exit status and numbered retrieval before exposure
+  rationale: Previous agents read the whole verbose log before guidance ran. A short root routing
+    cue now names the real operation before reading selected modules. The stdlib helper retains exact
+    merged raw bytes and child status separately from a partial view. Scoped RTK shell/test trials
+    preserve status but omit causes in compact output, so raw recall is required and RTK is optional.
+    Native file tools bypass shell filters and need their own explicit bounds.
+  evidence:
+  - evals/selective-value.md
+  - evals/context-efficiency-trial.md
+  - procedures/output.md
+  - scripts/context_output.py
+  - tests/test_native_output.py
+  - https://github.com/rtk-ai/rtk/tree/e001f773f80b22b7dc4c7a79521b30e35aaef026
+  applicability: Opt-in consumers with verbose commands/logs requiring recoverable causal evidence.
+    No hook, server, dependency, model or runtime is enabled by selection.
+  alternatives:
+  - Native redirection plus bounded grep/range reads
+  - Explicit project-local RTK with reviewed source and raw recall
+  - Existing scoped context-mode, Headroom and Graphify trials
+  unknowns:
+  - No universal interception, long-session advantage or human benefit is demonstrated; built-in
+    Read/Grep/Glob remain outside shell filtering, and line suffixes require native range recovery.
+  validation:
+  - Consumer traces demonstrate guide use and bounded causal retrieval before full log exposure;
+    a strong native workflow also recovers the cause without exposing the whole source.
+  - Independent checks cover binary raw bytes, nonzero status, signal status, failed startup,
+    view-render failure, existing-path refusal, giant lines and edited-file-safe undo.
+  rollback: Undo unchanged owned resources; preserve private raw logs and adjacent status receipts.
+    Use native bounded capture/search or the earlier exact source for existing pins.
+  revisit_when: A real unstructured workload defeats simple retrieval, or a project-local alternative
+    preserves more important evidence with lower complete-task consumption.

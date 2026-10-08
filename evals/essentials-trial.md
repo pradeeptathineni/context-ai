@@ -20,7 +20,7 @@ All three implemented a bounded local loop, retried 502/503/504 and connection e
 
 **Limits.** One run per arm, builder-designed task, builder grading. The user's global `~/.agents/skills/standard` skill (which routes to this library) was visible to every arm, so "native" is not Context-free. Human usefulness is unmeasured. Raw JSONL, diffs and the decision record are kept in the local planning folder, not this repository.
 
-**Consequence.** Essentials stays the default feature route because it produced the prior-art inspection and record that CTX04 requires and the other arms skipped. Revisit if a second task shows the extra reads without a better-evidenced decision.
+**Historical consequence, superseded.** The reset retained essentials as its default feature route because it produced the prior-art inspection and decision record. That criterion rewarded process completion despite equal correctness and higher consumption. D-023 revision 2 supersedes it: ordinary covered work is native-sufficient; essentials remains an explicit route for a consequential decision or regression risk. The second case and the [selective-value campaign](selective-value.md) provide no general task advantage.
 
 ## Second case: version-sensitive API (C-DEV-02)
 

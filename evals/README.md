@@ -6,6 +6,8 @@ Deterministic repository validation checks structure and syntax; it cannot estab
 
 [Task profile evidence](task-profiles.md) records explicit resolution/effect checks and builder use on real Context development. It does not claim that an uncoached consumer selected those profiles or that native skill discovery occurred.
 
+[Selective-value evidence](selective-value.md) records the current native-sufficient default, focused output/TDD comparisons, retained losses and lifecycle checks. Functional delivery, measured advantage and human value are separate outcomes.
+
 ## Protocol
 
 For each scenario:

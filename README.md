@@ -124,7 +124,7 @@ The browser tests need the pinned Playwright Chromium runtime. Use an existing s
 
 ## Proof and limits
 
-Tests exercise all nine loadouts for both hosts, portable file pins, edited-file protection and recovery from interrupted application. The [web exercise](examples/web/brief.md) includes browser, interaction and accessibility checks. These are automated and builder checks. Same-task consumer trials are recorded in [essentials](evals/essentials-trial.md), [host activation](evals/host-activation.md) and [efficiency](evals/context-efficiency-trial.md); human usefulness remains unmeasured.
+Tests exercise all nine loadouts for both hosts, portable file pins, edited-file protection and recovery from interrupted application. The [web exercise](examples/web/brief.md) includes browser, interaction and accessibility checks. These are automated and builder checks. The [selective-value campaign](evals/selective-value.md) records the current native-sufficient default and measured focused routes. Earlier same-task consumer trials are recorded in [essentials](evals/essentials-trial.md), [host activation](evals/host-activation.md) and [efficiency](evals/context-efficiency-trial.md); human usefulness remains unmeasured.
 
 Installation verification does not run consumer project tests. Fixture tests, local browser checks and reported file reads do not establish production behavior, human usefulness or native skill activation. The [loadout guide](docs/loadouts.md#evidence-discovery-and-limits) details these boundaries.
 
