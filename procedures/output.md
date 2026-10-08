@@ -15,3 +15,11 @@ python3 .context-ai/resources/scripts/context_output.py inspect build-raw.log --
 The view defaults to 4 KiB and 40 evidence lines. It gives raw path, SHA256, byte/line counts and numbered matching context. It is partial: literal searches inspect bounded line prefixes, so long-line suffixes, unmatched causes and omitted matches need another range or native bounded search. A short result is never proof that no error occurred. Read the cause and relevant context before proposing a fix; verify the result with the actual project test.
 
 Native Read/Grep/Glob bypass shell filters. Bound these reads explicitly. RTK is an optional reviewed explicit filter for supported command formats; its compact view can omit causes, so use bounded recall/search. Choose one transformation owner per command. No global hooks, model or service is needed here.
+
+## Optional reviewed RTK route
+
+For an already reviewed project-local RTK executable, choose RTK alone for a supported command and retain its printed recall ID. The exercised interface is v0.51.0, source [e001f77](https://github.com/rtk-ai/rtk/tree/e001f773f80b22b7dc4c7a79521b30e35aaef026), Apache-2.0. Confirm the local version before use. Keep `RTK_TELEMETRY_DISABLED=1`, `RTK_DB_PATH` and `RTK_RECALL_DB` explicitly project-local; do not run `init` or install hooks as part of this procedure.
+
+`rtk test COMMAND ...` and `rtk err COMMAND ...` retain failure output and status in the exercised formats. Their compact views omitted causes in local fixtures: retrieve the printed ID with `rtk recall ID --grep 'distinctive cause' -C 2`. At this pin `--lines` slices before `--grep`, so combining them can hide a middle-file cause. Bound an unusually broad query with ordinary host output limits; refine it and read surrounding evidence. `--full` restores raw bytes but should be redirected to a file before further inspection. Do not rerun a stateful command merely to recover its output.
+
+Native Read/Grep/Glob are separate paths. The trial simulated hook rewrites for Bash and observed no rewrite for those built-ins; no installed-hook or universal interception claim follows. Native capture/search remains the ordinary arbitrary-output route. Reconsider a server only after a concrete workload exceeds it.
