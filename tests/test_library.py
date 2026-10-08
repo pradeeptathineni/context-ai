@@ -67,6 +67,16 @@ class PersonalLibrary(unittest.TestCase):
         self.assertTrue(result['due_research'])
         self.assertEqual(lib.selection('signals', self.state)['profile']['selections'], before['profile']['selections'])
 
+    def test_grouped_source_bundle_keeps_distinct_interest_assessments(self):
+        report = self.intake()
+        self.assertEqual(lib.maintenance(self.state, report)['status'], 'assessed-new-input')
+        second = copy.deepcopy(report)
+        second['interest'] = 'computer-simulation'
+        self.assertEqual(lib.maintenance(self.state, second)['status'], 'assessed-new-input')
+        self.assertEqual({e['interest'] for e in lib.events(self.state)},
+                         {'project-equipment', 'computer-simulation'})
+        self.assertEqual(lib.maintenance(self.state, second)['status'], 'unchanged')
+
     def test_changed_and_unchanged_finite_passes_never_install(self):
         intake = self.intake()
         result = lib.maintenance(self.state, intake, today=date(2026, 10, 8))

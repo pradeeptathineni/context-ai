@@ -229,7 +229,7 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
         control = inside(state, 'control.json')
         if control.exists() and json.loads(control.read_text()).get('paused'):
             return {'status': 'paused', 'actions': []}
-        seen = {e.get('intake_sha') for e in prior}
+        seen = {(e.get('interest'), e.get('intake_sha')) for e in prior}
         due = []
         for interest in interests:
             latest = [e for e in prior if e.get('interest') == interest['id']]
@@ -263,7 +263,7 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
                             p = ps[profile_id]
                             if option['id'] in p['policy']['trials'] and not trial_plan(state, p, recipe, wheel_cache).exists():
                                 retry = True
-        if sha in seen and not retry:
+        if (scope['id'], sha) in seen and not retry:
             return {'status': 'unchanged', 'actions': [], 'due_research': due}
         semantic_sha = digest(encoded({'interest': scope['id'], 'claims': report['claims'],
                                      'candidates': report['recommendations'],
