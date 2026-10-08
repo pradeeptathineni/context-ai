@@ -144,15 +144,15 @@ Challenge a consequential research claim against its cited source before admitti
 
 ## signals — Store correction invariants
 
-Use a generated input sequence to challenge one real Signals save/correction invariant in its isolated consumer.
+Retain the exercised store/correction property as an optional regression technique for consequential merge changes.
 
-**Selection:** hypothesis. Context has exercised exact wheel behavior and denied host access; Signals can assess the technique against its own actual record semantics.
+**Selection:** hypothesis. The Signals owner executed 24 deterministic and 32 generated sequences against actual store/correction data under four verified denial probes.
 
-**Next action:** Use the versioned Context peer selection and run one source-frozen local consumer invariant; retain red/green failures and deterministic baseline.
+**Next action:** At the next store merge change, review the retained consumer-owned recipe against the new source and declared Node/Git runtimes; preserve deterministic coverage and run generated sequences only under explicit trial authority.
 
-**State:** suggested. Checked 2026-10-08 at `hypothesis-6.168.5`.
+**State:** assessed-conditional. Checked 2026-10-08 at `6453cf6f7682922edaee96982a1d76d92b8ec474`.
 
-**Limits:** Context lifecycle trial does not prove Signals storage behavior.; Peer consumer receipt still required; no automatic dependency adoption.
+**Limits:** Peer executed Context 895c86c with a closed consumer-owned adapter; later Context source was inspected, not rerun.; The semantic correction preceded this trial; no Hypothesis discovery, general advantage or automatic dependency adoption.
 
 [Profile and assessment](../library/profiles/signals.yaml).
 

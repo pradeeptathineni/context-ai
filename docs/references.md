@@ -419,3 +419,5 @@ The canonical scope ledger is `docs/product.yaml`; `examples/library-maintenance
 `evals/greenfield.md` retains changed behavior, scoped trial results, reused native/direct-upstream comparisons, fixture maintenance cases and copy-migration limitations.
 
 The delivered Labs research procedure was explicitly read before a real source-claim check of scheduler simulator README and Apache-2.0 LICENSE at `e55795dfbad65357a6353621bfa560a0ed652aab` (2026-10-08). This refined its scoped catalog assessment; no runtime, learning benefit or causal guidance gain follows. Raw source digests and the preserved consumer artifact live in the local acceptance package.
+
+Signals' versioned `reciprocal-consumer-v1` (SHA256 `209f886e8a53905c5e4c5153ad1bde8ee305cea753c082a33886943556e9fc78`) supplied the actual store/correction use and runtime metadata contribution above. Exact Context execution identity is 895c86c, distinct from later inspected 02d4061. The contribution influenced e12fbb1's literal destination-ancestor metadata permission and native Node regression; consumer-owned driver code remains outside Context's trusted recipes. Reviewed 2026-10-08.

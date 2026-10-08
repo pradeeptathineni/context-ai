@@ -697,3 +697,19 @@ options:
       comparison claim
     checked_ref: 52bc7ef19c0be5f21ad8aeb7ad93df84d09953640a08673e0a3a95c014bc4c7b
     grade: 2
+  - scope: Signals-owned actual store/correction consumer; normal Context lifecycle at 895c86c with approved
+      local runtime adaptation
+    evidence:
+    - evals/greenfield.md
+    - docs/hypothesis-trial.md
+    strengths:
+    - 56 store/correction sequences passed; four host/network denial checks and edited-resource preservation
+      passed.
+    - Peer returned a reproducible destination-ancestor metadata fix, integrated with native regression.
+    weaknesses:
+    - Four pre-import lifecycle failures retained; final consumer succeeded with owner-approved runtime adaptation.
+    - Semantic correction was found by a reader before this property; Hypothesis did not discover it.
+    - Unequal case counts and concurrent setup do not establish speedup, human benefit or superior defect finding.
+    - Later Context 02d4061 was inspected, not executed; no current-source reciprocal rerun claimed.
+    checked_ref: 895c86cd68e970eb0f83adbcce3f9996f6ea3b18
+    grade: 2

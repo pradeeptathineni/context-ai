@@ -1,18 +1,16 @@
 # Changelog
 
-## Unreleased
-
-- Add a personal catalog, five assessed project profiles, scoped interests, actionable suggestions, private assessment history and finite policy-bound evolution through the normal CLI.
-- Show complete short command failures and labeled long failure tails while retaining exact raw output and status.
-- Preserve unmanaged instruction newline bytes across delivery/refresh/undo; replace custom prose import parsing with explicit host delivery.
-- Generate public library and product views from their canonical YAML; retain original loadouts, pins and schema-2 consumer ownership compatibility.
-
-
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+- Add a personal catalog, six assessed project profiles, scoped interests, actionable suggestions, private assessment history and finite policy-bound evolution through the normal CLI.
+- Show complete short command failures and labeled long failure tails while retaining exact raw output and status.
+- Preserve unmanaged instruction newline bytes across delivery/refresh/undo; replace custom prose import parsing with explicit host delivery.
+- Generate public library and product views from their canonical YAML; retain original loadouts, pins and schema-2 consumer ownership compatibility.
+- Complete reciprocal Signals store/correction use, retain all failed attempts, and integrate the reproduced destination-runtime metadata correction with native denial coverage.
 
 - Completed Context's reciprocal evidence reconciliation from Signals' actual pinned output verification task; preserved all 13 consumer results and their mixed overhead. The web entry point now exposes native-sufficient work, focused output/TDD selection and preview/use/refresh/undo commands.
 

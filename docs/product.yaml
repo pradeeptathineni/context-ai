@@ -19,7 +19,7 @@ features:
     delivery: working
     value: 2
     scope: Canonical provider-neutral standards and opt-in overlays retained.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - evals/selective-value.md
     limitations:
@@ -35,7 +35,7 @@ features:
     value: 2
     scope: Original families retained; pinned Labs research guidance read and used in a real source claim check;
       output/TDD routes remain opt-in.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/library.md
     - evals/selective-value.md
@@ -51,7 +51,7 @@ features:
     delivery: working
     value: 2
     scope: 140 concepts retained and linked to four unresolved-interest scopes.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - concepts.yaml
     - library/interests.yaml
@@ -61,13 +61,13 @@ features:
   name: Tooling & capability catalog
   role: core
   type: knowledge
-  intent: Catalog native facilities, upstream equipment, and Context’s own resources so their purpose, availability,
-    and useful differences are apparent.
+  intent: "Catalog native facilities, upstream equipment, and Context\u2019s own resources so their purpose,\
+    \ availability, and useful differences are apparent."
   assessment:
     delivery: working
     value: 2
     scope: 18 options expose purpose, upstream pins, delivery boundary, alternatives and scoped evidence.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - library/catalog.yaml
     limitations:
@@ -76,13 +76,13 @@ features:
   name: Project profiles & policies
   role: core
   type: configuration
-  intent: Describe each project’s needs, environment, preferences, authorized actions, and selection policies
-    so standardization does not mean uniformity.
+  intent: "Describe each project\u2019s needs, environment, preferences, authorized actions, and selection\
+    \ policies so standardization does not mean uniformity."
   assessment:
     delivery: working
     value: 2
     scope: Six profiles select coherent concern owners from inspected source snapshots.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - library/profiles
     - docs/project-suggestions.md
@@ -98,7 +98,7 @@ features:
     delivery: working
     value: 2
     scope: Four due-query scopes link concepts to profile choices with finite refresh windows.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - library/interests.yaml
     limitations:
@@ -114,7 +114,7 @@ features:
     value: 2
     scope: Three real Signals interest batches admitted by exact digest; identical passes skip and missing-peer
       fallback preserves choices.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - evals/greenfield.md
     limitations:
@@ -129,7 +129,7 @@ features:
     delivery: working
     value: 2
     scope: Scoped source, trial and local artifact assessments are retained separately from selection.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - library/catalog.yaml
     - schemas/library-assessment.schema.json
@@ -146,7 +146,7 @@ features:
     value: 2
     scope: Output/TDD recipes and exact pinned Hypothesis run under tested native deny rules. Failed attempts
       retained.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/hypothesis-trial.md
     - evals/greenfield.md
@@ -162,7 +162,7 @@ features:
     delivery: working
     value: 2
     scope: Recurring profiles reuse existing pinned delivery; explicit original loadouts remain supported.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/loadouts.md
     - docs/library.md
@@ -178,7 +178,7 @@ features:
     delivery: working
     value: 2
     scope: One concern owner per profile, reasons and optional deeper choices.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - library/profiles
     - docs/project-suggestions.md
@@ -194,7 +194,7 @@ features:
     delivery: working
     value: 2
     scope: Focused output guidance routes before shell commands; native ordinary tasks add zero guidance.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - procedures/output.md
     - evals/greenfield.md
@@ -210,7 +210,7 @@ features:
     delivery: working
     value: 2
     scope: Normal CLI profile preview/apply/verify uses exact pins and safe consumer writes.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/library.md
     - evals/greenfield.md
@@ -227,7 +227,7 @@ features:
     value: 3
     scope: Copy migration preserves unmanaged CRLF/Unicode and edited resources; failed overwrite and undo
       ownership retained.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - evals/greenfield.md
     - tests/test_hosts.py
@@ -243,7 +243,7 @@ features:
     delivery: working
     value: 2
     scope: Shared pinned source feeds thin Codex/Claude routers with explicit import ownership.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/loadouts.md
     - tests/test_hosts.py
@@ -259,7 +259,7 @@ features:
     delivery: working
     value: 2
     scope: Exact intake bundles, immutable decisions and hash-checked artifact copies retain old alternatives.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/library.md
     limitations:
@@ -275,7 +275,7 @@ features:
     value: 2
     scope: Public catalog/profile/opportunity browser with evidence disclosure and preserved legacy delivery
       view.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - examples/web/index.html
     limitations:
@@ -290,7 +290,7 @@ features:
     delivery: working
     value: 2
     scope: CLI catalog/select/suggest/trial/evolve/assess/decide and existing lifecycle/export available.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/library.md
     limitations:
@@ -305,7 +305,7 @@ features:
     delivery: working
     value: 2
     scope: Named Labs/home-lab/Signals/Principles needs plus pre-repository simulation opportunities.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/project-suggestions.md
     limitations:
@@ -321,7 +321,7 @@ features:
     value: 2
     scope: Real intake, local assessment and allowed future-profile update; unchanged pass, pause/resume and
       missing-peer work.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - examples/library-maintenance.yaml
     - evals/greenfield.md
@@ -334,14 +334,16 @@ features:
   intent: Equip Signals and other projects, retain their practical results as first-party evidence, and continue
     operating when a peer or optional provider is absent.
   assessment:
-    delivery: partial
-    value: null
-    scope: Published exact peer pin; Context used real Signals findings to inspect and execute Hypothesis.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    delivery: working
+    value: 2
+    scope: Context used three real Signals batches; Signals exercised normal Context lifecycle and 56 actual
+      store/correction sequences, returning a reproduced runtime fix.
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - evals/greenfield.md
     limitations:
-    - Signals practical consumer receipt remains pending.
+    - First-party reciprocal execution used Context 895c86c; later pin inspection is distinct.
+    - Combined Claude acceptance and human usefulness remain unproved.
 - id: consumer-evaluations
   name: Consumer evaluations
   role: core
@@ -352,7 +354,7 @@ features:
     delivery: working
     value: 2
     scope: Historical 13 trajectories retained plus real executable preservation outcomes and failed attempt.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - evals/selective-value.md
     - docs/hypothesis-trial.md
@@ -368,7 +370,7 @@ features:
     delivery: working
     value: 2
     scope: This ledger is canonical and the product/suggestion views are generated.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/product.yaml
     - scripts/build_product.py
@@ -384,7 +386,7 @@ features:
     delivery: working
     value: 2
     scope: Hash pins, edit preservation, private state, policy gates and native sandbox denials.
-    assessed_ref: c220d634cde1995c243a11624660e9fa0c2358f7
+    assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/hypothesis-trial.md
     - tests/test_library.py

@@ -17,8 +17,7 @@ environment:
   package_manager: npm >=12.1.0 <13; exact package lock
   checks:
   - npm run verify
-  snapshot_scope: Public source inspection at the recorded revision; peer greenfield owner may supersede
-    it.
+  snapshot_scope: Public source inspection at the recorded revision; peer greenfield owner may supersede it.
 priorities:
 - Preserve evidence and historical policy.
 - No candidate execution by Signals.
@@ -41,8 +40,7 @@ selections:
   reason: Give the reciprocal consumer one narrow output capability, invoked explicitly before its command.
   concern: output-handling
 - option: research-evidence
-  reason: Use at source assessment and interchange boundaries while preserving producer mode and missing
-    revisions.
+  reason: Use at source assessment and interchange boundaries while preserving producer mode and missing revisions.
   concern: research
 suggestions:
 - area: Reciprocal consumer / output
@@ -55,8 +53,8 @@ suggestions:
   limitations:
   - This snapshot does not establish the new peer implementation.
   - Source-only fit; joint operation and timing require a versioned consumer receipt.
-  next_action: Have the Signals owner run an actual approved check in its disposable consumer under the
-    pinned focused selection; retain raw output, exact status, invocation and useful recovered cause.
+  next_action: Have the Signals owner run an actual approved check in its disposable consumer under the pinned
+    focused selection; retain raw output, exact status, invocation and useful recovered cause.
   status: suggested
   checked_ref: 135cd3537901b956d4c7decd1bbb7d97ab805e8e
   date: '2026-10-08'
@@ -78,8 +76,8 @@ suggestions:
 - area: Claim support
   opportunity: Challenge a consequential research claim against its cited source before admitting it.
   option: nist-citation-probes
-  why: NIST distinguishes source faithfulness, completeness and sufficiency; matching a substring alone
-    is insufficient.
+  why: NIST distinguishes source faithfulness, completeness and sufficiency; matching a substring alone is
+    insufficient.
   evidence:
   - https://www.nist.gov/programs-projects/building-evaluation-probes-agentic-ai
   limitations:
@@ -91,18 +89,22 @@ suggestions:
   checked_ref: 2026-10-08-primary-source
   date: '2026-10-08'
 - area: Store correction invariants
-  opportunity: Use a generated input sequence to challenge one real Signals save/correction invariant
-    in its isolated consumer.
+  opportunity: Retain the exercised store/correction property as an optional regression technique for consequential
+    merge changes.
   option: hypothesis
-  why: Context has exercised exact wheel behavior and denied host access; Signals can assess the technique
-    against its own actual record semantics.
+  why: The Signals owner executed 24 deterministic and 32 generated sequences against actual store/correction
+    data under four verified denial probes.
   evidence:
+  - evals/greenfield.md
   - docs/hypothesis-trial.md
   limitations:
-  - Context lifecycle trial does not prove Signals storage behavior.
-  - Peer consumer receipt still required; no automatic dependency adoption.
-  next_action: Use the versioned Context peer selection and run one source-frozen local consumer invariant;
-    retain red/green failures and deterministic baseline.
-  status: suggested
-  checked_ref: hypothesis-6.168.5
+  - Peer executed Context 895c86c with a closed consumer-owned adapter; later Context source was inspected,
+    not rerun.
+  - The semantic correction preceded this trial; no Hypothesis discovery, general advantage or automatic dependency
+    adoption.
+  next_action: At the next store merge change, review the retained consumer-owned recipe against the new source
+    and declared Node/Git runtimes; preserve deterministic coverage and run generated sequences only under
+    explicit trial authority.
+  status: assessed-conditional
+  checked_ref: 6453cf6f7682922edaee96982a1d76d92b8ec474
   date: '2026-10-08'
