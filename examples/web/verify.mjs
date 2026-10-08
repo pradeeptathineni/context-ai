@@ -50,7 +50,11 @@ try {
     await expect(page.locator('#concept-count')).toHaveText('140');
     await page.getByLabel('Web',{exact:true}).check();
     assert.equal(await page.locator('.loadout').count(),2);
-    await page.locator('summary').click();
+    await page.getByText('Preview, use, refresh or remove a focused selection',{exact:true}).click();
+    await expect(page.locator('#task pre').first()).toBeVisible();
+    assert(!(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth)), 'focused commands overflow at '+width);
+    if ([320,1440].includes(width)) await page.screenshot({path:out+`task-expanded-${width}.png`,fullPage:true});
+    await page.getByText('Read the web acceptance checklist',{exact:true}).click();
     assert(await page.getByText('Inspect the built page at desktop and 320px.').isVisible());
     const note=page.getByLabel('Preview a review note');
     const noteStatus=page.locator('#note-status');

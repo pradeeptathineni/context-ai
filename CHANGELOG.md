@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Completed Context's reciprocal evidence reconciliation from Signals' actual pinned output verification task; preserved all 13 consumer results and their mixed overhead. The web entry point now exposes native-sufficient work, focused output/TDD selection and preview/use/refresh/undo commands.
+
 - Fixed two P2s from the final delta review of 1fc6f94: Claude import detection now tracks multi-line code spans and paragraph boundaries, and `adoption.py` no longer calls an incomplete assessment license/runtime verification (per-field origin and a complete/partial/none state).
 - `procedures/diagnose.md` now carries the save-then-search recipe for large output that the trial and D-025 attribute to it.
 - Completed the Signals to Context pair exercise on a real post-reset export: Neoma trial for a Markdown notes consumer (D-028), opt-in `--with context-portable-notes`, Context-verified adoption assessments, and a consumer task checked with Neoma's own code (`evals/pair-exercise.md`).

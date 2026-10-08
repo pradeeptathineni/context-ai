@@ -3,3 +3,4 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}}
 
 @media(max-width:400px){nav{width:100%;justify-content:space-between;gap:.6rem}nav button{font-size:.8rem;padding-inline:.65rem}.intro{padding-top:2.6rem}}
+#task{margin-bottom:3rem}#task>p{max-width:75ch;color:var(--muted)}#task .state-list{margin-block:1.5rem}#task details p{margin-block:.8rem}pre{white-space:pre-wrap;overflow-wrap:anywhere;font-size:.85rem}code{overflow-wrap:anywhere}

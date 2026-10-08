@@ -1,6 +1,6 @@
 # Representative web exercise
 
-This is a public synthetic consumer fixture, independent from neon1. The visitor is a developer finding which Context AI loadout fits a job. They should identify a starting point, filter it, and inspect a web verification checklist. No install or remote submission occurs.
+This is a public synthetic consumer fixture, independent from neon1. The visitor is a developer deciding whether a task needs any Context guidance. They should find the native-sufficient route, a focused output/TDD selection with preview/use/refresh/undo commands, or a recurring loadout, then filter it and inspect a web verification checklist. No install or remote submission occurs.
 
 Direction: a calm reading surface with strong type and divided catalogue rows. An expressive green/dark variant demonstrates explicit brand latitude without changing hierarchy. The compared alternatives were an identical-card landing page and a dense command console; the chosen reading surface makes the catalogue easier to compare and keeps guidance understandable.
 
