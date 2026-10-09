@@ -1,0 +1,13 @@
+# Context library interface
+
+Product outcomes and ownership remain in [docs/product.yaml](product.yaml). This document describes the static interface; it does not define another product or selection policy.
+
+The existing quiet palette uses a cool white surface (`#f4f7f8`), dark text (`#182532`), blue accent (`#174d68`), muted text (`#465b6b`), and a red focus ring (`#a13022`). The optional expressive palette uses dark green (`#07180f`), light text (`#edf7ef`), pale green accent (`#a9edbb`), and a gold focus ring (`#ebc276`). CSS custom properties own these tokens. System typography, a 1200px content boundary, fluid 1–3rem side spacing, and 44px minimum interactive targets retain the existing brand without new assets or dependencies.
+
+The working area has Equipment, Loadouts and Trials tabs. Equipment exposes purpose, prerequisites, hosts and evidence before source detail. Project loadouts show the reason for each selected component and keep native-sufficient work explicit. Trials lead with the purpose and actual outcome, including failures, before measurements and receipts. Standards, full concern-specific loadouts, delivery commands and ownership history remain secondary disclosures.
+
+Native tab semantics include arrow keys, Home/End and a single tab stop. Controls have explicit labels, empty-filter recovery restores focus, all source text uses `textContent`, and only HTTPS source links become active. The single-column layout supports 320px and long source strings. Both palettes preserve visible focus and reduced-motion preferences. Browser/axe evidence is a builder check, not an assistive-technology user test or proof of human usefulness.
+
+The static generated catalog reads canonical library selections and parent-owned public trial/plan evidence. The frontend renders the canonical plan; it does not decide conflicts, local permissions or ownership. Export prepares a request for local resolution. No private target paths, local installed state, model calls, apply operations or runtime service belong in the public build. The delivery engine remains responsible for plan/apply/verify/refresh/undo.
+
+Design guidance used: the existing guided `web-experience` selection, [instruction-only Impeccable adapter](../procedures/web-design.md), and its pinned shape/craft/critique references. Existing product truth and brand settle the brief; the binary, hooks, init, redundant interviews and competing product records are excluded. Before/after viewport captures and actual behavior checks are retained in the local planning evidence store.
