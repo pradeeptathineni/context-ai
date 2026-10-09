@@ -28,6 +28,9 @@ try {
     await page.goto(base);await page.locator('.equipment-card').last().waitFor();
     const data=await page.evaluate(()=>window.CONTEXT_CATALOG);
     assert(data.library.options.length>2 && data.library.profiles.length>=2);
+    assert.equal(data.opportunity_migration.status,'moved','retired-state catalog required');
+    assert(!Object.hasOwn(data,'suggestions'),'duplicate general-opportunity data must be absent');
+    await expect(page.locator('#opportunity-compatibility')).toHaveCount(0);
     assert(data.trials?.some(trial=>trial.status && trial.outcome),'actual public trial evidence required');
     assert(data.delivery_preview,'canonical delivery preview required');
     await expect(page.locator('.equipment-card')).toHaveCount(data.library.options.length);
@@ -74,7 +77,7 @@ try {
     await page.getByRole('tab',{name:'Loadouts',exact:true}).click();
     await page.getByLabel('Project setup').selectOption('principles');
     await expect(page.locator('.profile-card')).toHaveCount(1);
-    await expect(page.locator('.profile-card')).toContainText('No added Context files or tools');
+    await expect(page.locator('.profile-card')).toContainText('No added task guidance; ordinary work uses native tools');
     if ([320,1440].includes(width)) { await page.evaluate(()=>scrollTo(0,0)); await page.screenshot({path:out+`native-loadout-${width}.png`}); }
     await page.getByLabel('Project setup').selectOption('signals');
     await expect(page.locator('.profile-card')).toContainText(data.library.options.find(item=>item.id==='context-output').name);

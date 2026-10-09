@@ -79,7 +79,7 @@ function renderProfiles() {
   for (const choice of profile.selections) {
     const item = options.get(choice.option); if (!item) continue;
     const li = el('li'); li.append(el('strong', item.name), el('p', choice.reason));
-    li.append(factsList([['Adds', item.delivery.kind === 'native' ? 'No added Context files or tools for ordinary work.' : item.purpose], ['Prerequisites', item.requirements], ['Permissions', item.permissions]]));
+    li.append(factsList([['Adds', item.delivery.kind === 'native' ? 'No added task guidance; ordinary work uses native tools.' : item.purpose], ['Prerequisites', item.requirements], ['Permissions', item.permissions]]));
     const link = el('a', 'Inspect this equipment'); link.href = `#equipment-${item.id}`;
     link.addEventListener('click', () => { resetEquipment(); activateTab('equipment'); requestAnimationFrame(() => document.getElementById(`equipment-${item.id}`).scrollIntoView({block:'start'})); });
     li.append(link); choices.append(li);
@@ -135,15 +135,6 @@ function renderPreview() {
   }
   area.append(el('p', 'Additions and replacements show the initial plan; conflicts show the later deliberate edit. Both are proposed engine outputs, not a live target status.', 'note'), groups, disclosure('Example provenance and limits', [factsList([['Source revision', preview.source_commit], ['Evidence reference', preview.raw_refs], ['Status', preview.evidence_class], ['Preservation outcome', preview.outcome ? `Unmanaged bytes preserved: ${preview.outcome.unmanaged_bytes_preserved}; edited helper preserved: ${preview.outcome.edited_helper_preserved}; undo completed: ${preview.outcome.undo?.undone}` : 'Not recorded'], ['Permissions', preview.permissions], ['Limits', preview.limits]])]));
 }
-function renderOwnership() {
-  const area = document.querySelector('#migration-note'); const migration = catalog.opportunity_migration;
-  if (migration?.status === 'moved' || migration?.status === 'imported' || migration?.status === 'acknowledged' || !(catalog.suggestions || []).length) {
-    area.append(el('p', 'General project opportunities belong to Signals. Context keeps the equipment choices and setup evidence shown here. Ordinary setup works without Signals.'), factsList([['Ownership', catalog.ownership?.project_opportunities || 'Signals project opportunities'], ['Transfer evidence', migration?.receipt_reference || migration?.receipt || 'See the local ownership handoff.']]));
-  } else {
-    area.append(el('p', 'The retained opportunity records remain available until Signals acknowledges their transfer. They are separate from AI setup selections.'));
-    for (const item of catalog.suggestions) document.querySelector('#opportunity-results').append(disclosure(`${item.profile}: ${item.area}`, [el('p', item.opportunity), factsList([['Next action', item.next_action], ['Evidence', item.evidence], ['Limits', item.limitations]])]));
-  }
-}
 function activateTab(id, focus = false) {
   for (const tab of document.querySelectorAll('[role=tab]')) {
     const selected = tab.getAttribute('aria-controls') === id; tab.setAttribute('aria-selected', String(selected)); tab.tabIndex = selected ? 0 : -1;
@@ -196,4 +187,4 @@ document.querySelector('#search').addEventListener('input', renderLoadouts);
 document.querySelectorAll('[name=concern]').forEach(input => input.addEventListener('change', renderLoadouts));
 document.querySelector('#reset').addEventListener('click', () => { document.querySelector('#search').value = ''; document.querySelector('[name=concern][value=all]').checked = true; renderLoadouts(); document.querySelector('#search').focus(); });
 document.querySelector('#mode').addEventListener('click', event => { const active = event.currentTarget.getAttribute('aria-pressed') !== 'true'; event.currentTarget.setAttribute('aria-pressed',String(active)); document.body.dataset.mode = active ? 'expressive' : 'quiet'; });
-renderEquipment(); renderProfiles(); renderLoadouts(); renderTrials(); renderPreview(); renderOwnership(); updateCommand();
+renderEquipment(); renderProfiles(); renderLoadouts(); renderTrials(); renderPreview(); updateCommand();
