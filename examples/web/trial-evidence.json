@@ -1,0 +1,65 @@
+{
+  "schema_version": 1,
+  "trials": [
+    {
+      "id": "context-hypothesis-undo-first",
+      "option": "hypothesis",
+      "title": "Initial preservation trial hit its CPU limit",
+      "purpose": "Generate real Context apply/edit/verify/undo cases and preserve unmanaged and edited managed bytes.",
+      "status": "failed",
+      "outcome": "The candidate exceeded the initial 10-second CPU budget before completing; this attempt supplies no successful preservation result.",
+      "host": "macOS sandbox-exec; CPython 3.12",
+      "model": "No model call; executable property trial",
+      "version": "Hypothesis 6.168.5 / sortedcontainers 2.4.0",
+      "context_revision": null,
+      "source_snapshot_sha256": null,
+      "evidence_class": "actual-executable-candidate-trial-with-controlled-consumers",
+      "limits": [
+        "Failed attempts remain retained; the later larger budget is a separate explicitly recorded recipe.",
+        "No current Context commit inferred for this historical uncommitted trial snapshot."
+      ],
+      "policy": {
+        "network": "denied",
+        "personal_home": "denied",
+        "writes": "destination only",
+        "cpu_seconds": 10,
+        "wall_seconds_per_command": 20
+      },
+      "evidence": [
+        "docs/hypothesis-trial.md",
+        "evals/greenfield.md"
+      ],
+      "receipt_sha256": "509eea0139654af9360ab25754d4bdd9590e9a95f6668effc87606f0926f9b4d"
+    },
+    {
+      "id": "hypothesis-peer-fix",
+      "option": "hypothesis",
+      "title": "Generated preservation stress, after boundary correction",
+      "purpose": "Generate real Context apply/edit/verify/undo cases and preserve unmanaged and edited managed bytes.",
+      "status": "passed",
+      "outcome": "24 deterministic and 32 generated preservation cases passed under four verified denials; generated cases took longer and do not establish an advantage.",
+      "host": "macOS sandbox-exec; CPython 3.12",
+      "model": "No model call; executable property trial",
+      "version": "Hypothesis 6.168.5 / sortedcontainers 2.4.0",
+      "context_revision": "e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8",
+      "source_snapshot_sha256": "3253cb7d7bdb4734ea8c3c70d847a244286a16333df954b2fea8ea969bce51cd",
+      "evidence_class": "actual-executable-candidate-trial-with-controlled-consumers",
+      "limits": [
+        "Controlled consumers; no independent or human usefulness claim.",
+        "Full-suite CPU work overlapped final trial; unequal case counts are not a causal speed comparison."
+      ],
+      "policy": {
+        "network": "denied",
+        "personal_home": "denied",
+        "writes": "destination only",
+        "cpu_seconds": 60,
+        "wall_seconds_per_command": 60
+      },
+      "evidence": [
+        "docs/hypothesis-trial.md",
+        "evals/greenfield.md"
+      ],
+      "receipt_sha256": "f79f8d1570001ac099530c5f18314b8dd2d2d667ecd307cc1533d79a5136b26a"
+    }
+  ]
+}

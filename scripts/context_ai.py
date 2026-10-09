@@ -1153,7 +1153,7 @@ def undo(project):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover','catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess'])
+    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover','catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess','handoff'])
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
     parser.add_argument('--profile',type=Path,help='Task profile for packet, or catalog project profile for delivery')
@@ -1167,6 +1167,10 @@ def main():
     parser.add_argument('--wheel-cache',type=Path,help='Inspected exact wheel cache for a trusted executable trial')
     parser.add_argument('--destination',type=Path,help='New disposable trial directory')
     parser.add_argument('--execute',action='store_true',help='Execute trusted eligible trials after isolation probes')
+    parser.add_argument('--allow-root',type=Path,help='Trusted local scope for a read-only handoff')
+    parser.add_argument('--project-id',help='Trusted project registration ID for a handoff')
+    parser.add_argument('--source-ref',help='Trusted public project reference for a handoff')
+    parser.add_argument('--public',action='store_true',help='Export a static handoff selection without local state')
     parser.add_argument('--lock',type=Path,help='Apply an exact portable lock against this source checkout')
     parser.add_argument('--provider',choices=sorted(PROVIDERS),help='Host adapter: codex (default), claude or both; refresh keeps the installed host')
     parser.add_argument('--brand',help='Project visual intent, 1-2000 characters')
@@ -1174,6 +1178,20 @@ def main():
     parser.add_argument('--option',action='append',default=[],metavar='KEY=VALUE',help='Explicit supported alternative; repeat for different options')
     parser.add_argument('--with',dest='extras',action='append',default=[],metavar='CAPABILITY',help='Add a registered context-* resource procedure to this project selection')
     args=parser.parse_args()
+    if args.command=='handoff':
+        if not all((args.input,args.project,args.allow_root,args.project_id,args.profile,args.source_ref)):
+            raise Invalid('handoff requires request input and an explicit trusted local project/profile binding')
+        if any((args.loadouts,args.state,args.sha256,args.producer,args.commit,args.interest,args.fixture,args.wheel_cache,args.destination,args.execute,args.lock,args.brand,args.design_procedure,args.option,args.extras)):
+            raise Invalid('handoff supports only read-only request and trusted binding arguments')
+        from context_handoff import read_request, handle_request, public_result
+        binding={'path':args.project,'allow_root':args.allow_root,'profile_id':str(args.profile),'source_ref':args.source_ref}
+        result=handle_request(read_request(args.input),bindings={args.project_id:binding},provider=args.provider)
+        print(encoded(public_result(result) if args.public else result).decode(),end='')
+        if result['status']=='blocked':
+            sys.exit(2)
+        return
+    if args.allow_root is not None or args.project_id is not None or args.source_ref is not None or args.public:
+        raise Invalid('trusted handoff binding arguments require the handoff command')
     if args.command in ('catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess'):
         from context_library import dispatch
         result=dispatch(args)

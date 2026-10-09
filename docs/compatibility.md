@@ -47,4 +47,23 @@ Claude unmanaged prose imports are delegated to the host. Context uses an explic
 
 Private immutable evidence/history and future selections survive missing peers. Production schedules are paused configuration, with finite native-host activation documented separately. No candidate-supplied command or policy field is executed.
 
-The public static catalog budget is 90 KB after adding real scoped source/use assessments (formerly 80 KB); the complete current output is about80 KB. This bounds the expanded catalog data, without changing browser dependencies or asserting measured field performance.
+The public static catalog budget is 90 KB after adding real scoped source/use assessments (formerly 80 KB); the complete current output is about 78 KB. This bounds the expanded catalog data, without changing browser dependencies or asserting measured field performance.
+
+
+## Experience ownership update (unreleased)
+
+General project opportunities moved to Signals after verified conservation of
+13 frozen records. `suggestions` remains a read-only schema-1 response with
+`status: moved`, an empty active list, destination and recovery references.
+Current profile schema 1 makes the old `suggestions` field optional and
+deprecated; historic profiles remain readable. Catalog views omit those general
+opportunities. Moved interest scopes retain their IDs and recovery history but
+cannot request research, write assessment events or execute trials in Context.
+AI-engineering profiles, private existing events, equipment intake and all
+installation/portable-lock schemas retain their meaning.
+
+`handoff` adds a closed schema-1 read-only plan/status request. Target bindings
+come from the trusted local caller, outside portable JSON. Plans use the existing
+delivery engine; public exports contain static selection with local state unknown.
+The normal CLI's nonzero validation convention is unchanged. No request
+approves apply, installation or inference. See [local contract](context-handoff.md).

@@ -66,7 +66,9 @@ def validate_request(request):
     ids = set()
     for finding in request['findings']:
         fields(finding, ('id', 'outcome', 'evidence_refs'))
-        key = identifier(finding['id'])
+        key = text(finding['id'], 192)
+        if not re.fullmatch(r'[a-zA-Z0-9][a-zA-Z0-9_.:-]{0,191}', key):
+            raise engine.Invalid('invalid finding identity')
         if key in ids:
             raise engine.Invalid('duplicate finding identity')
         ids.add(key)

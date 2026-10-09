@@ -35,7 +35,13 @@ class PersonalLibrary(unittest.TestCase):
         self.assertIn('home-lab', ps)
         self.assertNotEqual(ps['labs']['selections'], ps['home-lab']['selections'])
         self.assertTrue(all(not p['policy']['schedule'] for p in ps.values()))
-        self.assertIn('opportunity', lib.suggestions()['suggestions'][0])
+        moved = lib.suggestions()
+        self.assertEqual(moved['status'], 'moved')
+        self.assertEqual(moved['destination'], 'signals-ai/project-opportunities')
+        self.assertEqual(moved['suggestions'], [])
+        self.assertEqual(moved['migration']['count'], 13)
+        self.assertTrue((ROOT / moved['export_reference']).is_file())
+        self.assertTrue((ROOT / moved['receipt_reference']).is_file())
 
     def test_profile_delivery_pins_then_preserves_edits_on_undo(self):
         project = Path(self.temp.name).resolve() / 'consumer'
@@ -67,15 +73,36 @@ class PersonalLibrary(unittest.TestCase):
         self.assertTrue(result['due_research'])
         self.assertEqual(lib.selection('signals', self.state)['profile']['selections'], before['profile']['selections'])
 
-    def test_grouped_source_bundle_keeps_distinct_interest_assessments(self):
+    def test_grouped_source_bundle_keeps_distinct_active_equipment_assessments(self):
+        original = lib.document
+        interests = copy.deepcopy(original('interests'))
+        second_scope = copy.deepcopy(interests['interests'][0])
+        second_scope['id'] = 'equipment-second'
+        interests['interests'].append(second_scope)
+        def document(name):
+            return interests if name == 'interests' else original(name)
+        with patch('context_library.document', side_effect=document):
+            report = self.intake()
+            self.assertEqual(lib.maintenance(self.state, report)['status'], 'assessed-new-input')
+            second = copy.deepcopy(report)
+            second['interest'] = 'equipment-second'
+            self.assertEqual(lib.maintenance(self.state, second)['status'], 'assessed-new-input')
+            self.assertEqual({e['interest'] for e in lib.events(self.state)},
+                             {'project-equipment', 'equipment-second'})
+            self.assertEqual(lib.maintenance(self.state, second)['status'], 'unchanged')
+
+    def test_transferred_interest_cannot_create_events_or_trials(self):
+        before = lib.selection('signals', self.state)
         report = self.intake()
-        self.assertEqual(lib.maintenance(self.state, report)['status'], 'assessed-new-input')
-        second = copy.deepcopy(report)
-        second['interest'] = 'computer-simulation'
-        self.assertEqual(lib.maintenance(self.state, second)['status'], 'assessed-new-input')
-        self.assertEqual({e['interest'] for e in lib.events(self.state)},
-                         {'project-equipment', 'computer-simulation'})
-        self.assertEqual(lib.maintenance(self.state, second)['status'], 'unchanged')
+        report['interest'] = 'computer-simulation'
+        with patch('context_trials.run_trial') as trial:
+            result = lib.maintenance(self.state, report, execute_trials=True)
+        trial.assert_not_called()
+        self.assertEqual(result['status'], 'moved')
+        self.assertEqual(result['actions'], [])
+        self.assertEqual(lib.events(self.state), [])
+        self.assertEqual({row['id'] for row in result['due_research']}, {'project-equipment'})
+        self.assertEqual(lib.selection('signals', self.state), before)
 
     def test_changed_and_unchanged_finite_passes_never_install(self):
         intake = self.intake()

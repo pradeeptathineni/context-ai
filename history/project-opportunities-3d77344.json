@@ -1,0 +1,458 @@
+{
+  "schema_version": 1,
+  "kind": "context-opportunities-migration",
+  "source_owner": "context-ai",
+  "destination_owner": "signals-ai/project-opportunities",
+  "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+  "count": 13,
+  "source_files": [
+    {
+      "path": "library/profiles/context.yaml",
+      "sha256": "7a41d45868fff70b7cd2c6bfaacb39b753db36ef1f32737459f0be5407f1b118"
+    },
+    {
+      "path": "library/profiles/home-lab.yaml",
+      "sha256": "1a0a4462af1baf2ec368462e548de946b165a296b5193c612079a67d42a9b238"
+    },
+    {
+      "path": "library/profiles/labs.yaml",
+      "sha256": "b8e3d7ada1ad124d37ded1166081be142dab1a3a8aca60f6100e49b39ebec55a"
+    },
+    {
+      "path": "library/profiles/principles.yaml",
+      "sha256": "c34a3851d9326554bb89d0b0f8caea21d710a1c0f6d4d218700cd17529bb1455"
+    },
+    {
+      "path": "library/profiles/signals.yaml",
+      "sha256": "160554d47be23a9297990ad876af161218c05e7e4cffe489bbaac12bd0a2e3a7"
+    },
+    {
+      "path": "library/profiles/simulation.yaml",
+      "sha256": "b6da8caaad675a74948b0530c095141cce758ef4b037c2c4eedb21fe5b5bd4c9"
+    }
+  ],
+  "records": [
+    {
+      "profile": "context",
+      "project": "https://github.com/pradeeptathineni/context-ai",
+      "area": "Edit/undo preservation",
+      "opportunity": "Exercise newline, Unicode, no-final-newline and managed-file edits through apply/refresh/undo before a lifecycle change is delivered.",
+      "option": "hypothesis",
+      "why": "Signals nominated property generation for this actual seam; Context inspected and ran the exact wheel after fixing a reproduced unmanaged CRLF normalization defect.",
+      "evidence": [
+        "docs/hypothesis-trial.md",
+        "evals/greenfield.md"
+      ],
+      "limitations": [
+        "The defect was identified by static inspection and a deterministic reproduction; Hypothesis is not credited with an independent discovery.",
+        "32 generated cases took longer than 24 deterministic cases; no productivity advantage claimed."
+      ],
+      "next_action": "Acquire the reviewed wheel set, preview the hypothesis-undo recipe, then run it with --wheel-cache in a new disposable directory at the next consequential lifecycle change.",
+      "status": "operational-in-isolated-trial",
+      "checked_ref": "52bc7ef19c0be5f21ad8aeb7ad93df84d09953640a08673e0a3a95c014bc4c7b",
+      "date": "2026-10-08",
+      "id": "context-opportunity:context:423e33c1ed2e0ccc",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/context.yaml",
+        "ordinal": 0,
+        "source_record_sha256": "ea27ef3b5ff31a4539bc28097efd7c35310a133f60c56c48e9975a02ca3ada47",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "home-lab",
+      "project": "https://github.com/pradeeptathineni/home-lab",
+      "area": "Backup / recovery",
+      "opportunity": "Close the independent-backup-destination gap using the existing restore workflow.",
+      "option": "native",
+      "why": "README and recovery documentation explicitly distinguish a same-Mac fixture proof from resilient backup.",
+      "evidence": [
+        "README.md",
+        "docs/recovery.md"
+      ],
+      "limitations": [
+        "No destination, credentials or current backup runtime was inspected.",
+        "The checkout has uncommitted changes beyond this snapshot."
+      ],
+      "next_action": "Choose an explicitly authorized independent destination, then use the existing backup check and fixture restore-test to record checksum recovery; keep service quiesce/export requirements.",
+      "status": "suggested",
+      "checked_ref": "7768131dc21f5a3bb1e46aeebce16fe8972cc887",
+      "date": "2026-10-08",
+      "id": "context-opportunity:home-lab:fe1fe811eabab52d",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/home-lab.yaml",
+        "ordinal": 0,
+        "source_record_sha256": "620e088ad4990a33a2d9b044e74dd2b21d232a3766f0a423c73ffe086abab94d",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "home-lab",
+      "project": "https://github.com/pradeeptathineni/home-lab",
+      "area": "Operational diagnostics",
+      "opportunity": "Retain validation output once before retrieving the failing cause.",
+      "option": "context-output",
+      "why": "The project has explicit validate/test commands; recoverable logs can avoid rerunning potentially stateful operations.",
+      "evidence": [
+        "Makefile",
+        "pyproject.toml",
+        "docs/greenfield-prior-art.md"
+      ],
+      "limitations": [
+        "No large-output failure or speed benefit was measured for home-lab.",
+        "Native reads bypass the explicit wrapper."
+      ],
+      "next_action": "In a disposable approved consumer, compare native redirect/search with context-output on an existing validation command before changing the operational route.",
+      "status": "conditional",
+      "checked_ref": "7768131dc21f5a3bb1e46aeebce16fe8972cc887",
+      "date": "2026-10-08",
+      "id": "context-opportunity:home-lab:3321c1e0ac2c95e7",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/home-lab.yaml",
+        "ordinal": 1,
+        "source_record_sha256": "333583988f8e2ea1f7ba68bc87bd12f67f48f2ee6579aa0c2d6a1fda52364e3a",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "labs",
+      "project": "https://github.com/pradeeptathineni/labs",
+      "area": "Kubernetes / CKAD practice",
+      "opportunity": "Turn the unstarted CKAD-002 link into one deliberately scoped practice attempt.",
+      "option": "research-evidence",
+      "why": "The lab preserves 20 task IDs, points to simulator dependencies and requires a BSL review before copying or running.",
+      "evidence": [
+        "niches/code/devops/orchestration/kubernetes/ckad/ck-x/ckad-002/README.md",
+        "niches/code/devops/orchestration/kubernetes/ckad/ck-x/ckad-002/lab.json: tracking.status=not-started"
+      ],
+      "limitations": [
+        "No simulator execution, official exam alignment or readiness was verified.",
+        "Context research guidance does not grant permission to run CK-X."
+      ],
+      "next_action": "Read the pinned CK-X license and environment metadata; select one task and an approved disposable environment, then record commands and incomplete results under its existing ID.",
+      "status": "suggested",
+      "checked_ref": "5967c563e783e190ee8723a4446dd700c588870b",
+      "date": "2026-10-08",
+      "id": "context-opportunity:labs:ee5a6acfebb90042",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/labs.yaml",
+        "ordinal": 0,
+        "source_record_sha256": "5b27b42a74ee47e1dac4bae52180076343b569e3996ec1be098c1b70e5e1c9e1",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "labs",
+      "project": "https://github.com/pradeeptathineni/labs",
+      "area": "Catalog delivery",
+      "opportunity": "Use the existing browser smoke check for a catalog interaction change.",
+      "option": "native",
+      "why": "The catalog is static and already provides desktop/mobile and no-JavaScript checks.",
+      "evidence": [
+        ".meta/site/README.md"
+      ],
+      "limitations": [
+        "No catalog defect or browser result was established in this inspection."
+      ],
+      "next_action": "For the next UI change, build the existing site and run .meta/site/browser_smoke.py with its declared environment; retain any failing interaction before fixing it.",
+      "status": "conditional",
+      "checked_ref": "5967c563e783e190ee8723a4446dd700c588870b",
+      "date": "2026-10-08",
+      "id": "context-opportunity:labs:f7284b54996228a9",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/labs.yaml",
+        "ordinal": 1,
+        "source_record_sha256": "b2644e3d0d34d06f7dc7ab0030dfd376e6da1c92cb6804ec533ddda4dc822de0",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "labs",
+      "project": "https://github.com/pradeeptathineni/labs",
+      "area": "Scheduler prediction lab",
+      "opportunity": "Predict why a pod cannot fit one of two differently sized nodes, then inspect filter plugin results.",
+      "option": "scheduler-simulator",
+      "why": "The existing Kubernetes study area can use exposed scheduler decisions as a learning artifact.",
+      "evidence": [
+        "https://github.com/kubernetes-sigs/kube-scheduler-simulator"
+      ],
+      "limitations": [
+        "No runtime trial or completed Labs exercise claimed.",
+        "Home-lab defers Kubernetes; this suggestion does not propose a home-lab migration."
+      ],
+      "next_action": "Review the upstream runtime/images and license boundary, then run one isolated two-node prediction/inspection activity and retain the expected vs observed filters.",
+      "status": "conditional",
+      "checked_ref": "2026-10-08-primary-source",
+      "date": "2026-10-08",
+      "id": "context-opportunity:labs:e5b73b65fa12c219",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/labs.yaml",
+        "ordinal": 2,
+        "source_record_sha256": "cd83208899ddc37d80df036dabc7c6bc4db6827e1e7f28ceab76911d950e4ec3",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "principles",
+      "project": "https://github.com/pradeeptathineni/principles",
+      "area": "Corpus maintenance",
+      "opportunity": "Use the existing outcome route for a source-change reassessment instead of adding a second harness.",
+      "option": "native",
+      "why": "AGENTS routes maintenance to update-content and separates deterministic validity from semantic judgment.",
+      "evidence": [
+        "AGENTS.md",
+        "README.md"
+      ],
+      "limitations": [
+        "No specific source change or semantic deficiency was observed.",
+        "Taxonomy, protected intent and exact principle activation retain human gates."
+      ],
+      "next_action": "When an actual source changes, request the affected maintenance outcome, follow the project route and run its offline checks; present consequential semantic changes for the existing human gate.",
+      "status": "conditional",
+      "checked_ref": "9d08b67ead232a61b1ec43d6c9068a2d5384b9bd",
+      "date": "2026-10-08",
+      "id": "context-opportunity:principles:679695d93f49a4bc",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/principles.yaml",
+        "ordinal": 0,
+        "source_record_sha256": "666ca3e303aac8cab05bf25bcdc71a0e5d066392aad5919fe66a6b71c386d878",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "signals",
+      "project": "https://github.com/pradeeptathineni/signals-ai",
+      "area": "Reciprocal consumer / output",
+      "opportunity": "Compare retained failure diagnosis through native output and the focused Context capability.",
+      "option": "context-output",
+      "why": "Signals exposes a verbose verification command and keeps raw-output recovery as a documented requirement.",
+      "evidence": [
+        "AGENTS.md: broad analysis/noisy validation and raw_ref recovery",
+        "package.json: verify command"
+      ],
+      "limitations": [
+        "This snapshot does not establish the new peer implementation.",
+        "Source-only fit; joint operation and timing require a versioned consumer receipt."
+      ],
+      "next_action": "Have the Signals owner run an actual approved check in its disposable consumer under the pinned focused selection; retain raw output, exact status, invocation and useful recovered cause.",
+      "status": "suggested",
+      "checked_ref": "135cd3537901b956d4c7decd1bbb7d97ab805e8e",
+      "date": "2026-10-08",
+      "id": "context-opportunity:signals:cef869fea70eeb9e",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/signals.yaml",
+        "ordinal": 0,
+        "source_record_sha256": "70e2b2e967be28bd89dd6bfafe3f5a13ec32f0b94dc43a4fa98ea16950738779",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "signals",
+      "project": "https://github.com/pradeeptathineni/signals-ai",
+      "area": "Research intake",
+      "opportunity": "Refresh Context interests from a bounded public Signals export while keeping source findings advisory.",
+      "option": "research-evidence",
+      "why": "README separates acquisition, export time, producer mode and retained original observations.",
+      "evidence": [
+        "README.md: native exchange provenance and fixture separation"
+      ],
+      "limitations": [
+        "No imported producer result becomes independent corroboration of itself.",
+        "A missing or unsupported peer artifact must leave independent research available."
+      ],
+      "next_action": "Consume a versioned local export through Context intake; tie changed evidence to one unresolved profile choice and skip duplicate evidence on the second finite pass.",
+      "status": "suggested",
+      "checked_ref": "135cd3537901b956d4c7decd1bbb7d97ab805e8e",
+      "date": "2026-10-08",
+      "id": "context-opportunity:signals:969060c11d47a27b",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/signals.yaml",
+        "ordinal": 1,
+        "source_record_sha256": "4442297967525aeb241517547e968c8578f7e9eeccf1c4b45d04edaab23ec617",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "signals",
+      "project": "https://github.com/pradeeptathineni/signals-ai",
+      "area": "Claim support",
+      "opportunity": "Challenge a consequential research claim against its cited source before admitting it.",
+      "option": "nist-citation-probes",
+      "why": "NIST distinguishes source faithfulness, completeness and sufficiency; matching a substring alone is insufficient.",
+      "evidence": [
+        "https://www.nist.gov/programs-projects/building-evaluation-probes-agentic-ai"
+      ],
+      "limitations": [
+        "NIST supplies a methodology; the archived demonstrator is not selected for execution.",
+        "Peer export research revision remains unknown; source inspected directly on 2026-10-08."
+      ],
+      "next_action": "Use the three source questions in one real claim assessment; retain the source text, finding and scope instead of adding a judge pipeline.",
+      "status": "conditional",
+      "checked_ref": "2026-10-08-primary-source",
+      "date": "2026-10-08",
+      "id": "context-opportunity:signals:0b9d1cb11a9aabd0",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/signals.yaml",
+        "ordinal": 2,
+        "source_record_sha256": "31a0b208ea237435c5d0ded639860e2b5a5aa185b2162625e50c31d6d686b36d",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "signals",
+      "project": "https://github.com/pradeeptathineni/signals-ai",
+      "area": "Store correction invariants",
+      "opportunity": "Retain the exercised store/correction property as an optional regression technique for consequential merge changes.",
+      "option": "hypothesis",
+      "why": "The Signals owner executed 24 deterministic and 32 generated sequences against actual store/correction data under four verified denial probes.",
+      "evidence": [
+        "evals/greenfield.md",
+        "docs/hypothesis-trial.md"
+      ],
+      "limitations": [
+        "Peer executed Context 895c86c with a closed consumer-owned adapter; later Context source was inspected, not rerun.",
+        "The semantic correction preceded this trial; no Hypothesis discovery, general advantage or automatic dependency adoption."
+      ],
+      "next_action": "At the next store merge change, review the retained consumer-owned recipe against the new source and declared Node/Git runtimes; preserve deterministic coverage and run generated sequences only under explicit trial authority.",
+      "status": "assessed-conditional",
+      "checked_ref": "6453cf6f7682922edaee96982a1d76d92b8ec474",
+      "date": "2026-10-08",
+      "id": "context-opportunity:signals:9031a755230d1ccd",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/signals.yaml",
+        "ordinal": 3,
+        "source_record_sha256": "b0ecd84e2f9453e47c2073f2e4c45362506a4ca36bde7fc15400d56522fe8bdd",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "simulation",
+      "project": null,
+      "area": "Exploratory simulation",
+      "opportunity": "Specify one observable scenario and validation criterion before adopting a simulator.",
+      "option": "research-evidence",
+      "why": "The assignment names simulation as an allowed interest; no implementation or runtime was supplied.",
+      "evidence": [],
+      "limitations": [
+        "No repository, simulator, license, approved runtime or use result exists in this profile."
+      ],
+      "next_action": "State the system, perturbation and measurable outcome; research original sources for the smallest eligible simulator and propose a bounded isolated trial.",
+      "status": "suggested",
+      "checked_ref": "unknown",
+      "date": "2026-10-08",
+      "id": "context-opportunity:simulation:89567bf37a1b831b",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/simulation.yaml",
+        "ordinal": 0,
+        "source_record_sha256": "3f383227962495c730e37c475c54aaa16cc77b3bf5bcb5396dd65da2d7a132e4",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    },
+    {
+      "profile": "simulation",
+      "project": null,
+      "area": "Waiting-time experiment",
+      "opportunity": "Compare waiting time with one service counter vs two for arrivals every three minutes and five-minute service.",
+      "option": "simpy-queue",
+      "why": "SimPy models events and shared resources; this creates a concrete bottleneck experiment without assuming a future repository.",
+      "evidence": [
+        "https://simpy.readthedocs.io/en/latest/"
+      ],
+      "limitations": [
+        "The example question is a suggested exploratory task.",
+        "No execution, stable package pin, model validity or human interest confirmation claimed."
+      ],
+      "next_action": "Inspect a pinned stable SimPy resource example; propose a no-network isolated model with a fixed time horizon and a small parameter table.",
+      "status": "conditional",
+      "checked_ref": "2026-10-08-primary-source",
+      "date": "2026-10-08",
+      "id": "context-opportunity:simulation:5b36fbacee69a40a",
+      "source_id": null,
+      "aliases": [],
+      "scope": "public",
+      "origin": {
+        "owner": "context-ai",
+        "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+        "source_profile": "library/profiles/simulation.yaml",
+        "ordinal": 1,
+        "source_record_sha256": "3cefaa82a64915a6caaecfb8062ccd66aa4bb7840f354348b61b24788c51178b",
+        "identity_basis": "No original ID present; stable migration ID derives from profile and unchanged area.",
+        "annotations_basis": "No saved user annotation fields present in these source records; all existing fields preserved."
+      }
+    }
+  ],
+  "authority": "Existing opportunity observations only; no install/trial/apply authority. AI-engineering selections and lifecycle remain Context-owned.",
+  "method": "Frozen tracked source export; no regeneration or model call."
+}

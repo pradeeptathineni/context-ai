@@ -61,6 +61,22 @@ repository instructions or inspect credentials. Binding does not prove that the
 checkout matches the public source snapshot: the public profile records its
 assessment snapshot separately, and the trusted caller owns source registration.
 
+The normal Context CLI exposes the same read-only contract:
+
+```sh
+python3 scripts/context_ai.py handoff --input REQUEST.json \
+  --project APPROVED_PROJECT --allow-root APPROVED_ROOT \
+  --project-id lab --profile home-lab \
+  --source-ref https://github.com/example/lab --provider codex
+```
+
+Use `--public` only for the static portable selection. `--execute`, installation,
+trial and selection mutation flags are rejected. Invalid inputs return a nonzero
+exit: the normal CLI retains its existing code 1 convention; the standalone
+adapter uses code 2. A valid blocked result returns code 2 in both routes.
+Finding IDs accept stable namespaced migration IDs, including colons, up to
+192 characters; they remain data and never enter commands.
+
 Local callers may instead invoke the standalone CLI with explicit trusted
 arguments:
 

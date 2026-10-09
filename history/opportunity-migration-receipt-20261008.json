@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "status": "verified",
+  "count": 13,
+  "source_revision": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+  "source_sha256": "390d5b2012244fdd13a859ba292fed2982439fc1cbc8397d4e00764a3bceee3d",
+  "peer_receipt_sha256": "59b12ba1eaa10aeb81c95896af12c0e1370a3df189d8e867962546cc86c5ebe1",
+  "owner_receipt_sha256": "e2a6a6177436403a4bbd51a4724928d10966588aa6541bd496a7e7e7c0ab7173",
+  "identity_mapping_equal": true,
+  "original_records_byte_equivalent_after_canonical_decode": true,
+  "source_states_notes_aliases_scope_evidence_provenance_equal": true,
+  "destination_owner": "signals-ai/project-opportunities",
+  "first_imported": 13,
+  "second_imported": 0,
+  "second_unchanged": 13,
+  "recovery": {
+    "destination": "disposable-root",
+    "imported": 13,
+    "unchangedSourceRecords": true
+  },
+  "annotation_conservation_reported": true,
+  "evidence_scope": "Direct comparison of all13 imported source records and mappings; peer-reported second-pass/annotation/recovery checks inspected, not rerun by Context.",
+  "authority": "Observations only, no installation authority.",
+  "identity_note": "Original Context records had no IDs; these are unchanged export migration IDs, not invented historical IDs."
+}

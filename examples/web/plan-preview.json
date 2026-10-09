@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "scope": "public-controlled-engine-example",
+  "profile": "home-lab",
+  "source_commit": "3d77344591b695f02d3ade88647aad1d1f5e0b97",
+  "purpose": "Preview the focused output selection, then show a deliberately edited helper that blocks replacement.",
+  "addition_plan": {
+    "activation": "proposed",
+    "selection_outcome": "focused",
+    "additions": [
+      ".agents/skills/context-output/SKILL.md",
+      ".claude/skills/context-output/SKILL.md",
+      ".context-ai/resources/LICENSE",
+      ".context-ai/resources/procedures/output.md",
+      ".context-ai/resources/scripts/context_output.py"
+    ],
+    "replacements": [],
+    "removals": [],
+    "changes": [
+      "LICENSE",
+      "procedures/output.md",
+      "scripts/context_output.py"
+    ],
+    "conflicts": []
+  },
+  "conflict_plan": {
+    "activation": "proposed",
+    "selection_outcome": "focused",
+    "additions": [],
+    "replacements": [],
+    "removals": [],
+    "changes": [],
+    "conflicts": [
+      "user file conflict: .context-ai/resources/scripts/context_output.py"
+    ]
+  },
+  "permissions": [
+    "Existing Python/Git runtime probes only; no project tests, package install, inference, hooks or credentials.",
+    "Explicit apply in an owned disposable fixture; public page cannot apply."
+  ],
+  "outcome": {
+    "verification": [],
+    "unmanaged_bytes_preserved": true,
+    "edited_helper_preserved": true,
+    "undo": {
+      "preserved_conflicts": [
+        ".context-ai/resources/scripts/context_output.py"
+      ],
+      "undone": false
+    }
+  },
+  "evidence_class": "controlled real-engine lifecycle example",
+  "limits": [
+    "This is a disposable controlled edit, not a private user target or independent acceptance.",
+    "Plan is proposed; it does not authorize or confirm installation."
+  ],
+  "raw_refs": [
+    "preview-additions.json",
+    "preview-conflict.json",
+    "preview-verify.json",
+    "preview-refresh.json",
+    "preview-undo.json"
+  ],
+  "raw_sha256": {
+    "preview-additions": "47c2c829c548d4bfea6607dc5c7eecf81fad2cbad359c8220368fd2f4e2c62fd",
+    "preview-conflict": "03c8230cdfb109b4f0c0b4e6d99d89209067994226690691df6bd1f0ac73f946",
+    "preview-verify": "5985fed823105b674f46323f1bbf70698b16754e5b018e162489884b35040857",
+    "preview-refresh": "28b5c4dc74c8dd041e48c88a38abcc08e3029cd8997782f7bc4dcd7805e04b43",
+    "preview-undo": "15d7504258e7b4e899334d1b732efdefa771d1d59cd65ab99a34e33e0dc23e4b"
+  }
+}
