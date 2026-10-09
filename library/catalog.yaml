@@ -383,6 +383,21 @@ options:
     - Broader than a focused capability for a one-off need.
     checked_ref: 4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904
     grade: null
+  - scope: 'First-party disposable current Signals UI task: automatic reviewed project context clears on
+      scope change; edited drafts and lifecycle bytes/modes are preserved.'
+    evidence:
+    - 'examples/web/trial-evidence.json: signals-project-context-scope; exact consumer/source/receipt hashes
+      and limits.'
+    - Instruction-only Impeccable 4.5.0 pin ece38d9904b8a619b3f77cab476eacad09c4fb11 actually read before
+      the change.
+    strengths:
+    - Existing guided selection supported a bounded interface correction with before/after browser evidence
+      and complete update/undo.
+    weaknesses:
+    - No causal advantage over native engineering or human usefulness established; native dropdown keyboard
+      selection remains unverified.
+    checked_ref: 6b5498b7eaa1a099ecc12e7adea853b7a95b3a65
+    grade: null
 - id: context-output
   name: Capture and inspect command output
   purpose: Retain a verbose command once, recover bounded diagnostic evidence and preserve its exit status.

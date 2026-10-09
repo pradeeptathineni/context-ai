@@ -60,6 +60,52 @@
         "evals/greenfield.md"
       ],
       "receipt_sha256": "f79f8d1570001ac099530c5f18314b8dd2d2d667ecd307cc1533d79a5136b26a"
+    },
+    {
+      "id": "signals-project-context-scope",
+      "option": "web-experience",
+      "title": "Prepared project context stays with its project",
+      "purpose": "Use the existing design loadout on a current Signals interface defect, then update and undo without losing consumer work.",
+      "status": "passed",
+      "outcome": "Switching to Everything clears the 3,747 bytes of automatic project context instead of carrying them into another scope; edited drafts remain intact.",
+      "host": "macOS; native builder and existing Chromium; disposable current Signals source consumer",
+      "model": "Existing native Codex agent session; no additional research provider run",
+      "version": "Impeccable 4.5.0 instruction-only adapter; Node 24.19.0; existing Playwright",
+      "context_revision": "6b5498b7eaa1a099ecc12e7adea853b7a95b3a65",
+      "source_snapshot_sha256": "8b0b36a2c5f3b4ee1a65a00319248f6690ba0fdd463e6ba1328d101069c673ae",
+      "consumer_revision": "671c0389bc622b508a8e8063fee125c45f67078c",
+      "consumer_source_basis": "Signals 38606330 plus stable captured dirty experience files; separate disposable source commits",
+      "consumer_source_manifest_sha256": "4044c6a18af53ba15c190fe3ac584a5d13bce18fce19c35ae5bbbdf0625f2620",
+      "upstream_revision": "ece38d9904b8a619b3f77cab476eacad09c4fb11",
+      "evidence_class": "first-party actual consumer task with controlled project registration",
+      "metrics": {
+        "automatic_context_bytes_before": 3747,
+        "automatic_context_bytes_after": 0,
+        "edited_draft_preserved": true,
+        "history_context_cleared": true,
+        "research_requests": 0,
+        "browser_errors": 0,
+        "mobile_overflow": false,
+        "undo_completed": true,
+        "unmanaged_bytes_and_modes_preserved": true
+      },
+      "policy": {
+        "target": "owned disposable current Signals consumer",
+        "network": "No research/provider endpoint invoked by the consumer UI",
+        "installation": "project-local explicit plan/apply only",
+        "update_undo": "real engine refresh/apply/verify/undo; all unchanged equipment removed"
+      },
+      "evidence": [
+        "examples/web/trial-evidence.json",
+        "docs/design-system.md"
+      ],
+      "receipt_sha256": "3a857a10355499f62adc7c4fff46f87f64d470276f9aa05a6f2f5b8059fbce28",
+      "behavior_receipt_sha256": "4370b846c3f5a2b479a007786d0ab6f726ee9242e237f8141168e53328dff60b",
+      "limits": [
+        "First-party functional result; no causal design-resource advantage, speedup or human usefulness measurement.",
+        "1280 px and 390 px captures; native dropdown keyboard selection remains unverified after retained automation failures.",
+        "The consuming project owns the patch; canonical Signals source and private state were not changed."
+      ]
     }
   ]
 }

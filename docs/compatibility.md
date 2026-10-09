@@ -47,7 +47,7 @@ Claude unmanaged prose imports are delegated to the host. Context uses an explic
 
 Private immutable evidence/history and future selections survive missing peers. Production schedules are paused configuration, with finite native-host activation documented separately. No candidate-supplied command or policy field is executed.
 
-The public static catalog budget is 90 KB after adding real scoped source/use assessments (formerly 80 KB); the complete current output is about 78 KB. This bounds the expanded catalog data, without changing browser dependencies or asserting measured field performance.
+The public static catalog budget is 90 KB after adding real scoped source/use assessments (formerly 80 KB); the complete current output is about 81 KB. This bounds the expanded catalog data, without changing browser dependencies or asserting measured field performance.
 
 
 ## Experience ownership update (unreleased)
