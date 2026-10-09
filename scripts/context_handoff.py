@@ -84,7 +84,9 @@ def read_request(path):
     path = Path(path)
     if path.is_symlink() or any(p.is_symlink() for p in path.parents):
         raise engine.Invalid('symlink request path')
-    if path.stat().st_size > MAX_BYTES:
+    with path.open('rb') as source:
+        data = source.read(MAX_BYTES + 1)
+    if len(data) > MAX_BYTES:
         raise engine.Invalid('handoff request too large')
     def unique(pairs):
         result = {}
@@ -93,7 +95,7 @@ def read_request(path):
                 raise engine.Invalid('duplicate JSON field')
             result[key] = value
         return result
-    return validate_request(json.loads(path.read_bytes(), object_pairs_hook=unique))
+    return validate_request(json.loads(data, object_pairs_hook=unique))
 
 
 def local_directory(value):

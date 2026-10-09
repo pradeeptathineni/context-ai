@@ -30,6 +30,8 @@ The version 1 request has exactly these fields:
 constraints/findings lists are valid. Unknown fields, duplicate JSON fields,
 duplicate finding IDs, local paths and control characters are rejected. Requests
 are limited to 32 KiB, 16 constraints, 16 findings and 16 references per finding.
+The file reader takes one bounded buffer and checks its actual length before
+parsing it; a file growing after a size observation cannot bypass the limit.
 Finding outcomes and constraints provide context for the caller; they never add
 capabilities, dependencies, command arguments or execution permission. Structured
 findings are not independently verified facts. Only approved public findings
@@ -93,6 +95,10 @@ installation status, conflict counts, filenames, raw preview and private errors.
 Its local state is always `unknown`. A public page cannot use this export to
 inspect private state or invoke programs. Do not publish the default local
 result. Export failure is explicit if trusted metadata contains a machine path.
+`selection_pins` describes the static selected profile using the caller's explicit
+provider, or `both` by default. It is not the local preview's `pins`: the local
+engine plan preserves an existing installation's provider when none is supplied.
+The portable command template includes its static provider explicitly.
 
 After reviewing a local plan, the user may separately authorize the existing
 delivery command:

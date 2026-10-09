@@ -1,4 +1,5 @@
 import copy
+import io
 import json
 from pathlib import Path
 import sys
@@ -134,6 +135,32 @@ class LocalHandoff(unittest.TestCase):
         self.bindings['lab']['profile_id'] = 'unregistered'
         with self.assertRaises(engine.Invalid):
             self.run_request()
+
+    def test_growing_request_uses_one_bounded_buffer_not_declared_file_size(self):
+        path = self.root / 'growing.json'
+        original = json.dumps(self.request).encode()
+        path.write_bytes(original)
+        read_sizes = []
+        class GrowingSource(io.BytesIO):
+            def read(self, size=-1):
+                read_sizes.append(size)
+                return super().read(size)
+        # The opened content has grown, although the directory entry still reports
+        # the original small file. Trailing whitespace keeps the JSON valid.
+        grown = GrowingSource(original + b' ' * handoff.MAX_BYTES)
+        with patch.object(Path, 'open', return_value=grown), self.assertRaises(engine.Invalid):
+            handoff.read_request(path)
+        self.assertEqual(read_sizes, [handoff.MAX_BYTES + 1])
+
+    def test_portable_default_provider_is_static_not_installed_host_preview(self):
+        library.delivery('home-lab', self.project, 'codex', action='apply')
+        result = handoff.handle_request(self.request, bindings=self.bindings)
+        self.assertEqual(result['pins']['provider'], 'codex')
+        exported = handoff.public_result(result)
+        self.assertEqual(exported['selection_pins']['provider'], 'both')
+        self.assertEqual(exported['command_template'][-2:], ['--provider', 'both'])
+        self.assertNotIn('pins', exported)
+        self.assertEqual(exported['local_state'], 'unknown')
 
     def test_peer_absent_native_profile_still_plans_without_selection_from_findings(self):
         self.request['profile_id'] = 'principles'
