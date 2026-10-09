@@ -1,13 +1,13 @@
 # context-ai
 
-Context AI is my personal library of project equipment, standards, choices and evidence. Browse what fits a project, keep older alternatives with their limits, and pin only the guidance or tools that earn a role. Ordinary work starts with the project's instructions and native tools.
+Context AI is my personal library of AI-engineering equipment, standards, choices and evidence. Browse what fits a task, keep older alternatives with their limits, and pin only the guidance or tools that earn a role. Ordinary work starts with the project's instructions and native tools.
 
-The [catalog and profiles](docs/library.md) show actual selections for Labs, home-lab, Signals, Principles and an exploratory simulation interest. [Project opportunities](docs/project-suggestions.md) connect inspected needs to a concrete next action. The [local portal](examples/web/index.html) brings options, reasons and evidence together; it installs nothing.
+The [catalog and profiles](docs/library.md) show AI-engineering selections for Context, Labs, home-lab, Signals, Principles and an exploratory simulation target. The [equipment portal](examples/web/index.html) brings options, reasons and trial evidence together; it installs nothing. Signals owns general [project opportunities](docs/project-suggestions.md); the verified transfer keeps their history and recovery export.
 
 ```sh
 .venv/bin/python scripts/context_ai.py catalog
 .venv/bin/python scripts/context_ai.py select labs
-.venv/bin/python scripts/context_ai.py suggestions
+.venv/bin/python scripts/context_ai.py profiles
 ```
 
 [Safe delivery and maintenance](docs/library.md) provide preview, pinned setup, refresh, verified controlled trials, finite evidence intake, policy-bound future selections and undo. Shared resources feed Codex and Claude through thin adapters. The [140-concept index](concepts.yaml), original loadout scope and upstream attribution remain available without becoming required reading for every task. [Product scope](docs/PRODUCT.md) separates implemented behavior from demonstrated benefit.

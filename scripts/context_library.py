@@ -48,9 +48,12 @@ def profile(id):
         if choice['concern'] in concerns:
             raise Invalid('overlapping active concern owner')
         concerns.add(choice['concern'])
-    for suggestion in value['suggestions']:
+    for suggestion in value.get('suggestions', []):
         if suggestion['option'] not in options:
             raise Invalid('unknown suggestion option')
+    # Legacy profile records remain parseable, but general opportunities have
+    # one live owner and are recovered through the frozen migration export.
+    value.pop('suggestions', None)
     return value
 
 
@@ -179,24 +182,43 @@ def delivery(id, project, provider=None, action='plan', state=None):
             'external_delivery': [{'option': o['id'], 'upstream': o['upstream'], 'status': 'native-installer-required'} for o in picked['direct_upstream']]}
 
 
+def opportunity_migration():
+    """One ownership record in the existing product ledger; no peer query needed."""
+    ledger = read_yaml(ROOT / 'docs/product.yaml')
+    row = next(r for r in ledger['features'] if r['id'] == 'ecosystem-suggestions')
+    return row.get('ownership', {'status': 'context-owned', 'destination': 'context-ai'})
+
+
 def suggestions(state=None):
-    rows = []
-    for p in profiles().values():
-        for s in p['suggestions']:
-            rows.append({'profile': p['id'], 'project': p['project'], **s})
-    return {'schema_version': 1, 'suggestions': rows, 'mutations': 'none'}
+    migration = opportunity_migration()
+    if migration['status'] != 'moved':
+        raise Invalid('opportunity ownership migration is not verified')
+    return {'schema_version': 1, 'status': 'moved', 'destination': migration['destination'],
+            'export_reference': migration['export_reference'],
+            'receipt_reference': migration['receipt_reference'],
+            'migration': migration, 'suggestions': [], 'mutations': 'none',
+            'authority': 'Historical export and ownership notice; AI-engineering selection stays in Context.'}
 
 
 def render_suggestions():
-    lines = ['# Project opportunities', '', 'Generated from assessed project profiles. Suggestions do not install themselves.', '']
-    for s in suggestions()['suggestions']:
-        lines += ['## ' + s['profile'] + ' — ' + s['area'], '', s['opportunity'], '',
-                  '**Selection:** ' + s['option'] + '. ' + s['why'], '',
-                  '**Next action:** ' + s['next_action'], '',
-                  '**State:** ' + s['status'] + '. Checked ' + s['date'] + ' at `' + s['checked_ref'] + '`.', '',
-                  '**Limits:** ' + '; '.join(s['limitations']), '',
-                  '[Profile and assessment](../library/profiles/' + s['profile'] + '.yaml).', '']
-    return '\n'.join(lines)
+    migration = suggestions()['migration']
+    return '\n'.join([
+        '# Project opportunities moved to Signals', '',
+        'Signals owns general project opportunities, project interests and their feedback. '
+        'Context owns AI-engineering equipment, loadout selection, trials and safe delivery.', '',
+        f"The verified migration retained {migration['count']} records from Context `"
+        + migration['source_revision'] + '`. Source states, evidence and provenance were preserved. '
+        'The inspected peer receipt reports no added records on the second import and '
+        'successful recovery in a disposable destination.', '',
+        migration['identity_note'], '',
+        '[Frozen export](../' + migration['export_reference'] + ') · '
+        '[Conservation receipt](../' + migration['receipt_reference'] + ')', '',
+        'The `suggestions` CLI remains a read-only moved response with those recovery references. '
+        'It does not generate or mutate another opportunity list. '
+        'Use `catalog`, `profiles` and `select PROFILE` for Context equipment.', '',
+        'The previous project-suggestions assessment remains in [the product ledger](product.yaml) '
+        'at its original evidence scope. Migration is not new discovery or installation authority.',
+        ''])
 
 
 def intake(path, sha, producer, commit, interest, fixture=False):
@@ -236,6 +258,8 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
         seen = {(e.get('interest'), e.get('intake_sha')) for e in prior}
         due = []
         for interest in interests:
+            if interest.get('ownership', {}).get('status') == 'moved':
+                continue
             latest = [e for e in prior if e.get('interest') == interest['id']]
             next_due = date.fromisoformat(latest[-1]['next_due'] if latest else interest['due'])
             if next_due <= today:
@@ -247,6 +271,12 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
                     'current_selections': 'preserved', 'coverage_gap': 'No new source observation supplied.'}
         report = intake_report['evidence']
         sha = report['bundle_sha256']
+        scope = next(i for i in interests if i['id'] == intake_report['interest'])
+        if scope.get('ownership', {}).get('status') == 'moved':
+            return {'status': 'moved', 'interest': scope['id'],
+                    'destination': scope['ownership']['destination'],
+                    'history_reference': scope['ownership']['history_reference'],
+                    'actions': [], 'due_research': due, 'current_selections': 'preserved'}
         raw = intake_report.get('_raw_bundle')
         if raw is not None:
             if digest(raw) != sha:
@@ -256,7 +286,6 @@ def maintenance(state, intake_report=None, today=None, execute_trials=False, whe
                 raise Invalid('retained bundle changed')
             atomic(raw_path, raw)
             raw_path.chmod(0o600)
-        scope = next(i for i in interests if i['id'] == intake_report['interest'])
         retry = False
         if execute_trials:
             for candidate in report['recommendations']:

@@ -125,6 +125,8 @@
       }
     },
     "suggestions": {
+      "deprecated": true,
+      "$comment": "Legacy opportunity records are retained in migration history; live profiles own AI-engineering selections only.",
       "type": "array",
       "maxItems": 300,
       "items": {
@@ -204,8 +206,7 @@
     "environment",
     "priorities",
     "policy",
-    "selections",
-    "suggestions"
+    "selections"
   ],
   "additionalProperties": false,
   "$schema": "https://json-schema.org/draft/2020-12/schema"

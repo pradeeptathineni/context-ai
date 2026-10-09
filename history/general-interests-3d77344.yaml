@@ -1,0 +1,43 @@
+schema_version: 1
+kind: context-general-interests-history
+source_owner: context-ai
+destination_owner: signals-ai/project-interests
+source_commit: 3d77344591b695f02d3ade88647aad1d1f5e0b97
+source_file: library/interests.yaml
+source_sha256: 3231923af484ad6cff1c6a9a85ed8084ba58ae5e776e34301db19223b00e9d6f
+interests:
+- id: kubernetes-learning
+  query: What do the pinned CK-X CKAD-002 license and environment dependencies permit for one scoped Kubernetes
+    practice attempt?
+  concepts:
+  - research.licensing
+  - security.sandbox
+  profiles:
+  - labs
+  refresh_days: 30
+  due: '2026-10-08'
+  last_seen: null
+- id: independent-backup-proof
+  query: What evidence closes the independent backup destination and fixture restoration gap under home-lab's
+    existing private recovery policy?
+  concepts:
+  - security.secrets
+  - research.provenance
+  profiles:
+  - home-lab
+  refresh_days: 30
+  due: '2026-10-08'
+  last_seen: null
+- id: computer-simulation
+  query: Which observable simulation question and validation method can justify a minimal approved simulator
+    rather than an unspecified framework?
+  concepts:
+  - research.decision
+  - security.sandbox
+  profiles:
+  - simulation
+  refresh_days: 30
+  due: '2026-10-08'
+  last_seen: null
+semantics: Original IDs and records retained without research replay. General project discovery belongs
+  to Signals; history is not an active Context query list.

@@ -24,6 +24,12 @@ interests:
   refresh_days: 30
   due: '2026-10-08'
   last_seen: null
+  ownership:
+    status: moved
+    destination: signals-ai/project-interests
+    history_reference: history/general-interests-3d77344.yaml
+    scope: Historical ID retained for existing intake/state readers; Context no longer schedules this
+      general research.
 - id: independent-backup-proof
   query: What evidence closes the independent backup destination and fixture restoration gap under home-lab's
     existing private recovery policy?
@@ -35,6 +41,12 @@ interests:
   refresh_days: 30
   due: '2026-10-08'
   last_seen: null
+  ownership:
+    status: moved
+    destination: signals-ai/project-interests
+    history_reference: history/general-interests-3d77344.yaml
+    scope: Historical ID retained for existing intake/state readers; Context no longer schedules this
+      general research.
 - id: computer-simulation
   query: Which observable simulation question and validation method can justify a minimal approved simulator
     rather than an unspecified framework?
@@ -46,3 +58,9 @@ interests:
   refresh_days: 30
   due: '2026-10-08'
   last_seen: null
+  ownership:
+    status: moved
+    destination: signals-ai/project-interests
+    history_reference: history/general-interests-3d77344.yaml
+    scope: Historical ID retained for existing intake/state readers; Context no longer schedules this
+      general research.

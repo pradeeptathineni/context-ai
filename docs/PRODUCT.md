@@ -1,8 +1,10 @@
 # Context AI — product
 
-Maintain a personal, evidence-informed source of project equipment and standards, and help each project select, use, and evolve the combinations that fit it.
+Maintain personal AI-engineering standards, equipment choices and evidence; select, deliver and evolve fitting project setups under explicit policies.
 
 Generated from product.yaml. Delivery and scoped value are separate.
+
+Amended AI-engineering scope preserves earlier assessments at their recorded scope.
 
 | Feature | Delivery | Value | Scope and limits |
 | --- | --- | --- | --- |
@@ -16,17 +18,24 @@ Generated from product.yaml. Delivery and scoped value are separate.
 | Candidate assessments | working | 2 | Scoped source, trial and local artifact assessments are retained separately from selection. Local semantic judgments are not independent acceptance. |
 | Controlled trials | working | 2 | Output/TDD recipes and exact pinned Hypothesis run under tested native deny rules. Failed attempts retained. macOS CPython3.12 x86_64 reviewed wheel boundary; unsupported hosts fail closed. |
 | Loadout library | working | 2 | Recurring profiles reuse existing pinned delivery; explicit original loadouts remain supported. Direct upstream installers are never run implicitly. |
-| Loadout recommendations | working | 2 | One concern owner per profile, reasons and optional deeper choices. Suggestions need workload assessment before adoption. |
+| Loadout selection | working | 2 | One concern owner per profile, reasons and optional deeper choices. Suggestions need workload assessment before adoption. |
 | Task routing & activation | working | 2 | Focused output guidance routes before shell commands; native ordinary tasks add zero guidance. No automatic native Read/Grep interception; fresh host session may be needed. |
 | Project setup | working | 2 | Normal CLI profile preview/apply/verify uses exact pins and safe consumer writes. Verify reports integrity/runtime probes; project checks are not silently run. |
 | Updates & undo | working | 3 | Copy migration preserves unmanaged CRLF/Unicode and edited resources; failed overwrite and undo ownership retained. Concrete CRLF defect corrected; no general superiority claim. |
 | AI-host adapters | working | 2 | Shared pinned source feeds thin Codex/Claude routers with explicit import ownership. Installed files do not establish current-chat activation or served model identity. |
 | Evidence & decision history | working | 2 | Exact intake bundles, immutable decisions and hash-checked artifact copies retain old alternatives. Private history is exported only on explicit state selection. |
-| Catalog portal & showcase | working | 2 | Public catalog/profile/opportunity browser with evidence disclosure and preserved legacy delivery view. Portal contains public committed choices, not live private consumer installation state. |
+| Equipment portal & showcase | working | 2 | Public catalog/profile/opportunity browser with evidence disclosure and preserved legacy delivery view. Portal contains public committed choices, not live private consumer installation state. |
 | CLI & exports | working | 2 | CLI catalog/select/suggest/trial/evolve/assess/decide and existing lifecycle/export available. No web or producer recommendation grants execution authority. |
-| Project suggestions | working | 2 | Named Labs/home-lab/Signals/Principles needs plus pre-repository simulation opportunities. No downstream repository modified; user novelty/value not asserted. |
 | Library evolution | working | 2 | Real intake, local assessment and allowed future-profile update; unchanged pass, pause/resume and missing-peer work. Native schedule configuration is supplied paused; production recurrence is not activated. |
 | Reciprocal use & feedback | working | 2 | Context used three real Signals batches; Signals exercised normal Context lifecycle and 56 actual store/correction sequences, returning a reproduced runtime fix. First-party reciprocal execution used Context 895c86c; later pin inspection is distinct.; Combined Claude acceptance and human usefulness remain unproved. |
 | Consumer evaluations | working | 2 | Historical 13 trajectories retained plus real executable preservation outcomes and failed attempt. Unequal case counts, no speedup; current same-machine research contention disclosed in results. |
 | Product ledger | working | 2 | This ledger is canonical and the product/suggestion views are generated. Feature delivery and scoped value are independent; unknown value stays null. |
 | All | working | 2 | Hash pins, edit preservation, private state, policy gates and native sandbox denials. Guardrails require pass/fail; evidence grades cannot compensate for failure. |
+
+## Transferred responsibility
+
+Project suggestions is owned by `signals-ai/project-opportunities`. 13 records were conserved. See [the migration and recovery references](project-suggestions.md).
+
+Historical assessment at `e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8`: delivery working, scoped value 2. Named Labs/home-lab/Signals/Principles needs plus pre-repository simulation opportunities.
+
+Historical limits: No downstream repository modified; user novelty/value not asserted..

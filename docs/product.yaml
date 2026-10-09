@@ -1,7 +1,7 @@
 schema_version: 3
 project: context-ai
-mission: Maintain a personal, evidence-informed source of project equipment and standards, and help each project
-  select, use, and evolve the combinations that fit it.
+mission: Maintain personal AI-engineering standards, equipment choices and evidence; select, deliver and
+  evolve fitting project setups under explicit policies.
 scope: All listed features are required. Role describes contribution, not priority or optionality. Required
   support does not mean enabled by default.
 roles:
@@ -13,8 +13,8 @@ features:
   name: Core context & standards
   role: core
   type: knowledge
-  intent: Maintain the personal standards and reusable guidance that projects can share without requiring the
-    same setup or extra instructions for every task.
+  intent: Maintain the personal standards and reusable guidance that projects can share without requiring
+    the same setup or extra instructions for every task.
   assessment:
     delivery: working
     value: 2
@@ -33,8 +33,8 @@ features:
   assessment:
     delivery: working
     value: 2
-    scope: Original families retained; pinned Labs research guidance read and used in a real source claim check;
-      output/TDD routes remain opt-in.
+    scope: Original families retained; pinned Labs research guidance read and used in a real source claim
+      check; output/TDD routes remain opt-in.
     assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - docs/library.md
@@ -76,8 +76,8 @@ features:
   name: Project profiles & policies
   role: core
   type: configuration
-  intent: "Describe each project\u2019s needs, environment, preferences, authorized actions, and selection\
-    \ policies so standardization does not mean uniformity."
+  intent: Maintain AI-engineering target requirements, host environment and authorized equipment/update
+    policies; reference Signals-owned project context without duplicating general project analysis.
   assessment:
     delivery: working
     value: 2
@@ -88,12 +88,17 @@ features:
     - docs/project-suggestions.md
     limitations:
     - Simulation has no assumed repository; public snapshot revisions can age.
+  scope_amendment:
+    date: '2026-10-08'
+    basis: Experience assignment product-amendment.yaml
+    assessment_semantics: Prior assessment retained at its original scope; the amended intent is the current
+      contract.
 - id: interests
   name: Interests & research queries
   role: core
   type: configuration
-  intent: Maintain research needs derived from concepts, projects, and unresolved choices; revisit what can
-    change a decision rather than every catalog entry.
+  intent: Maintain research needs derived from concepts, projects, and unresolved choices; revisit what
+    can change a decision rather than every catalog entry.
   assessment:
     delivery: working
     value: 2
@@ -107,8 +112,8 @@ features:
   name: Research intake
   role: core
   type: integration
-  intent: Consume relevant new or updated Signals evidence and use independent research when Signals is unavailable
-    or insufficient.
+  intent: Consume relevant new or updated Signals evidence and use independent research when Signals is
+    unavailable or insufficient.
   assessment:
     delivery: working
     value: 2
@@ -156,8 +161,8 @@ features:
   name: Loadout library
   role: core
   type: configuration
-  intent: Maintain reusable, project-specific combinations of selected guidance, tools, and settings, including
-    multiple specializations rather than one universal harness.
+  intent: Maintain reusable, project-specific combinations of selected guidance, tools, and settings,
+    including multiple specializations rather than one universal harness.
   assessment:
     delivery: working
     value: 2
@@ -169,11 +174,11 @@ features:
     limitations:
     - Direct upstream installers are never run implicitly.
 - id: recommendations
-  name: Loadout recommendations
+  name: Loadout selection
   role: core
   type: assessment
-  intent: Choose coherent equipment for a project, explain the selections, and avoid redundant ownership or
-    conflicting behavior.
+  intent: Choose and explain coherent AI-engineering equipment for a target project; preserve alternative
+    profiles, native-sufficient work, conflict handling and evidence-informed specialization.
   assessment:
     delivery: working
     value: 2
@@ -184,12 +189,17 @@ features:
     - docs/project-suggestions.md
     limitations:
     - Suggestions need workload assessment before adoption.
+  scope_amendment:
+    date: '2026-10-08'
+    basis: Experience assignment product-amendment.yaml
+    assessment_semantics: Prior assessment retained at its original scope; the amended intent is the current
+      contract.
 - id: activation
   name: Task routing & activation
   role: core
   type: integration
-  intent: Make selected guidance or tools available before the action they should improve, while leaving ordinary
-    work unobstructed when no addition is needed.
+  intent: Make selected guidance or tools available before the action they should improve, while leaving
+    ordinary work unobstructed when no addition is needed.
   assessment:
     delivery: working
     value: 2
@@ -204,8 +214,8 @@ features:
   name: Project setup
   role: core
   type: delivery
-  intent: Preview and safely deliver pinned selections through fitting native or upstream mechanisms, accurately
-    reporting what installation and readiness checks establish.
+  intent: Preview and safely deliver pinned selections through fitting native or upstream mechanisms,
+    accurately reporting what installation and readiness checks establish.
   assessment:
     delivery: working
     value: 2
@@ -225,8 +235,8 @@ features:
   assessment:
     delivery: working
     value: 3
-    scope: Copy migration preserves unmanaged CRLF/Unicode and edited resources; failed overwrite and undo
-      ownership retained.
+    scope: Copy migration preserves unmanaged CRLF/Unicode and edited resources; failed overwrite and
+      undo ownership retained.
     assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - evals/greenfield.md
@@ -265,11 +275,11 @@ features:
     limitations:
     - Private history is exported only on explicit state selection.
 - id: portal
-  name: Catalog portal & showcase
+  name: Equipment portal & showcase
   role: supporting
   type: ui
-  intent: Browse what is known, selected, installed, tested, or superseded, and deliberately share personal
-    standards and choices with their reasons.
+  intent: Make capabilities, loadouts, trials, standards and lifecycle choices clear to people; expose
+    authorized local plan/status through the existing engine while keeping public information separate.
   assessment:
     delivery: working
     value: 2
@@ -280,12 +290,17 @@ features:
     - examples/web/index.html
     limitations:
     - Portal contains public committed choices, not live private consumer installation state.
+  scope_amendment:
+    date: '2026-10-08'
+    basis: Experience assignment product-amendment.yaml
+    assessment_semantics: Prior assessment retained at its original scope; the amended intent is the current
+      contract.
 - id: interfaces
   name: CLI & exports
   role: supporting
   type: integration
-  intent: Expose selection, delivery, lifecycle, catalog, and evidence operations to people, agents, and scripts
-    without requiring the portal.
+  intent: Expose selection, delivery, lifecycle, catalog, and evidence operations to people, agents, and
+    scripts without requiring the portal.
   assessment:
     delivery: working
     value: 2
@@ -299,8 +314,8 @@ features:
   name: Project suggestions
   role: core
   type: assessment
-  intent: Show named repositories and concrete improvements they could benefit from, with fit, evidence, limitations,
-    and next actions; do not silently modify them.
+  intent: Show named repositories and concrete improvements they could benefit from, with fit, evidence,
+    limitations, and next actions; do not silently modify them.
   assessment:
     delivery: working
     value: 2
@@ -310,6 +325,21 @@ features:
     - docs/project-suggestions.md
     limitations:
     - No downstream repository modified; user novelty/value not asserted.
+  ownership:
+    status: moved
+    destination: signals-ai/project-opportunities
+    source_revision: 3d77344591b695f02d3ade88647aad1d1f5e0b97
+    export_reference: history/project-opportunities-3d77344.json
+    export_sha256: 390d5b2012244fdd13a859ba292fed2982439fc1cbc8397d4e00764a3bceee3d
+    count: 13
+    receipt_reference: history/opportunity-migration-receipt-20261008.json
+    identity_note: Original records had no stable IDs or saved-annotation fields; migration IDs and missing-original-ID
+      semantics are retained in the frozen export.
+    receipt_sha256: 5e76f303e383813111123425dcb29d194c0cf476734cc044da73432349342118
+    peer_receipt_sha256: 59b12ba1eaa10aeb81c95896af12c0e1370a3df189d8e867962546cc86c5ebe1
+    owner_receipt_sha256: e2a6a6177436403a4bbd51a4724928d10966588aa6541bd496a7e7e7c0ab7173
+    evidence_scope: Direct comparison of all13 imported source records and mappings; peer-reported second-pass/annotation/recovery
+      checks inspected, not rerun by Context.
 - id: evolution
   name: Library evolution
   role: core
@@ -319,8 +349,8 @@ features:
   assessment:
     delivery: working
     value: 2
-    scope: Real intake, local assessment and allowed future-profile update; unchanged pass, pause/resume and
-      missing-peer work.
+    scope: Real intake, local assessment and allowed future-profile update; unchanged pass, pause/resume
+      and missing-peer work.
     assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - examples/library-maintenance.yaml
@@ -331,13 +361,13 @@ features:
   name: Reciprocal use & feedback
   role: core
   type: integration
-  intent: Equip Signals and other projects, retain their practical results as first-party evidence, and continue
-    operating when a peer or optional provider is absent.
+  intent: Equip Signals and other projects, retain their practical results as first-party evidence, and
+    continue operating when a peer or optional provider is absent.
   assessment:
     delivery: working
     value: 2
-    scope: Context used three real Signals batches; Signals exercised normal Context lifecycle and 56 actual
-      store/correction sequences, returning a reproduced runtime fix.
+    scope: Context used three real Signals batches; Signals exercised normal Context lifecycle and 56
+      actual store/correction sequences, returning a reproduced runtime fix.
     assessed_ref: e12fbb1ac97e12b998c6da594ae2702c6c6b7ea8
     evidence:
     - evals/greenfield.md

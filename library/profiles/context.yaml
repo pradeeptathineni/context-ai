@@ -32,22 +32,3 @@ selections:
   reason: For this explicit preservation-stress profile only, execute a reviewed pinned recipe in an isolated
     disposable consumer.
   concern: preservation-testing
-suggestions:
-- area: Edit/undo preservation
-  opportunity: Exercise newline, Unicode, no-final-newline and managed-file edits through apply/refresh/undo
-    before a lifecycle change is delivered.
-  option: hypothesis
-  why: Signals nominated property generation for this actual seam; Context inspected and ran the exact
-    wheel after fixing a reproduced unmanaged CRLF normalization defect.
-  evidence:
-  - docs/hypothesis-trial.md
-  - evals/greenfield.md
-  limitations:
-  - The defect was identified by static inspection and a deterministic reproduction; Hypothesis is not
-    credited with an independent discovery.
-  - 32 generated cases took longer than 24 deterministic cases; no productivity advantage claimed.
-  next_action: Acquire the reviewed wheel set, preview the hypothesis-undo recipe, then run it with --wheel-cache
-    in a new disposable directory at the next consequential lifecycle change.
-  status: operational-in-isolated-trial
-  checked_ref: 52bc7ef19c0be5f21ad8aeb7ad93df84d09953640a08673e0a3a95c014bc4c7b
-  date: '2026-10-08'

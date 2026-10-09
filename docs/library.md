@@ -1,6 +1,6 @@
-# Choose equipment for a project
+# Choose AI-engineering equipment
 
-Browse the catalog, then use the profile whose purpose and evidence match your project. Ordinary work starts with its own instructions and native tools. A selection preserves an option and its reason. Delivery previews the current Context source and locks exact resource versions when applied; direct upstream options retain their declared pins.
+Browse the catalog, then choose a profile whose AI-engineering purpose, host environment and evidence match your task. Ordinary work starts with the project's instructions and native tools. A selection preserves an option and its reason. Delivery previews the current Context source and locks exact resource versions when applied; direct upstream options retain their declared pins.
 
 Run from the Context source with Python 3.10+ and the pinned source environment:
 
@@ -10,10 +10,11 @@ python3 -m venv .venv
 .venv/bin/python scripts/context_ai.py catalog
 .venv/bin/python scripts/context_ai.py profiles
 .venv/bin/python scripts/context_ai.py select labs
-.venv/bin/python scripts/context_ai.py suggestions
 ```
 
-The [project opportunities](project-suggestions.md) and [portal](../examples/web/index.html) show the current public choices. [Catalog YAML](../library/catalog.yaml) holds options and scoped assessments; [profiles](../library/profiles) own selections, inspected snapshots, priorities and policies. The original loadout families, concepts, upstream notices, task packets and direct reads remain available. A task packet resolves one task's guidance; a library profile captures recurring project needs. Neither runs an agent.
+The [portal](../examples/web/index.html) shows equipment, loadouts and scoped trial evidence. [Catalog YAML](../library/catalog.yaml) holds options and assessments; [profiles](../library/profiles) own AI-engineering selections, inspected snapshot references and equipment policies. The original loadout families, concepts, upstream notices, task packets and direct reads remain available. A task packet resolves one task's guidance; a library profile captures a recurring AI-engineering setup. Neither runs an agent.
+
+Signals owns general project opportunities, interests and feedback. The [verified transfer](project-suggestions.md) retains all 13 original records and their absence of original IDs or saved annotation fields. `suggestions` remains a read-only compatibility response with `status: moved`, the Signals destination and recovery references; it emits no active opportunity list. Existing schema-v1 profiles may retain the deprecated optional `suggestions` field in history, but current profile and catalog views expose AI-engineering configuration only.
 
 ## Deliver a selection safely
 
@@ -58,7 +59,9 @@ The macOS backend denies personal HOME, external reads/writes and network, then 
 
 ## Follow relevant evidence
 
-[Interests](../library/interests.yaml) connect unresolved choices to profiles and concepts. Due queries guide native host research; they do not turn every concept into a research job. Signals v1 evidence is admitted with exact bytes, producer identity and commit; native primary-source research remains available without Signals.
+[Interests](../library/interests.yaml) connect unresolved AI-engineering choices to profiles and concepts. Due queries guide native host research; they do not turn every concept into a research job. Signals v1 evidence is admitted with exact bytes, producer identity and commit; native primary-source research remains available without Signals.
+
+The original general-interest IDs remain readable with moved markers and [frozen source records](../history/general-interests-3d77344.yaml). They produce no due research or trials in Context. Existing retained intake events and assessments remain available; a new intake against one of those IDs returns the owner and history reference. The active `project-equipment` scope covers concrete AI-engineering choices.
 
 ```sh
 .venv/bin/python scripts/context_ai.py evolve --state /absolute/private-library

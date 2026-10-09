@@ -10,8 +10,8 @@ snapshot:
     sha256: e19ed7f4d35356207b307369fb0b78ab5bbf65c8e300ea95d05a1a991ca57437
   - path: package.json
     sha256: ab7abb0b7dd770e7a6a64f2b9a4a1ab92d7b006315d0b4db680f79901a412a1d
-purpose: Maintain an evidence-grounded principles corpus with deterministic checks and human semantic
-  judgment.
+purpose: Use project-native AI-assisted corpus workflows while preserving source identity, semantic policy
+  and human acceptance gates.
 environment:
   language: Node.js >=24.0.0 <25
   checks:
@@ -20,8 +20,8 @@ environment:
   - npm run validate
   snapshot_scope: Committed public source only; local folder name differs from remote repository name.
 priorities:
-- Preserve stable principle/source identity and explicit human gates.
-- Offline deterministic checks remain separate from semantic acceptance.
+- Keep the project's existing outcome routing as the sole workflow owner.
+- Separate offline syntax checks from semantic acceptance and human judgment.
 policy:
   trials: []
   updates: []
@@ -30,21 +30,3 @@ selections:
 - option: native
   reason: The repository already owns outcome routing, taxonomy authority and source review.
   concern: ordinary-work
-suggestions:
-- area: Corpus maintenance
-  opportunity: Use the existing outcome route for a source-change reassessment instead of adding a second
-    harness.
-  option: native
-  why: AGENTS routes maintenance to update-content and separates deterministic validity from semantic
-    judgment.
-  evidence:
-  - AGENTS.md
-  - README.md
-  limitations:
-  - No specific source change or semantic deficiency was observed.
-  - Taxonomy, protected intent and exact principle activation retain human gates.
-  next_action: When an actual source changes, request the affected maintenance outcome, follow the project
-    route and run its offline checks; present consequential semantic changes for the existing human gate.
-  status: conditional
-  checked_ref: 9d08b67ead232a61b1ec43d6c9068a2d5384b9bd
-  date: '2026-10-08'
