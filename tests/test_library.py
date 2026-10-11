@@ -82,6 +82,17 @@ class PersonalLibrary(unittest.TestCase):
         with self.assertRaisesRegex(c.Invalid,'absolute consumer'):
             lib.delivery('home-lab',alias,action='apply')
 
+    def test_explicit_provider_on_profile_refresh_overrides_inherited_host(self):
+        project=Path(self.temp.name).resolve()/'provider-change';project.mkdir()
+        lib.delivery('home-lab',project,provider='codex',action='apply')
+        preview=lib.delivery('home-lab',project,provider='both',action='refresh')
+        self.assertEqual(preview['delivery']['resolution']['provider'],'both')
+        self.assertIn('.claude/skills/context-output/SKILL.md',preview['delivery']['writes'])
+        self.assertEqual(c.installed(project)['resolution']['provider'],'codex')
+        lib.delivery('home-lab',project,provider='both',action='apply')
+        self.assertEqual(c.verify(project)['provider'],'both')
+        self.assertTrue(c.undo(project)['undone'])
+
     def test_missing_peer_does_not_remove_selections(self):
         before = lib.selection('signals')
         result = lib.maintenance(self.state, today=date(2026, 10, 8))

@@ -173,7 +173,7 @@ def delivery(id, project, provider=None, action='plan', state=None):
     if picked['direct_upstream'] and action == 'apply':
         raise Invalid('direct-upstream profile requires its inspected native installer; no implicit execution')
     previous = installed(project)
-    if previous and (action == 'refresh' or provider is None):
+    if previous and provider is None:
         provider = previous['resolution']['provider']
     provider = provider or 'both'
     lock, files = resolve(picked['loadouts'], project, provider, extras=picked['capabilities'])
