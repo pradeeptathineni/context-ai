@@ -39,7 +39,7 @@ capabilities:
     path: procedures/react-review.md
     description: Read targeted Vercel React rules when the actual project uses React.
     files:
-    - sourced/vercel/react/compiled-guide.md
+    - sourced/vercel/react/compiled-guide.upstream.txt
     - sourced/vercel/react/upstream-README.md
     boundary: Match framework/version; no forced Next or Vercel hosting.
   context-web-audit:

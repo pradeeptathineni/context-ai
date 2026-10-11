@@ -23,7 +23,6 @@ concerns:
     files: [core/prior-art.md, skills/pact-hrr/SKILL.md]
     adapted_from: [ecc, ponytail]
     native_names: [search-first, ponytail, pact-hrr]
-    archived: [archive/overlays/prior-art.md]
   test-first-loop:
     owner_kind: upstream
     files: [procedures/tdd.md]

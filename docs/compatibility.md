@@ -8,7 +8,7 @@ The generated `concept-needs` handoff is now schema 2: it contains curated quest
 
 House policies live in `overlays/`. The pre-1 `custom/` routers were removed because no loadout selected them; exact old source commits retain the old paths. Read a task-relevant overlay directly or use loadouts for a recurring project selection.
 
-Codex is the current supported materialization adapter. Its project-local skill routers use unique context-prefixed names; the existing standard discovery name is untouched. Instruction-only upstream adaptations declare omitted binaries/hooks and preserve pinned documentation/notice files. A project can continue a stage on its earlier lock while the library advances; review a refresh at a checkpoint before changing the active pin.
+Codex and Claude Code are supported materialization adapters. Its project-local skill routers use unique context-prefixed names; the existing standard discovery name is untouched. Instruction-only upstream adaptations declare omitted binaries/hooks and preserve pinned documentation/notice files. A project can continue a stage on its earlier lock while the library advances; review a refresh at a checkpoint before changing the active pin.
 
 Exact snapshots remain available in Git commits and exported release/checkpoint archives. Materialization does not retrieve an old revision automatically: use the exact checkout/archive to reproduce that pin. New `git archive COMMIT` exports expand the tracked `REVISION` marker using Git `export-subst`; checkout copies, tree-only archives and older archives may lack a concrete marker. The resolver uses Git only when the source itself is the repository root, then a concrete archive marker, otherwise `exported-tree` plus resource hashes. A consumer repository surrounding an export cannot supply the library commit. A marker records provenance; resource hashes still establish selected bytes. Use the commit or archive digest as the source identity; no stable designation is implied.
 
@@ -20,7 +20,7 @@ Portable-pin validation compares resource hashes and reviewed declarations witho
 
 ## Current decision and CLI views
 
-`decisions` expands shared defaults and selects the latest revision of each record; predecessors remain available for provenance and exact pins. `decisions LOADOUT` and `explain LOADOUT` limit the view to the resolved composition. Current records use catalog concept IDs. Old installed locks contain their original resolved records and still verify without consulting the current registry.
+`decisions` expands shared defaults from one current record per ID. Revision numbers and predecessor IDs remain stable; earlier Git commits and installed locks retain historical records for provenance and exact pins. The current registry no longer requires predecessor copies in the active tree. `decisions LOADOUT` and `explain LOADOUT` limit the view to the resolved composition. Current records use catalog concept IDs. Old installed locks contain their original resolved records and still verify without consulting the current registry.
 
 `explain` now includes inherited selections, effective options, stage routes and check recipes. Capability definitions retain their existing shape; `capability_requirements` states required/optional declarations without implying availability. `verify` retains `verified` and `owned_files`, and adds its installation scope, executed runtime probes, missing optional boundaries, suggested checks and `project_checks: "not_run"`. These additive command outputs do not change lock or installation schema 2. A structured per-task use receipt is optional; project-specific reporting contracts still apply.
 
@@ -69,3 +69,9 @@ come from the trusted local caller, outside portable JSON. Plans use the existin
 delivery engine; public exports contain static selection with local state unknown.
 The normal CLI's nonzero validation convention is unchanged. No request
 approves apply, installation or inference. See [local contract](context-handoff.md).
+
+## Reference consolidation
+
+New React selections ship the unmodified `sourced/vercel/react/compiled-guide.upstream.txt` instead of the redundant adapted `.md` copy, with the same upstream revision and attribution. Existing installations retain their previous pinned bytes until an explicit refresh/apply; reproduce their original lock from its exact source commit. No third-party snapshot was edited. Superseded prior-art guidance is retained in Git rather than a second archive; the active owner is `core/prior-art.md`.
+
+The latest published library tag is v0.3.0. Routing `release_version` and the private validation package version identify that release; later content belongs to Unreleased. Schema versions are independent.

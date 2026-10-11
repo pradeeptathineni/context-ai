@@ -1,38 +1,6 @@
 schema_version: 1
 decisions:
 - id: D-018
-  revision: 1
-  supersedes: null
-  concept: context.loadouts
-  action: adapt
-  selection: Explicit resource prerequisites with selected notices and source pins
-  rationale: Ordinary Markdown links are navigation; their former recursive closure
-    included unrelated instructions and directories. Keep the distributor and declare
-    actual prerequisites. Compiled React advice replaces duplicated rule copies, with
-    a local section route.
-  evidence:
-  - https://agentskills.io/specification
-  - Signals:ee4aea154c461aaa8f9f0cbb770240c28c19dde7:claim-skills
-  - Signals:ee4aea154c461aaa8f9f0cbb770240c28c19dde7:claim-react
-  - tests/test_resources.py
-  applicability: Codex project-local compositions; informational links never select
-    dependencies.
-  alternatives:
-  - Retain implicit recursive links
-  - Replace distributor with an unproved external installer
-  - Correct the current narrow adapter and declare prerequisites
-  unknowns:
-  - Materialized bytes are measured; model token savings and human benefit are unmeasured.
-  validation:
-  - Regression reproduced unintended AGENTS inclusion before correction; selected
-    dependencies, notices, casing, cycles and source integrity checked.
-  - Independent review exposed missing routes; corrected React/design navigation retains
-    applicable guidance.
-  rollback: Use exact earlier source/pin; undo unchanged files before changing the
-    composition.
-  revisit_when: A real selected procedure cannot reach its instructions, or a maintained
-    distributor proves lower total burden with preservation/undo.
-- id: D-018
   revision: 2
   supersedes: 1
   concept: context.loadouts
@@ -68,61 +36,6 @@ decisions:
     composition.
   revisit_when: A real selected procedure cannot reach its instructions, or a maintained
     distributor proves lower total burden with preservation/undo.
-- id: D-019
-  revision: 1
-  supersedes: null
-  concept: architecture.portability
-  action: adapt
-  selection: Portable exact declarations and verified local ownership migration
-  rationale: Retain the narrow distributor; separate source selection from machine
-    ownership, reject metadata drift, and recover interrupted writes with retained
-    backups. No surveyed replacement has proved preservation/undo with lower burden.
-  evidence:
-  - tests/test_portability.py
-  - Signals:3badfed8922e896e1c83d20c68654057487541ca:option-source-lineage:source-lineage-prov
-  applicability: Codex project-local schema-2 pins and schema-1 installations.
-  alternatives:
-  - Preserve absolute-path public locks
-  - Require manual edits to ownership
-  - Correct the current adapter with checked rebind/export and recovery
-  unknowns:
-  - Concurrent hostile filesystem writers and power-loss durability are not guaranteed.
-  validation:
-  - Copied legacy edits refuse; portable apply and safe rebind preserve instructions;
-    actual required version probes run.
-  - A real owned subprocess was killed mid-application; recovery restores the original
-    user instructions.
-  - Independent imported-metadata findings corrected and covered by negative tests.
-  rollback: Recover pending writes; undo unchanged files; use an earlier exact source
-    snapshot when required.
-  revisit_when: A real consumer needs unsupported provider distribution or fails recovery/portability
-    invariants.
-- id: D-020
-  revision: 1
-  supersedes: null
-  concept: web.design
-  action: adapt
-  selection: Project brand intent and one selected primary design procedure
-  rationale: Keep the already pinned instruction-only references. Guided critique suits new surfaces;
-    a concise reference suits bounded changes within an established system. Two palette labels cannot
-    represent project intent.
-  evidence:
-  - sources.lock.json:impeccable
-  - sources.lock.json:anthropic
-  - tests/test_loadouts.py
-  applicability: Web selections only; guided default, lightweight explicit at a checkpoint; brand text
-    remains subordinate to user/project authority.
-  alternatives:
-  - One heavy procedure for every web edit
-  - Load both primary procedures
-  - Select one procedure and keep browser acceptance constant
-  unknowns:
-  - No human evaluation or model-input measurement establishes superior design outcomes.
-  validation:
-  - Both closures retain selected source notices and browser checks; lightweight excludes guided resources.
-  - Existing web fixture passes four widths, interactions and axe; screenshots inspected as builder judgment.
-  rollback: Propose and review guided on refresh; apply only at a checkpoint; undo retains user edits.
-  revisit_when: A real task shows insufficient guidance or conflicting project visual intent.
 - id: D-021
   revision: 1
   supersedes: null
@@ -151,49 +64,18 @@ decisions:
   rollback: Remove the dev-only gate and exact dependency; retain all product tests.
   revisit_when: Duplicated validation or runtime burden demonstrates that a small consolidation preserves
     discriminating checks.
-- id: D-004
-  revision: 2
-  supersedes: 1
-  concept: context.loadouts
-  action: adapt
-  selection: Direct task reads; declarative pinned loadouts for recurring project selections
-  rationale: The ordinary README probe installed standard and a separate use receipt although project
-    instructions already determined the edit and checks. Keep direct reading first for settled tasks.
-    Explanation and materialization share one composition owner so inherited routes and options agree.
-  evidence:
-  - core/context.md
-  - core/prior-art.md
-  - skills/context-loadout/SKILL.md
-  - docs/loadouts.md
-  - tests/test_consumer_path.py
-  applicability: Ordinary task guidance and reusable Codex project selections; project authority wins.
-  alternatives:
-  - Install standard and require a receipt for every task
-  - Add a classifier or installer wrapper
-  - Use selective direct reads and correct the existing command interface
-  unknowns:
-  - A small disposable maintenance probe is diagnostic; it proves neither token savings nor human benefit.
-  validation:
-  - Baseline README task completed without a guidance-driven API decision or defect catch;
-    installation and receipt lookup were additional steps.
-  - Reproduced explain react-web omitting inherited web guidance and ignoring lightweight;
-    shared composition now agrees with plan and retains one primary procedure.
-  - Verify reports installation scope, executed runtime probes and project checks not run.
-  - A fresh matched README probe used direct reads, preserved instructions/API/user notes,
-    and passed the same tests without installing Context or writing a receipt; no API defect was caught.
-  rollback: Keep earlier source pins; undo unchanged owned files. Direct reads leave no materialization.
-  revisit_when: A real task needs durable selection or exposes missing guidance, misleading verification,
-    or a direct-read path that cannot preserve project constraints.
 - id: D-019
-  revision: 2
-  supersedes: 1
+  revision: 3
+  supersedes: 2
   concept: architecture.portability
   action: adapt
-  selection: Portable declarations, verified ownership and native archive commit markers
-  rationale: Retain the existing ownership, export/rebind and recovery mechanisms. A native source
-    archive lacked its commit marker, and an export nested in a consumer repository inherited the
-    consumer commit even with a source marker. Use Git export-subst and accept Git identity only
-    when the source itself is the repository root.
+  selection: Portable source validation with destination-owned runtime discovery and recoverable delivery
+  rationale: Retain the existing ownership, export/rebind and recovery mechanisms. A native source archive
+    lacked its commit marker, and an export nested in a consumer repository inherited the consumer commit
+    even with a source marker. Use Git export-subst and accept Git identity only when the source itself
+    is the repository root. Portable-pin validation must compare reviewed declarations without consulting
+    the validator working directory. Plan/apply discover required capabilities in the destination, and
+    verify probes them there; imported availability cannot authorize delivery.
   evidence:
   - https://git-scm.com/docs/gitattributes#_export_subst
   - sha256:dfbc18a97acbf42548b318bd6f86aa9ed347e97802c90678f134d3192f21c1b0
@@ -205,17 +87,22 @@ decisions:
   - Manually normalize every extracted archive
   - Add a custom export wrapper
   - Use Git native substitution and a checked source-root boundary
+  - 'Reuse runtime resolution against the validator working directory (rejected: reproduced CI failure)'
+  - Validate portable declarations without weakening destination requirements (selected)
   unknowns:
-  - A marker identifies a claimed source commit, not authenticated provenance; resource hashes
-    still pin selected bytes. Older or tree-only archives can retain unknown revision identity.
+  - A marker identifies a claimed source commit, not authenticated provenance; resource hashes still pin
+    selected bytes. Older or tree-only archives can retain unknown revision identity.
   - Concurrent hostile filesystem writers and power-loss durability remain outside the guarantee.
   validation:
   - Baseline archive reported exported-tree; a nested export reported the consumer commit.
   - Native archive expansion, source-root identity and unexpanded/missing marker fallback are checked.
   - Retained ownership, portability, instruction preservation and interruption recovery gates pass.
+  - Reproduced declared Python validator without .venv; portable validation passes while missing destination
+    runtime rejects before writes.
   rollback: Use earlier exact sources/pins; recover pending writes and undo unchanged files.
   revisit_when: A real supported source format loses its identity or authenticated producer provenance
     becomes necessary beyond the current trusted source boundary.
+
 - id: D-020
   revision: 2
   supersedes: 1
@@ -350,106 +237,34 @@ decisions:
   revisit_when: Real first-use tasks cannot select a sufficient small profile, or a maintained native
     resolver supplies the same explicit validation with less burden.
 
-- id: D-023
-  revision: 1
-  supersedes: null
-  concept: research.prior_art
-  action: adapt
-  selection: Essentials route - one prior-art owner adapting ECC search-first and the Ponytail reuse
-    ladder, pinned Matt Pocock TDD and two-axis review, gstack product questions only for open decisions
-  rationale: The reset asks for selective evidence-backed outfitting rather than a larger constitution.
-    ECC search-first supplies the need, channel, search and adopt/extend/build sequence; its presence-only
-    preflight is replaced by capability probes. Ponytail's ladder and review tags merge into the existing
-    prior-art and review owners instead of an always-on persona. Matt Pocock's TDD and code-review files
-    are pinned whole with their helper files; references to skills not selected are replaced in thin
-    Context adapters. gstack's six product questions are adapted, hold-scope, only for unresolved decisions.
-  evidence:
-  - https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/skills/search-first/SKILL.md
-  - https://github.com/mattpocock/skills/tree/f3fc5632f401156837ee3872f14fe33ccf1024ea/skills/engineering
-  - https://github.com/DietrichGebert/ponytail/tree/552acd5efd0aeae2583a12efe39373d2f076f25e/skills
-  - https://github.com/garrytan/gstack/tree/db745675bdf9f575276db2dcd132d3c047218a12/office-hours
-  - sources.lock.json
-  - ownership.yaml
-  applicability: Feature and bug-fix work in a consuming project; ordinary edits within a settled
-    mechanism skip the prior-art search.
-  alternatives:
-  - Install full ECC, gstack, Superpowers or a development harness
-  - Keep the separate overlay and core prior-art rules
-  - Adopt OpenSpec or Spec Kit as a mandatory spec process
-  - Import Fabric patterns wholesale
-  - One adapted prior-art owner plus pinned selected upstream procedures
-  unknowns:
-  - Benefit on real consumer tasks is measured only by the bounded same-task trials recorded in evals;
-    human usefulness and model input savings beyond those runs are unmeasured.
-  validation:
-  - Upstream files read at the pinned revisions with MIT licenses; selected helper-file closure
-    (tdd tests/mocking) materializes with the license through resources.yaml and sources.lock.json.
-  - OpenSpec and Spec Kit were compared as spec owners; only the scenario and added/modified/removed
-    delta discipline is adopted, inside the review spec axis. No Fabric recipe matched a task check.
-  rollback: Use the earlier exact source/pins; undo unchanged owned resources.
-  revisit_when: A consumer trial shows the essentials route adds reads without better outcomes, or an
-    upstream revision materially changes a selected file.
-
 - id: D-024
-  revision: 1
-  supersedes: null
+  revision: 2
+  supersedes: 1
   concept: context.capability_selection
   action: build
-  selection: Concern ownership map with one active owner per concern and an archive outside loading paths
-  rationale: Active guidance had overlapping owners (two prior-art rules, a patterns alternatives list
-    restating the reuse ladder). A small validated map names, per concern, whether the native host, a
-    pinned upstream or Context-authored guidance owns it, and which active files may specialize it.
-    Superseded text moves to archive/ with a replacement pointer.
+  selection: One validated concern owner; current decisions in the tree, predecessors in Git
+  rationale: The concern map prevents competing active guidance and duplicate native skills. Exact source
+    commits already reproduce earlier pins, decisions and superseded guidance; an additional archive copy
+    has no replay or migration consumer. Retain the map and remove the duplicate archive and predecessor
+    records from the current tree.
   evidence:
   - ownership.yaml
-  - archive/README.md
   - tests/test_ownership.py
+  - docs/compatibility.md
   applicability: All loadouts, capabilities and skills in this library.
   alternatives:
-  - Leave ownership implicit in prose
-  - Delete superseded files outright
-  - Explicit map, validated against loadouts, with an archive
+  - Implicit ownership
+  - Validated ownership with duplicate archive and predecessor records
+  - Validated ownership with exact history in Git (selected)
   unknowns:
-  - The map records library ownership; it cannot observe what a consumer's native host has installed
-    beyond project-local discovery.
+  - The map records library ownership; it cannot observe what a consumer's native host has installed beyond
+    project-local discovery.
   validation:
   - Validator rejects a concern with two owners, an active route to an archived file, and any loadout
     or capability resource not covered by a concern.
-  rollback: Restore archived files from Git history; the map is advisory metadata for selection.
+  rollback: Use the earlier exact source commit for historical pins; restore removed guidance from Git
+    if an actual migration needs it.
   revisit_when: A concern needs two owners in different contexts, or the map drifts from actual loadouts.
-
-- id: D-025
-  revision: 1
-  supersedes: null
-  concept: context.compression
-  action: retain
-  selection: Bounded project logs and native host truncation own tool-output efficiency; no compressor
-    or code graph by default
-  rationale: On a verbose failing log with the root cause mid-file, a saved log plus targeted search
-    kept both the cause and the symptom in 1.6 KB. Headroom's library mode reduced the Anthropic-format
-    tool result by about 8% losslessly and passed OpenAI tool messages through unchanged; context-mode
-    missed the cause until a second query. Graphify's explain matched rg on callers, and its path query
-    was misleading. Their agent integrations write user-global configuration.
-  evidence:
-  - evals/context-efficiency-trial.md
-  - https://github.com/headroomlabs-ai/headroom/tree/278bbc8771938eec18e89df942e1594b6ddf41d4
-  - https://github.com/mksglu/context-mode/tree/2a7a92ab00496a4848decdd7b651daf9ccd90d96
-  - https://github.com/Graphify-Labs/graphify/tree/6478eb71237c86ee5fb6a35c702835e987ca445d
-  applicability: Consumer tasks with verbose command output or cross-file questions in small and
-    medium repositories.
-  alternatives:
-  - Headroom library, proxy or MCP
-  - context-mode MCP sandbox and search
-  - Graphify code graph
-  - Current bounded logs, rg and native truncation
-  unknowns:
-  - No model-in-the-loop end-task comparison was run for the challengers, because their agent
-    integrations require global configuration; long-session savings are untested.
-  validation:
-  - Deterministic recovery comparison on one 208 KB log; Graphify built and queried on scripts/.
-  rollback: Not applicable; nothing was installed into the library or a consumer.
-  revisit_when: A project-local integration exists and a long-session workload shows retained
-    correctness with material savings, or a large repository defeats rg navigation.
 
 - id: D-026
   revision: 1

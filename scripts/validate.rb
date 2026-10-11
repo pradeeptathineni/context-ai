@@ -304,7 +304,7 @@ end
 sourced_files = text_files.select { |path| Pathname.new(relative(path)).each_filename.include?("sourced") }
 sourced_files.each do |file|
   name = relative(file)
-  error("docs/references.md lacks provenance for sourced artifact: #{name}") unless reference_text.include?(name)
+  # Exact file provenance and integrity are owned by sources.lock.json and check_loadouts.py.
   if %w[AGENTS.md AGENTS.override.md CLAUDE.md GEMINI.md].include?(File.basename(file))
     error("active instruction filename is not allowed under sourced/: #{name}")
   end

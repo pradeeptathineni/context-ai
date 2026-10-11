@@ -1,5 +1,6 @@
 from pathlib import Path
 import sys
+import shutil
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -7,6 +8,21 @@ sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
 import context_ai as c
 
 class Resources(unittest.TestCase):
+    def test_complete_source_inventory_checks_unselected_bytes_and_unregistered_files(self):
+        import check_loadouts as gate
+        with tempfile.TemporaryDirectory() as td:
+            root=Path(td)
+            shutil.copytree(c.ROOT/'sourced',root/'sourced')
+            shutil.copyfile(c.ROOT/'sources.lock.json',root/'sources.lock.json')
+            with patch.object(c,'ROOT',root),patch.object(gate,'ROOT',root):
+                gate.check_sources()
+                optional=root/'sourced/impeccable/design/reference/hooks.md'
+                before=optional.read_bytes();optional.write_bytes(before+b'Unexpected drift\n')
+                with self.assertRaisesRegex(c.Invalid,'pinned upstream drift'):gate.check_sources()
+                optional.write_bytes(before)
+                (root/'sourced/unregistered.txt').write_text('No source authority')
+                with self.assertRaisesRegex(ValueError,'inventory differs'):gate.check_sources()
+
     def test_informational_links_cannot_expand_runtime_closure(self):
         with tempfile.TemporaryDirectory() as td:
             root=Path(td);(root/'selected.md').write_text('Read optional [docs](docs/).')
@@ -37,7 +53,7 @@ class Resources(unittest.TestCase):
             _,web=c.resolve(['react-web'],Path(td),'codex')
             self.assertIn('sourced/impeccable/design/LICENSE',web)
             self.assertIn('sourced/impeccable/design/NOTICE.md',web)
-            self.assertIn('sourced/vercel/react/compiled-guide.md',web)
+            self.assertIn('sourced/vercel/react/compiled-guide.upstream.txt',web)
             self.assertNotIn('sourced/impeccable/design/reference/hooks.md',web)
 
     def test_active_instruction_guard_is_case_insensitive(self):
@@ -50,5 +66,5 @@ class Resources(unittest.TestCase):
     def test_adapted_design_and_react_routes_have_required_instructions(self):
         with tempfile.TemporaryDirectory() as td:
             _,files=c.resolve(['react-web'],Path(td),'codex')
-            for name in ['procedures/react-review.md','sourced/vercel/react/compiled-guide.md','sourced/impeccable/design/reference/document.md','sourced/impeccable/design/reference/degraded/documenter.md']:
+            for name in ['procedures/react-review.md','sourced/vercel/react/compiled-guide.upstream.txt','sourced/impeccable/design/reference/document.md','sourced/impeccable/design/reference/degraded/documenter.md']:
                 self.assertIn(name,files)

@@ -82,7 +82,6 @@
         "sourced/vercel/react/upstream-README.md": "7c02f64b08fc6c4eef03c01d64f3e2ed478193ccfcbd14edba379abe23304651",
         "sourced/vercel/react/instruction.md": "71ed7794962fa6e803ee83030517b5b93a9f70fbfeb431ec4535c5480a8d8355",
         "sourced/vercel/react/README.md": "9eafb2123d3b8b2aef41fba0db2648a3f4f49996f8c7c8bb2c86263befd8b48a",
-        "sourced/vercel/react/compiled-guide.md": "b32084138640694d3640b59a27a0ad9456d5ad959397340fe854fac86d52b27a",
         "sourced/vercel/react/rules/js-cache-storage.md": "11b826b0433898c1ece2d3547010d8e77db9fb240185748c45db91493de9b6cc",
         "sourced/vercel/react/rules/bundle-conditional.md": "09c8259c3efb04fc0abb8e412ccbda217c222ae8118516283e571c995fe3a7d4",
         "sourced/vercel/react/rules/bundle-preload.md": "d1f7cc28da7cd5ab249acd287edc5b761afcfb194e9cb62cd44c5f3543db2de2",
@@ -160,7 +159,7 @@
         "sourced/vercel/react/compiled-guide.upstream.txt": "fc93e7421177bbf869cce892bc60a6c83a4517d974bc3bf65c4e2c1e58a6ccf6"
       },
       "excluded": "Executable launchers/hooks/binaries are not selected; snapshots are documentation only. Active instruction filenames are renamed; bytes otherwise unchanged.",
-      "modifications": "Compiled guide link repairs are marked prominently; unmodified source bytes retained as .upstream.txt."
+      "modifications": "None in retained snapshots. Removed the redundant Context link-repair copy; the unmodified compiled guide and individual rules retain exact upstream bytes. Packaging links refer to upstream paths, not implicit dependencies."
     },
     {
       "id": "ecc",

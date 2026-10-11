@@ -49,41 +49,6 @@ decisions:
   alternatives:
   - Prose modules
   - Structured data for executable/configuration contracts
-- id: D-004
-  concept: context.loadouts
-  action: adopt
-  selection: declarative YAML manifests
-  rationale: Compose references to context, skills, capabilities and checks without inventing an executable
-    DSL.
-  revisit_when: Repeated real consumers require semantics YAML cannot express safely and clearly.
-  revision: 1
-  supersedes: null
-  evidence:
-  - loadouts/standard.yaml
-  - schemas/loadout.schema.json
-  - tests/test_loadouts.py
-  applicability: Recurring project selections only.
-  alternatives:
-  - Direct task reads
-  - Declarative YAML composition
-  - Executable installer DSL
-- id: D-005
-  concept: research.decision
-  action: adopt
-  selection: Signals evidence -> Context decision -> project lock -> use receipt
-  rationale: Preserve the difference between what sources support, what a project adopts, what is installed,
-    and what actually worked.
-  revisit_when: Never collapse these states; only refine their contracts.
-  revision: 1
-  supersedes: null
-  evidence:
-  - core/prior-art.md
-  - schemas/evidence-bundle-v1.schema.json
-  - tests/test_evidence.py
-  applicability: Advisory evidence admission; superseded by the pinned peer checkpoint.
-  alternatives:
-  - Treat recommendations as activation
-  - Separate supported claims, adoption, installation and use
 - id: D-006
   concept: architecture.boundaries
   action: adopt
@@ -101,23 +66,6 @@ decisions:
   alternatives:
   - Existing agent host
   - Custom orchestration runtime
-- id: D-007
-  concept: web.design
-  action: trial
-  selection: Impeccable
-  rationale: Strong existing workflow for product truth, design shaping, critique, audit and browser iteration;
-    trial before broad endorsement.
-  revisit_when: Compatibility, hooks, maintenance cost, or real-task output is worse than simpler alternatives.
-  revision: 1
-  supersedes: null
-  evidence:
-  - sources.lock.json
-  - https://github.com/pbakaus/impeccable
-  - procedures/web-experience.md
-  applicability: Web guidance; superseded by the instruction-only adapter decision.
-  alternatives:
-  - Concise design reference
-  - Guided design procedure
 - id: D-008
   concept: web.design
   action: adopt
@@ -150,23 +98,6 @@ decisions:
   alternatives:
   - Framework-neutral web checks
   - Stack-matched React rules
-- id: D-010
-  concept: quality.accessibility
-  action: adopt
-  selection: Playwright + axe + human/agent screenshot critique
-  rationale: Combine deterministic browser/a11y checks with actual visual inspection; neither alone proves
-    UX quality.
-  revisit_when: Consumer environment cannot support the tools or a stronger compatible mechanism is measured.
-  revision: 1
-  supersedes: null
-  evidence:
-  - https://playwright.dev/docs/intro
-  - https://github.com/dequelabs/axe-core
-  - examples/web/verify.mjs
-  applicability: Web acceptance; automated accessibility checks do not establish all UX quality.
-  alternatives:
-  - Static checks alone
-  - Browser interactions plus axe and screenshot judgment
 - id: D-011
   concept: architecture.composition
   action: adopt
@@ -235,6 +166,7 @@ decisions:
   alternatives:
   - Narrate implementation
   - Explain non-obvious intent, invariants and constraints
+
 defaults:
   unknowns:
   - No comparative or human usefulness claim follows from this policy.

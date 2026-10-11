@@ -103,16 +103,12 @@ def current_decisions():
             raise Invalid('unsupported decision default')
         for record in document['decisions']:
             d={**defaults,**record}
-            key = (d['id'],d['revision'])
-            if key in decisions:
-                raise Invalid('duplicate decision revision')
-            decisions[key] = d
-    for d in decisions.values():
-        if d.get('supersedes'):
-            predecessor = (d['id'],d['supersedes'])
-            if predecessor not in decisions or d['revision'] <= d['supersedes']:
+            if d['id'] in decisions:
+                raise Invalid('duplicate current decision')
+            if d.get('supersedes') and d['revision'] <= d['supersedes']:
                 raise Invalid('invalid decision successor')
-    return {id: max((v for (k,_),v in decisions.items() if k==id), key=lambda d:d['revision']) for id,_ in decisions}
+            decisions[d['id']] = d
+    return decisions
 
 def active_files():
     """Every guidance file a loadout, capability or packet route can load."""
@@ -127,6 +123,12 @@ def ownership():
     """One active owner per concern; archived files stay off every active route."""
     document=read_yaml(ROOT/'ownership.yaml')
     validate_schema('ownership',document)
+    active=active_files()
+    deps=read_yaml(ROOT/'resources.yaml')['dependencies']
+    archived=[p for p in active if p.startswith('archive/')]
+    archived+=[d for key,values in deps.items() for d in [key,*values] if d.startswith('archive/')]
+    if archived:
+        raise Invalid('archived file on an active route: '+', '.join(sorted(set(archived))))
     pinned={s['id'] for s in json.loads((ROOT/'sources.lock.json').read_text())['sources']}
     commands={k for k,v in capability_registry()['capabilities'].items() if v['kind']=='command'}
     owner_of={}
@@ -145,15 +147,9 @@ def ownership():
         for path in spec.get('archived',[]):
             if not inside(ROOT,path).is_file():
                 raise Invalid('missing archived file: '+path)
-    active=active_files()
     uncovered=sorted(active-set(owner_of))
     if uncovered:
         raise Invalid('active files without a concern owner: '+', '.join(uncovered))
-    archived=[p for p in active if p.startswith('archive/')]
-    deps=read_yaml(ROOT/'resources.yaml')['dependencies']
-    archived+=[d for key,values in deps.items() for d in [key,*values] if d.startswith('archive/')]
-    if archived:
-        raise Invalid('archived file on an active route: '+', '.join(sorted(set(archived))))
     return document['concerns'],owner_of
 
 def selected_concerns(files):

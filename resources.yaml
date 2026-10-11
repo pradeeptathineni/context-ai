@@ -51,7 +51,7 @@ dependencies:
   domains/web/react.md:
   - procedures/react-review.md
   procedures/react-review.md:
-  - sourced/vercel/react/compiled-guide.md
+  - sourced/vercel/react/compiled-guide.upstream.txt
   procedures/web-design-lightweight.md:
   - sourced/anthropic/design/instruction.md
   procedures/diagnose.md:

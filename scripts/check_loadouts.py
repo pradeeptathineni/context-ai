@@ -4,10 +4,21 @@ from pathlib import Path
 import json
 import sys
 import tempfile
-from context_ai import ROOT, catalogue, current_decisions, ownership, read_yaml, resolve, task_packet, validate_schema
+from context_ai import ROOT, catalogue, current_decisions, ownership, read_yaml, resolve, resources, source_notices, task_packet, validate_schema
 from jsonschema import Draft202012Validator
 
+def check_sources():
+    sources=json.loads((ROOT/'sources.lock.json').read_text())['sources']
+    names=[name for source in sources for name in source['files']]
+    if len(names)!=len(set(names)):
+        raise ValueError('source artifact has multiple owners')
+    actual={p.relative_to(ROOT).as_posix() for p in (ROOT/'sourced').rglob('*') if p.is_file()}
+    if actual!=set(names):
+        raise ValueError('source inventory differs from sources.lock.json: '+str(sorted(actual^set(names))))
+    source_notices(resources(names))
+
 def check():
+    check_sources()
     for p in (ROOT/'schemas').glob('*.schema.json'):
         Draft202012Validator.check_schema(json.loads(p.read_text()))
     decisions=current_decisions()

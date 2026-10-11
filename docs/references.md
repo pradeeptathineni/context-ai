@@ -21,7 +21,7 @@ All external sources below were reviewed on **2026-09-12** unless another date i
   - [OpenAI: Plugins](https://learn.chatgpt.com/docs/plugins) distinguishes local skills from cross-surface plugin distribution; [Hooks](https://learn.chatgpt.com/docs/hooks) documents event checks and tool-coverage limits; [Rules](https://learn.chatgpt.com/docs/agent-configuration/rules) documents command-prefix policies and their matching limits. Reviewed 2026-10-05.
   - [OpenAI: AGENTS.md](https://learn.chatgpt.com/docs/agent-configuration/agents-md), [Subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents), [Config basics](https://learn.chatgpt.com/docs/config-file/config-basic), and [Developer commands](https://learn.chatgpt.com/docs/developer-commands) supplied the native owner map. Reviewed 2026-10-05.
   - [OpenAI: Personalize ChatGPT](https://learn.chatgpt.com/docs/personalize), [Projects](https://learn.chatgpt.com/docs/projects), and [Memories](https://learn.chatgpt.com/docs/customization/memories) distinguish durable preferences and project instructions from recall. Reviewed 2026-10-05.
-  - The prior-art gate, now [`core/prior-art.md`](../core/prior-art.md) (formerly `overlays/prior-art.md`, [archived](../archive/README.md)), composes the maintainer's ShouldaUsedThat and Maestro reuse decisions described below. Those decisions justify a check, not mandatory adoption of one tool.
+  - The prior-art gate, now [`core/prior-art.md`](../core/prior-art.md) (formerly `overlays/prior-art.md`, retained in Git history), composes the maintainer's ShouldaUsedThat and Maestro reuse decisions described below. Those decisions justify a check, not mandatory adoption of one tool.
 
 - [`AGENTS.md`](../AGENTS.md)
   - [AGENTS.md open format](https://agents.md/) established plain Markdown, nested scope, and the agent-oriented repository entry point.
@@ -79,7 +79,7 @@ The additional house files below were reviewed on **2026-10-05**. They distill p
 - [`overlays/ai-implementation.md`](../overlays/ai-implementation.md) composes engineering, context, testing, and benchmarking guidance into an established-tooling, deterministic-mechanism, then bounded-model decision order.
 - [`overlays/context-efficiency.md`](../overlays/context-efficiency.md) combines [`core/context.md`](../core/context.md), [`core/compression.md`](../core/compression.md), and [`core/benchmarking.md`](../core/benchmarking.md) to minimize total tokens subject to retained outcome quality.
 - [`overlays/delivery.md`](../overlays/delivery.md) specializes development, testing, review, and versioning into an authorized end-to-end implementation, refinement, commit, push, and release loop.
-- [`archive/overlays/prior-art.md`](../archive/overlays/prior-art.md), merged into `core/prior-art.md` on 2026-10-07, drew on [ShouldaUsedThat's product contract](https://github.com/pradeeptathineni/shoulda-used-that/blob/6edaff07d582a2d2d2d06145643f22dbfee3ca0e/docs/architecture/product-contract.md), [reuse gate](https://github.com/pradeeptathineni/shoulda-used-that/blob/6edaff07d582a2d2d2d06145643f22dbfee3ca0e/docs/architecture/dogfood-reuse-audit.md), and [Maestro's reuse register](https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/docs/architecture/reuse-register.md). The disposition and stop rules are this library's synthesis.
+- The prior-art overlay, merged into `core/prior-art.md` on 2026-10-07 and retained in earlier Git commits,, drew on [ShouldaUsedThat's product contract](https://github.com/pradeeptathineni/shoulda-used-that/blob/6edaff07d582a2d2d2d06145643f22dbfee3ca0e/docs/architecture/product-contract.md), [reuse gate](https://github.com/pradeeptathineni/shoulda-used-that/blob/6edaff07d582a2d2d2d06145643f22dbfee3ca0e/docs/architecture/dogfood-reuse-audit.md), and [Maestro's reuse register](https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/docs/architecture/reuse-register.md). The disposition and stop rules are this library's synthesis.
 - [`overlays/patterns.md`](../overlays/patterns.md) draws on [Maestro ADR-004](https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/docs/architecture/ADR-004-model-led-research.md) for the model/host boundary, [ShouldaUsedThat's reuse gate](https://github.com/pradeeptathineni/shoulda-used-that/blob/6edaff07d582a2d2d2d06145643f22dbfee3ca0e/docs/architecture/dogfood-reuse-audit.md) for a minimal custom residual, and [Blueprint AI's evolution contract](https://github.com/pradeeptathineni/blueprint-ai/blob/64e7603bf3f01af98d82f4dfd6a9829b63cc3c20/docs/evolution.md) for typed postconditions and exact replay.
 - [`overlays/orchestration.md`](../overlays/orchestration.md) uses [OpenAI's Codex subagent guidance](https://learn.chatgpt.com/docs/agent-configuration/subagents) and [Maestro's reuse register](https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/docs/architecture/reuse-register.md) to distinguish useful independent work from unmeasured fanout.
 - [`overlays/model-deliberation.md`](../overlays/model-deliberation.md) uses [OpenAI model selection](https://developers.openai.com/api/docs/guides/model-selection), [reasoning guidance](https://developers.openai.com/api/docs/guides/reasoning), and [Codex model availability](https://learn.chatgpt.com/docs/models). Product access and model rankings are volatile; verify at use time.
@@ -169,145 +169,9 @@ Canonical additions `core/code-comments.md`, `core/version-control.md`, `core/pr
 
 `sources.lock.json` is the single authority for snapshot revision, license and exact-file hashes. `procedures/web-design.md` selects an instruction-only Impeccable adapter. Executable launchers, downloads, hooks and extensions were inspected as optional mechanisms and excluded; none was activated. MIT Vercel licensing is declared by the preserved upstream README/skill metadata; Apache notices/terms remain with Impeccable/Anthropic.
 
-Source: [impeccable](https://github.com/pbakaus/impeccable/tree/ece38d9904b8a619b3f77cab476eacad09c4fb11), revision `ece38d9904b8a619b3f77cab476eacad09c4fb11`, Apache-2.0. Inactive documentation snapshots and notices:
+[`sources.lock.json`](../sources.lock.json) is the authoritative inventory of vendored bytes, exact upstream revisions, licenses and excluded execution paths. It pins Impeccable and Anthropic design documentation, Vercel React/web guidance, ECC search-first, Matt Pocock TDD/review/research, Ponytail reuse/review and Neoma Markdown compatibility. The selected closures are declared in `resources.yaml` and capability definitions; `source_notices()` validates hashes and includes the relevant notices during delivery. Optional source files stay in the source checkout and are not pulled into a consumer by Markdown links.
 
-- `sourced/impeccable/design/LICENSE`
-- `sourced/impeccable/design/NOTICE.md`
-- `sourced/impeccable/design/instruction.md`
-- `sourced/impeccable/design/reference/adapt.md`
-- `sourced/impeccable/design/reference/adapt.native.md`
-- `sourced/impeccable/design/reference/android.md`
-- `sourced/impeccable/design/reference/animate.md`
-- `sourced/impeccable/design/reference/audit.md`
-- `sourced/impeccable/design/reference/audit.native.md`
-- `sourced/impeccable/design/reference/bolder.md`
-- `sourced/impeccable/design/reference/clarify.md`
-- `sourced/impeccable/design/reference/colorize.md`
-- `sourced/impeccable/design/reference/component-review.md`
-- `sourced/impeccable/design/reference/craft-floor.md`
-- `sourced/impeccable/design/reference/craft.md`
-- `sourced/impeccable/design/reference/critique.md`
-- `sourced/impeccable/design/reference/degraded/asset-producer.md`
-- `sourced/impeccable/design/reference/degraded/documenter.md`
-- `sourced/impeccable/design/reference/degraded/finish-reviewer.md`
-- `sourced/impeccable/design/reference/degraded/manual-edit-applier.md`
-- `sourced/impeccable/design/reference/delight.md`
-- `sourced/impeccable/design/reference/distill.md`
-- `sourced/impeccable/design/reference/doctor.md`
-- `sourced/impeccable/design/reference/document.md`
-- `sourced/impeccable/design/reference/extract.md`
-- `sourced/impeccable/design/reference/generate.md`
-- `sourced/impeccable/design/reference/harden.md`
-- `sourced/impeccable/design/reference/hooks.md`
-- `sourced/impeccable/design/reference/init.md`
-- `sourced/impeccable/design/reference/ios.md`
-- `sourced/impeccable/design/reference/layout.md`
-- `sourced/impeccable/design/reference/live-setup.md`
-- `sourced/impeccable/design/reference/live.md`
-- `sourced/impeccable/design/reference/mode-operate.md`
-- `sourced/impeccable/design/reference/mode-persuade.md`
-- `sourced/impeccable/design/reference/mode-read.md`
-- `sourced/impeccable/design/reference/new-work.md`
-- `sourced/impeccable/design/reference/onboard.md`
-- `sourced/impeccable/design/reference/operate.md`
-- `sourced/impeccable/design/reference/optimize.md`
-- `sourced/impeccable/design/reference/overdrive.md`
-- `sourced/impeccable/design/reference/polish.md`
-- `sourced/impeccable/design/reference/quieter.md`
-- `sourced/impeccable/design/reference/region-map.md`
-- `sourced/impeccable/design/reference/routing.md`
-- `sourced/impeccable/design/reference/shape.md`
-- `sourced/impeccable/design/reference/typeset.md`
-- `sourced/impeccable/design/reference/visualize.md`
-
-Source: [anthropic](https://github.com/anthropics/skills/tree/683bc88e56f3e09ba94f7055977f3d3aa499f202), revision `683bc88e56f3e09ba94f7055977f3d3aa499f202`, Apache-2.0. Inactive documentation snapshots and notices:
-
-- `sourced/anthropic/design/LICENSE.txt`
-- `sourced/anthropic/design/instruction.md`
-
-Source: [vercel](https://github.com/vercel-labs/agent-skills/tree/063bee94c3f4df8453406c830b0a7df0f2860278), revision `063bee94c3f4df8453406c830b0a7df0f2860278`, MIT. Inactive documentation snapshots and notices:
-
-- `sourced/vercel/react/README.md`
-- `sourced/vercel/react/compiled-guide.md`
-- `sourced/vercel/react/compiled-guide.upstream.txt`
-- `sourced/vercel/react/instruction.md`
-- `sourced/vercel/react/rules/_sections.md`
-- `sourced/vercel/react/rules/_template.md`
-- `sourced/vercel/react/rules/advanced-effect-event-deps.md`
-- `sourced/vercel/react/rules/advanced-event-handler-refs.md`
-- `sourced/vercel/react/rules/advanced-init-once.md`
-- `sourced/vercel/react/rules/advanced-use-latest.md`
-- `sourced/vercel/react/rules/async-api-routes.md`
-- `sourced/vercel/react/rules/async-cheap-condition-before-await.md`
-- `sourced/vercel/react/rules/async-defer-await.md`
-- `sourced/vercel/react/rules/async-dependencies.md`
-- `sourced/vercel/react/rules/async-parallel.md`
-- `sourced/vercel/react/rules/async-suspense-boundaries.md`
-- `sourced/vercel/react/rules/bundle-analyzable-paths.md`
-- `sourced/vercel/react/rules/bundle-barrel-imports.md`
-- `sourced/vercel/react/rules/bundle-conditional.md`
-- `sourced/vercel/react/rules/bundle-defer-third-party.md`
-- `sourced/vercel/react/rules/bundle-dynamic-imports.md`
-- `sourced/vercel/react/rules/bundle-preload.md`
-- `sourced/vercel/react/rules/client-event-listeners.md`
-- `sourced/vercel/react/rules/client-localstorage-schema.md`
-- `sourced/vercel/react/rules/client-passive-event-listeners.md`
-- `sourced/vercel/react/rules/client-swr-dedup.md`
-- `sourced/vercel/react/rules/js-batch-dom-css.md`
-- `sourced/vercel/react/rules/js-cache-function-results.md`
-- `sourced/vercel/react/rules/js-cache-property-access.md`
-- `sourced/vercel/react/rules/js-cache-storage.md`
-- `sourced/vercel/react/rules/js-combine-iterations.md`
-- `sourced/vercel/react/rules/js-early-exit.md`
-- `sourced/vercel/react/rules/js-flatmap-filter.md`
-- `sourced/vercel/react/rules/js-hoist-regexp.md`
-- `sourced/vercel/react/rules/js-index-maps.md`
-- `sourced/vercel/react/rules/js-length-check-first.md`
-- `sourced/vercel/react/rules/js-min-max-loop.md`
-- `sourced/vercel/react/rules/js-request-idle-callback.md`
-- `sourced/vercel/react/rules/js-set-map-lookups.md`
-- `sourced/vercel/react/rules/js-tosorted-immutable.md`
-- `sourced/vercel/react/rules/rendering-activity.md`
-- `sourced/vercel/react/rules/rendering-animate-svg-wrapper.md`
-- `sourced/vercel/react/rules/rendering-conditional-render.md`
-- `sourced/vercel/react/rules/rendering-content-visibility.md`
-- `sourced/vercel/react/rules/rendering-hoist-jsx.md`
-- `sourced/vercel/react/rules/rendering-hydration-no-flicker.md`
-- `sourced/vercel/react/rules/rendering-hydration-suppress-warning.md`
-- `sourced/vercel/react/rules/rendering-resource-hints.md`
-- `sourced/vercel/react/rules/rendering-script-defer-async.md`
-- `sourced/vercel/react/rules/rendering-svg-precision.md`
-- `sourced/vercel/react/rules/rendering-usetransition-loading.md`
-- `sourced/vercel/react/rules/rerender-defer-reads.md`
-- `sourced/vercel/react/rules/rerender-dependencies.md`
-- `sourced/vercel/react/rules/rerender-derived-state-no-effect.md`
-- `sourced/vercel/react/rules/rerender-derived-state.md`
-- `sourced/vercel/react/rules/rerender-functional-setstate.md`
-- `sourced/vercel/react/rules/rerender-lazy-state-init.md`
-- `sourced/vercel/react/rules/rerender-memo-with-default-value.md`
-- `sourced/vercel/react/rules/rerender-memo.md`
-- `sourced/vercel/react/rules/rerender-move-effect-to-event.md`
-- `sourced/vercel/react/rules/rerender-no-inline-components.md`
-- `sourced/vercel/react/rules/rerender-simple-expression-in-memo.md`
-- `sourced/vercel/react/rules/rerender-split-combined-hooks.md`
-- `sourced/vercel/react/rules/rerender-transitions.md`
-- `sourced/vercel/react/rules/rerender-use-deferred-value.md`
-- `sourced/vercel/react/rules/rerender-use-ref-transient-values.md`
-- `sourced/vercel/react/rules/server-after-nonblocking.md`
-- `sourced/vercel/react/rules/server-auth-actions.md`
-- `sourced/vercel/react/rules/server-cache-lru.md`
-- `sourced/vercel/react/rules/server-cache-react.md`
-- `sourced/vercel/react/rules/server-dedup-props.md`
-- `sourced/vercel/react/rules/server-hoist-static-io.md`
-- `sourced/vercel/react/rules/server-no-shared-module-state.md`
-- `sourced/vercel/react/rules/server-parallel-fetching.md`
-- `sourced/vercel/react/rules/server-parallel-nested-fetching.md`
-- `sourced/vercel/react/rules/server-serialization.md`
-- `sourced/vercel/react/upstream-README.md`
-- `sourced/vercel/web/instruction.md`
-- `sourced/vercel/web/upstream-README.md`
-
-Ruler fit check used npm `@intellectronica/ruler@0.3.44` with install scripts disabled and `--agents codex --no-mcp --no-gitignore --no-skills --local-only`, first dry-run then apply in a disposable repository. It regenerated AGENTS and preserved the original in its generated output; the evidence/ownership remainder still belongs to Context. No multi-provider replication, general runtime or compressor was adopted.
+The unmodified Vercel compiled guide is the single shipped expansion of the React rules. Individual rules remain available for direct, focused source reads; their upstream build README is reference material. The duplicate Context link-repair compilation was removed on 2026-10-10. The exact raw guide retains upstream packaging links; the Context procedure points to the upstream source for those paths instead of repairing third-party bytes.
 
 `evals/web-exercise.json`, `evals/verification-stage-use.json`, `evals/v1-acceptance.md`, and `examples/web/brief.md` record local fixture/browser observations and policy, with the source pins above. `docs/compatibility.md` documents the schema/path migration contract. PyYAML and jsonschema are explicit maintained parsing/validation dependencies; `requirements.txt` retains exact PyPI artifact hashes. Browser development dependencies and transitive integrity values are in package-lock.json. No upstream installer is executed by the delivered loadout command.
 
@@ -373,7 +237,7 @@ The explicit examples are local builder judgments: `examples/task-profiles/integ
 
 ## Selective outfitting reset (reviewed 2026-10-07)
 
-The signals-context reset kit (prepared 2026-10-07, outside this repository) asked for one active owner per concern and a small evidence-backed essentials route. `ownership.yaml` (schema `schemas/ownership.schema.json`) records each concern's owner kind (native host, pinned upstream or Context-authored), its active files and duplicating native skill names; D-024 records the choice and `archive/README.md` maps superseded files to replacements. `loadouts/essentials.yaml` is the smallest selected route; `standard` composes it. D-023 records the upstream selections below. All upstream files were read at the exact revision, are MIT licensed and are pinned with SHA-256 hashes in `sources.lock.json`; no installer, hook, agent manifest or plugin from any of them is selected.
+The signals-context reset kit (prepared 2026-10-07, outside this repository) asked for one active owner per concern and a small evidence-backed essentials route. `ownership.yaml` (schema `schemas/ownership.schema.json`) records each concern's owner kind (native host, pinned upstream or Context-authored), its active files and duplicating native skill names; D-024 records the ownership choice; earlier Git commits retain superseded files and decision revisions. `loadouts/essentials.yaml` is the smallest selected route; `standard` composes it. D-023 records the upstream selections below. All upstream files were read at the exact revision, are MIT licensed and are pinned with SHA-256 hashes in `sources.lock.json`; no installer, hook, agent manifest or plugin from any of them is selected.
 
 - **ECC search-first** ([affaan-m/ECC@ef648e0](https://github.com/affaan-m/ECC/blob/ef648e01899ba3e8dc6371642deaaf64b4477775/skills/search-first/SKILL.md), MIT): `sourced/ecc/search-first/instruction.md` and `sourced/ecc/search-first/LICENSE`. `core/prior-art.md` adapts its search channels and adopt/extend/build sequence, replacing presence-only preflight with capability probes.
 - **Matt Pocock skills** ([mattpocock/skills@f3fc563](https://github.com/mattpocock/skills/tree/f3fc5632f401156837ee3872f14fe33ccf1024ea/skills/engineering), MIT): `sourced/mattpocock/tdd/instruction.md` with its helper files `sourced/mattpocock/tdd/tests.md` and `sourced/mattpocock/tdd/mocking.md`, `sourced/mattpocock/code-review/instruction.md`, `sourced/mattpocock/research/instruction.md` and `sourced/mattpocock/LICENSE`. `procedures/tdd.md`, `procedures/review.md` and `procedures/research-evidence.md` are thin adapters that replace references to unselected skills (`codebase-design`, `setup-matt-pocock-skills`) and the mandatory parallel sub-agents.
@@ -429,3 +293,9 @@ The user-supplied experience update moves general project opportunities to Signa
 The existing Apache-2.0 Impeccable 4.5.0 adapter at `ece38d9904b8a619b3f77cab476eacad09c4fb11` is the single selected design procedure. It excludes upstream init, hooks and binary downloads and references the existing canonical product source. [Official OpenAI Tool Search documentation](https://developers.openai.com/api/docs/guides/tools-tool-search) describes API-specific deferred function loading; it does not establish availability in this native session. The observed native tool metadata and fixed Context CLI remain the execution route; no paid API integration or custom runtime router was added.
 
 The [actual consumer record](../examples/web/trial-evidence.json) retains the current Signals source basis, pinned Impeccable guidance reads, scoped browser result and successful Context update/undo. It adds a first-party web-experience assessment without altering earlier assessments. Native dropdown keyboard selection was not established by the retained automation attempts.
+
+## Reconciliation review — 2026-10-10
+
+Portable source validation and consumer runtime discovery share reviewed declarations but have separate execution boundaries (D-019). The validator needs no consumer runtime; plan/apply and verification still enforce destination requirements. Existing Python/schema tooling owns the correction; no environment shim or new dependency was added. Current decisions retain stable IDs/revision numbers; exact earlier checkouts and installed locks retain predecessors. Opportunity migration exports/receipts and comparative evaluation evidence stay because conservation, replay and policy decisions consume them.
+
+A single native read-only subagent supplies the final artifact challenge. The callable desktop surface and [official subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents), checked on 2026-10-10, support this bounded review without a custom orchestrator. Inherited model settings remain unchanged. Review evidence does not establish human usefulness.
