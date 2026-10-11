@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Validate portable pins independently of the validator's environment; enforce required capabilities in the destination before plan/apply writes and during verification.
+
 - Focus the portal on equipment, loadouts and scoped trials with real engine previews and portable profile requests.
 - Move 13 existing general opportunities to Signals without regenerating them; retain recovery exports and prior assessments, retire duplicate live interests, and keep a moved compatibility response.
 - Add a trusted local read-only plan/status handoff through the existing delivery engine, with private target state separated from static public selection.

@@ -16,6 +16,8 @@ Exact snapshots remain available in Git commits and exported release/checkpoint 
 
 Resolution/installation schema 2 separates a relative project declaration from local `bound_project`. Existing schema-1 receipts still verify in their original directory. Copied legacy receipts refuse until `rebind` verifies every owned byte, routing block and required command, then changes only the binding. Edits cause refusal; no hand-editing or falsified ownership is required. `export` emits a portable pin; `apply --lock` verifies its resources against the selected source checkout. An active refresh remains a proposal. `recover` uses a local write journal to restore interrupted application while retaining later edits. Keep installation receipts and recovery records local.
 
+Portable-pin validation compares resource hashes and reviewed declarations without discovering runtimes on the validator's machine. `plan` and `apply`, including `apply --lock`, require capabilities in the intended consumer; `verify` rediscovers them there and probes required runtimes. A pin's recorded `available` value never substitutes for destination discovery. Lock and installation schema 2 remain unchanged.
+
 ## Current decision and CLI views
 
 `decisions` expands shared defaults and selects the latest revision of each record; predecessors remain available for provenance and exact pins. `decisions LOADOUT` and `explain LOADOUT` limit the view to the resolved composition. Current records use catalog concept IDs. Old installed locks contain their original resolved records and still verify without consulting the current registry.

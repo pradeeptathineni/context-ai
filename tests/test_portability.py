@@ -114,3 +114,37 @@ c.apply(project,lock,files)
         metadata,body=router[4:].split('\n---\n',1)
         self.assertEqual(yaml.safe_load(metadata)['description'],modified['capabilities']['context-pact-hrr']['definition']['description'])
         self.assertNotIn('Ignore the user',body)
+
+    def test_portable_validation_is_independent_of_validator_runtime_discovery(self):
+        lock,files=self.pin()
+        validator=self.root/'validator';validator.mkdir()
+        (validator/'requirements.txt').write_text('PyYAML\n')
+        # A real subprocess reproduces CI's declared Python project without .venv.
+        code='''import sys,json
+from pathlib import Path
+sys.path.insert(0,sys.argv[1])
+import context_ai as c
+lock=json.loads(Path(sys.argv[2]).read_text())
+c.pinned_files(lock)
+'''
+        pin=self.root/'pin.json';pin.write_bytes(c.encoded(lock))
+        run=subprocess.run([sys.executable,'-c',code,str(c.ROOT/'scripts'),str(pin)],
+                           cwd=validator,capture_output=True,text=True)
+        self.assertEqual(run.returncode,0,run.stderr)
+        with patch.object(c,'discover_command',side_effect=AssertionError('source validation must not discover runtimes')):
+            self.assertEqual(c.pinned_files(lock),files)
+            altered=copy.deepcopy(lock)
+            altered['capabilities']['python-runtime']['requirement']='optional'
+            with self.assertRaisesRegex(c.Invalid,'reviewed'):c.pinned_files(altered)
+
+    def test_portable_apply_checks_destination_runtime_before_writing(self):
+        lock,_=self.pin();files=c.pinned_files(lock)
+        destination=self.root/'python-project';destination.mkdir()
+        (destination/'requirements.txt').write_text('PyYAML\n')
+        (destination/'AGENTS.md').write_text('Preserve user instructions\n')
+        for operation in (c.resolve,c.plan,c.apply):
+            with self.subTest(operation=operation.__name__),self.assertRaisesRegex(c.Invalid,'missing required capability: python-runtime'):
+                if operation==c.resolve:operation(lock['loadouts'],destination,'codex')
+                else:operation(destination,lock,files)
+        self.assertFalse((destination/'.context-ai').exists())
+        self.assertEqual((destination/'AGENTS.md').read_text(),'Preserve user instructions\n')

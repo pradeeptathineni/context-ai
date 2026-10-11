@@ -614,7 +614,8 @@ def with_capabilities(selected, extras):
             selected['skills'].append(key)
     return selected
 
-def resolve(ids, project, provider, options=None, extras=()):
+def source_resolution(ids, provider, options=None, extras=()):
+    """Reviewed declarations and pinned bytes, independent of consumer runtimes."""
     hosts(provider)
     selected=selection(ids,options)
     extras=list(dict.fromkeys(extras))
@@ -623,10 +624,11 @@ def resolve(ids, project, provider, options=None, extras=()):
         selected['extra_capabilities']=extras
     decisions=selected_decisions(selected['decisions'])
     registry=capability_definitions(selected['options'])
-    states = capability_states(selected['capabilities'],registry,project)
-    # Machine observations belong to local reports, never portable resource pins.
-    for entry in states.values():
-        entry.pop('discovery',None)
+    for key in selected['capabilities']:
+        if key not in registry:
+            raise Invalid('unknown capability: '+key)
+    definitions = {key:{'requirement':required,'definition':registry[key]}
+                   for key,required in selected['capabilities'].items()}
     files = resources([p for paths in selected['stages'].values() for p in paths]+(['skills/context-loadout/SKILL.md','LICENSE']+[ADAPTER_DOCS[host] for host in hosts(provider)] if selected['loadouts'] else ['LICENSE']))
     for c in selected['capabilities']:
         if registry[c]['kind']=='resource':
@@ -639,8 +641,18 @@ def resolve(ids, project, provider, options=None, extras=()):
     file_hashes = {name:digest(data) for name,data in sorted(files.items())}
     tree_hash = digest(encoded(file_hashes))
     lock = {**selected,'schema_version':2,'provider':provider,'project':'.','library_revision':source_revision(),
-            'source_tree_sha256':tree_hash,'capabilities':states,
+            'source_tree_sha256':tree_hash,'capabilities':definitions,
             'decisions':decisions,'resources':file_hashes}
+    return lock,files
+
+def resolve(ids, project, provider, options=None, extras=()):
+    lock,files=source_resolution(ids,provider,options,extras)
+    lock['capabilities']=capability_states(
+        {key:entry['requirement'] for key,entry in lock['capabilities'].items()},
+        {key:entry['definition'] for key,entry in lock['capabilities'].items()},project)
+    # Machine locations belong to local reports, never portable resource pins.
+    for entry in lock['capabilities'].values():
+        entry.pop('discovery',None)
     validate_schema('lock',lock)
     return lock,files
 
@@ -852,6 +864,9 @@ def preflight(project, lock, files):
         raise Invalid('missing selected stage instructions')
     if lock['schema_version']==1 and lock['project']!=str(project):
         raise Invalid('legacy pin belongs to another project')
+    states=capability_states(
+        {key:entry['requirement'] for key,entry in lock['capabilities'].items()},
+        {key:entry['definition'] for key,entry in lock['capabilities'].items()},project)
     previous=installed(project)
     targets=materialized(lock,files)
     conflicts=[]
@@ -935,7 +950,8 @@ def preflight(project, lock, files):
     desired.update(claude_desired)
     desired.update({name:None for name in set(old_owned)-set(targets)})
     return {'previous':previous,'targets':targets,'old_owned':old_owned,'state':state,'desired':desired,
-            'conflicts':conflicts,'duplicates':duplicates,'inventory':inventory,'host_routing':routing}
+            'conflicts':conflicts,'duplicates':duplicates,'inventory':inventory,'host_routing':routing,
+            'capabilities':states}
 
 def apply(project,lock,files):
     check=preflight(project,lock,files)
@@ -981,7 +997,7 @@ def plan(project, lock, files):
     previous=check['previous']
     old=previous['resolution']['resources'] if previous else {}
     old_owned=check['old_owned']; targets=check['targets']
-    registry={key:entry for key,entry in lock['capabilities'].items()}
+    registry=check['capabilities']
     return {'selection_outcome':'focused' if lock['stages'] or lock['capabilities'] else 'native-sufficient',
             'resolution':lock,
             'writes':sorted(set(targets)|{name for name,value in check['desired'].items() if value is not None}),
@@ -1096,7 +1112,7 @@ def pinned_files(lock):
         data=path.read_bytes()
         if digest(data)!=sha:raise Invalid('pinned resource drift: '+name)
         files[name]=data
-    expected,_=resolve(lock['loadouts'],Path.cwd(),lock['provider'],lock['options'],lock.get('extra_capabilities',[]))
+    expected,_=source_resolution(lock['loadouts'],lock['provider'],lock['options'],lock.get('extra_capabilities',[]))
     for field in ['loadouts','stages','skills','options','checks','decisions','resources','extra_capabilities']:
         if lock.get(field)!=expected.get(field):raise Invalid('imported pin differs from reviewed source '+field)
     definitions=lambda value:{key:{'requirement':entry['requirement'],'definition':entry['definition']} for key,entry in value.items()}
