@@ -2,7 +2,7 @@
 
 The personal catalog keeps project instructions and native tools as the ordinary route. Focused resources earn selection for a stated concern; a complete upstream harness remains an available conditional choice. Profiles are proposed selections, not downstream installations or proof of usefulness. `library/catalog.yaml` and `library/profiles/` own these choices; suggestions and portal views derive from them.
 
-The inspected Context base is `4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904`. Greenfield changes must acquire their own commit and trial references before operation claims are added. Existing source pins retain their original evidence scope.
+This source review inspected Context `4390ac6fb1fca88c4a8fc550d91f8b5d54ddb904` on 2026-10-08. The project snapshots below describe that review, not current downstream state. Later operation claims have their own commits and trial references in the catalog and evaluations; existing source pins retain their original evidence scope.
 
 | Responsibility | Selected owner | Alternatives kept | Evidence and reopening condition |
 | --- | --- | --- | --- |
