@@ -8,17 +8,9 @@ This file describes how Claude Code receives a Context selection. It does not re
 
 Claude Code v2.1.277 and later read `AGENTS.md` as project instructions when no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists in the working directory or above it. When one exists, Claude reads the `CLAUDE.md` files instead, unless a `CLAUDE.md` imports `AGENTS.md` with an `@AGENTS.md` line ([memory documentation](https://code.claude.com/docs/en/memory)). Files load at session start; `/context` lists the memory files actually loaded.
 
-Context therefore uses the native route first:
+Context uses the native route when no CLAUDE instruction file shadows `AGENTS.md`. A local `CLAUDE.md` symlink resolving to the project's `AGENTS.md` also proves a shared instruction owner. Otherwise Context appends an explicit owned block to the local `CLAUDE.md` (or existing `.claude/CLAUDE.md`), preserving the user's bytes. This includes plain `@AGENTS.md` import prose: Claude owns parsing that prose; Context does not reconstruct its Markdown/import grammar.
 
-| Project state | What Context writes for Claude |
-| --- | --- |
-| No CLAUDE.md anywhere above the project | Nothing extra; Claude reads the managed `AGENTS.md` block natively |
-| A project CLAUDE.md that imports `@AGENTS.md` | Nothing extra |
-| A CLAUDE.md that does not import `AGENTS.md`, or only `CLAUDE.local.md`/an ancestor CLAUDE.md | One owned block in the project `CLAUDE.md` (or the existing `.claude/CLAUDE.md`) with the same router text |
-
-Import detection follows Claude's rules: a relative `@path` resolves from the file that contains it (so `.claude/CLAUDE.md` needs `@../AGENTS.md`), mentions inside code spans and fenced blocks are not imports, and a CLAUDE.md symlinked to AGENTS.md counts as importing it. The user-level **Project instructions** setting (`instructionFiles` under the built-in `cc-plugin-agents-md` plugin in `~/.claude/settings.json`) can change the default; Context does not read user settings, so a user who chose `claude-md` only should apply with a CLAUDE.md present to get a managed block.
-
-Context never adds `@AGENTS.md` to a user's CLAUDE.md, because that would pull the user's whole AGENTS.md into Claude sessions that deliberately excluded it. `plan` reports the chosen mode under `host_routing.claude`; `verify` fails if a CLAUDE.md later shadows AGENTS.md without a managed route, so `refresh` can add one.
+Context never adds an import to a user's instructions. `plan` reports the mode under `host_routing.claude`; `verify` detects a newly shadowing CLAUDE file without a managed route, so refresh can propose one. User-level instruction preferences remain outside Context discovery; a user who disabled native AGENTS reading should supply a CLAUDE file so delivery chooses an explicit route. See [the shared lifecycle contract](../../docs/loadouts.md) for preview, edit protection and removal.
 
 ## Skills
 
