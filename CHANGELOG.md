@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Bind profile delivery to the canonical consumer path so verify/refresh/undo work through ancestor aliases such as macOS `/tmp`.
+
 - Consolidate first-use and delivery documentation, correct Claude instruction ownership, keep only current decisions, and retire duplicated archived guidance and the adapted React compilation. Exact Git revisions preserve earlier pins and evidence.
 - Align routing and private validation-package versions with published v0.3.0; all later work remains Unreleased.
 

@@ -66,6 +66,22 @@ class PersonalLibrary(unittest.TestCase):
         self.assertEqual(c.installed(project)['resolution']['provider'], 'codex')
         self.assertFalse((project / 'CLAUDE.md').exists())
 
+    def test_profile_delivery_through_ancestor_alias_uses_canonical_lifecycle_binding(self):
+        root=Path(self.temp.name).resolve()
+        parent=root/'projects';parent.mkdir()
+        project=parent/'consumer';project.mkdir()
+        (project/'AGENTS.md').write_bytes(b'User rules\r\n')
+        alias=root/'alias';alias.symlink_to(parent,target_is_directory=True)
+        selected=alias/'consumer'
+        lib.delivery('home-lab',selected,action='apply')
+        self.assertEqual(c.installed(project)['bound_project'],str(project))
+        self.assertEqual(c.verify(project)['project_checks'],'not_run')
+        self.assertFalse(lib.delivery('home-lab',selected,action='refresh')['delivery']['conflicts'])
+        self.assertTrue(c.undo(project)['undone'])
+        self.assertEqual((project/'AGENTS.md').read_bytes(),b'User rules\r\n')
+        with self.assertRaisesRegex(c.Invalid,'absolute consumer'):
+            lib.delivery('home-lab',alias,action='apply')
+
     def test_missing_peer_does_not_remove_selections(self):
         before = lib.selection('signals')
         result = lib.maintenance(self.state, today=date(2026, 10, 8))

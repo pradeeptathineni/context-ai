@@ -168,6 +168,7 @@ def delivery(id, project, provider=None, action='plan', state=None):
     project = Path(project)
     if not project.is_absolute() or not project.is_dir() or project.is_symlink():
         raise Invalid('delivery needs an existing absolute consumer directory')
+    project=project.resolve()
     picked = selection(id, state)
     if picked['direct_upstream'] and action == 'apply':
         raise Invalid('direct-upstream profile requires its inspected native installer; no implicit execution')
