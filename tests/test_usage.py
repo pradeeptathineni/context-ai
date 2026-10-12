@@ -77,6 +77,43 @@ class Usage(unittest.TestCase):
         self.assertIsNone(result['between_snapshots'])
         self.assertTrue(usage.receipt(stream(completed(100), completed(20)), 'codex-exec')['counter_discontinuity'])
 
+    def test_return_to_an_earlier_snapshot_is_not_a_duplicate(self):
+        first, peak = snapshot(100), snapshot(150)
+        result = usage.receipt(stream(first, peak, first, first), 'app-server')
+        self.assertEqual(result['tokens']['input_tokens'], 100)
+        self.assertTrue(result['counter_discontinuity'])
+        self.assertIsNone(result['between_snapshots'])
+        self.assertEqual(len(result['observations']), 3)
+        self.assertEqual(result['duplicates'], 1)
+        result = usage.receipt(stream(completed(100), completed(150), completed(100)), 'codex-exec')
+        self.assertEqual(result['tokens']['input_tokens'], 100)
+        self.assertTrue(result['counter_discontinuity'])
+
+    def test_missing_field_transition_cannot_hide_a_counter_decrease(self):
+        def partial(total):
+            event = snapshot(0)
+            event['params']['tokenUsage'] = {'total': total, 'last': total.copy()}
+            return event
+        result = usage.receipt(stream(partial({'inputTokens': 100}),
+            partial({'outputTokens': 5}), partial({'inputTokens': 20})), 'app-server')
+        self.assertTrue(result['counter_discontinuity'])
+        self.assertIsNone(result['between_snapshots'])
+        self.assertEqual(result['tokens']['input_tokens'], 20)
+        self.assertIsNone(result['tokens']['output_tokens'])
+
+    def test_missing_fields_do_not_mask_growth_or_fill_the_latest_snapshot(self):
+        first, gap, last = snapshot(100), snapshot(0), snapshot(150)
+        first['params']['tokenUsage']['total'] = {'inputTokens': 100}
+        gap['params']['tokenUsage']['total'] = {'outputTokens': 5}
+        last['params']['tokenUsage']['total'] = {'inputTokens': 150}
+        result = usage.receipt(stream(first, gap, last), 'app-server')
+        self.assertFalse(result['counter_discontinuity'])
+        self.assertEqual(result['between_snapshots']['input_tokens'], 50)
+        self.assertIsNone(result['tokens']['output_tokens'])
+        latest_missing = usage.receipt(stream(first, gap), 'app-server')
+        self.assertIsNone(latest_missing['tokens']['input_tokens'])
+        self.assertIsNone(latest_missing['between_snapshots']['input_tokens'])
+
     def test_no_cross_thread_aggregation(self):
         for raw in (stream(snapshot(100), snapshot(150, thread='other')),
                     stream(snapshot(100), {'method': 'turn/completed', 'params': {

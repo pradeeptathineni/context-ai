@@ -6,6 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Preserve returning snapshot decreases and last-known counters through missing-field transitions in optional usage receipts; suppress misleading interval deltas.
 - Add opt-in native usage receipt parsing with missing/cumulative/reset boundaries; no hooks, collection, inferred costs or automatic model changes.
 - Reject adoption/trial candidates citing contradicted claims even when another cited claim is supported; preserve consideration, deferral and rejection evidence for inspection.
 - Bind profile delivery to the canonical consumer path so verify/refresh/undo work through ancestor aliases such as macOS `/tmp`.

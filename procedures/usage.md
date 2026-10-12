@@ -26,12 +26,15 @@ fields are null, including a missing total; the reader does not invent them or a
 input/reasoning breakdowns again. It rejects negative, boolean, fractional and oversized
 counters. Source-specific semantics matter: a CLI terminal counter is not proven to be
 one provider call or a delta from a resumed session. It is never summed with another
-terminal event. Identical terminal observations within the same turn are deduplicated;
+terminal event. Consecutive identical terminal observations within the same turn are deduplicated;
 an intervening turn start is a different observation even if counts match. A later
 interrupted turn has missing current usage, with earlier observations retained separately.
 
 App Server `total` is a thread-cumulative snapshot and `last` is retained separately.
-Repeated thread/turn/counter snapshots are deduplicated. The difference between the first
+Consecutive identical thread/turn/counter snapshots are deduplicated; returning to an earlier
+value after another observation is processed as new evidence, including any decrease. Missing
+fields do not erase their last known values for decrease detection; the latest reported fields
+remain null when missing and are never filled from that detection history. The difference between the first
 and final observed total is labeled `between_snapshots`; it excludes work before the first
 snapshot and is not a whole-run or per-stage measurement. Any decreasing observed counter
 marks a discontinuity (reset or reordering is not distinguished) and makes this difference

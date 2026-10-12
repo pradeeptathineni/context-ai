@@ -128,7 +128,8 @@ def receipt(raw, format, requested_model=None, requested_effort=None):
                     'signal': text(termination.get('signal')), 'trigger': text(termination.get('trigger'))}
             result['semantics'] = 'native-session-reported; not individual provider calls'
         elif format in ('codex-exec', 'app-server'):
-            previous, first, seen, scope, turn = None, None, set(), None, 0
+            previous, first, previous_identity, scope, turn = None, None, None, None, 0
+            last_known = dict.fromkeys(FIELDS)
             for line in raw.splitlines():
                 if not line.strip():
                     continue
@@ -152,12 +153,13 @@ def receipt(raw, format, requested_model=None, requested_effort=None):
                         result['status'] = 'completed' if kind == 'turn.completed' else 'failed'
                         current = counters(event.get('usage'))
                         identity = (turn, kind, json.dumps(current, sort_keys=True))
-                        if identity in seen:
+                        if identity == previous_identity:
                             result['duplicates'] += 1
                             continue
-                        seen.add(identity)
-                        if previous is not None and decreasing(previous, current):
+                        previous_identity = identity
+                        if decreasing(last_known, current):
                             result['counter_discontinuity'] = True
+                        last_known.update({key: value for key, value in current.items() if value is not None})
                         result['observations'].append({'turn_ordinal': turn, 'tokens': current})
                         result['tokens'] = current
                         previous = current
@@ -178,12 +180,13 @@ def receipt(raw, format, requested_model=None, requested_effort=None):
                         last = counters(usage.get('last'), camel=True)
                         turn_id = text(params.get('turnId'))
                         identity = (thread, turn_id, json.dumps([current, last], sort_keys=True))
-                        if identity in seen:
+                        if identity == previous_identity:
                             result['duplicates'] += 1
                             continue
-                        seen.add(identity)
-                        if previous is not None and decreasing(previous, current):
+                        previous_identity = identity
+                        if decreasing(last_known, current):
                             result['counter_discontinuity'] = True
+                        last_known.update({key: value for key, value in current.items() if value is not None})
                         if first is None:
                             first = current
                         result['observations'].append({'turn_id': turn_id, 'total': current, 'last': last})
