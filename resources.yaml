@@ -1,5 +1,7 @@
 schema_version: 1
 dependencies:
+  procedures/usage.md:
+  - scripts/context_usage.py
   core/prior-art.md:
   - core/engineering.md
   - core/research.md

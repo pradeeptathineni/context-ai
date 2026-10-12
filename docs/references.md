@@ -1,5 +1,12 @@
 # References and provenance
 
+The optional [native usage procedure](../procedures/usage.md) uses documented
+[Codex JSONL completion usage](https://learn.chatgpt.com/docs/non-interactive-mode),
+[App Server thread snapshots](https://learn.chatgpt.com/docs/app-server), and
+[reasoning output breakdowns](https://developers.openai.com/api/docs/guides/reasoning),
+reviewed 2026-10-12. The stdlib reader retains reported counters with explicit
+missing/reset/cumulative boundaries; it adds no collection, hooks or cost inference.
+
 ## Sourcing policy
 
 Prefer authoritative specifications, then first-party product documentation, then maintained and adopted open-source implementations, then high-quality engineering publications. Use synthesis only where those sources do not settle the repository's design. Adoption informs interoperability; it does not replace evidence.

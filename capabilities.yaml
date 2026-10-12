@@ -1,5 +1,14 @@
 schema_version: 1
 capabilities:
+  context-usage:
+    kind: resource
+    path: procedures/usage.md
+    description: Read supplied native token counters without collecting sessions,
+      inferring missing usage, installing hooks or changing models.
+    files:
+    - scripts/context_usage.py
+    boundary: Opt-in stdlib receipt parser; reported counters only. No inference,
+      session discovery, persistent collection, quota or cost conversion.
   context-output:
     kind: resource
     stages:
