@@ -37,6 +37,36 @@ class Evidence(unittest.TestCase):
         result=self.check_value(b);self.assertFalse(result['activation']);self.assertTrue(result['constraints'])
         b['claims'][0]['status']='contradicted'
         with self.assertRaisesRegex(e.Invalid,'supported'):self.check_value(b)
+    def test_supported_claim_does_not_override_cited_contradiction(self):
+        for disposition in ('adopt','trial'):
+            with self.subTest(disposition=disposition):
+                b=self.fixture()
+                contrary=copy.deepcopy(b['claims'][0])
+                contrary.update(id='contrary',status='contradicted')
+                b['claims'].append(contrary)
+                b['candidates'][0].update(disposition=disposition,claim_ids=['claim-1','contrary'])
+                with self.assertRaisesRegex(e.Invalid,'contradicted'):
+                    self.check_value(b)
+    def test_uncited_contradiction_does_not_block_supported_trial(self):
+        b=self.fixture()
+        contrary=copy.deepcopy(b['claims'][0])
+        contrary.update(id='uncited-contrary',status='contradicted')
+        b['claims'].append(contrary)
+        b['candidates'][0]['disposition']='trial'
+        result=self.check_value(b)
+        self.assertEqual(result['claims'],b['claims'])
+        self.assertEqual(result['recommendations'],b['candidates'])
+        self.assertFalse(result['activation'])
+    def test_contradictions_remain_inspectable_without_premature_adoption(self):
+        for disposition in ('consider','defer','reject'):
+            with self.subTest(disposition=disposition):
+                b=self.fixture()
+                b['claims'][0]['status']='contradicted'
+                b['candidates'][0]['disposition']=disposition
+                result=self.check_value(b)
+                self.assertEqual(result['claims'],b['claims'])
+                self.assertEqual(result['recommendations'],b['candidates'])
+                self.assertFalse(result['activation'])
     def test_private_urls_policy_ids_and_privacy_fail(self):
         for url in ['https://127.0.0.1/source','https://localhost/source','http://example.com/source','file:///etc/passwd','https://user:pass@example.com/source','https://example.local/source']:
             b=self.fixture();b['sources'][0]['uri']=url
