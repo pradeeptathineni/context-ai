@@ -93,6 +93,8 @@ def inspect_bundle(path,expected_sha,producer=None,commit=None,allow_fixture=Fal
         if candidate['disposition'] in ('adopt','trial'):
             if not candidate['claim_ids'] or not any(claims[id]['status'] in ('observed','supported') for id in candidate['claim_ids']):
                 raise Invalid('adoption/trial lacks supported claims')
+            if any(claims[id]['status']=='contradicted' for id in candidate['claim_ids']):
+                raise Invalid('contradicted claims block adoption/trial pending reassessment')
     if (not sources or not claims or not candidates) and not b['limitations']:
         raise Invalid('empty evidence requires an honest limitation')
     ext=b.get('extensions',{})
