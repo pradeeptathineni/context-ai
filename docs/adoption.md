@@ -4,6 +4,16 @@ Start with the [direct-read example](../README.md#use-one-context). Supply an ex
 
 For recurring project use, choose a [catalog profile](library.md) or an [explicit loadout](loadouts.md). The library guide owns source-environment setup and the delivery sequence; the loadout guide owns the command and runtime contract. Run Context commands from its source environment and task checks from the consumer project. Installation makes resources available; it does not prove discovery, invocation or benefit.
 
+## Reusable library and custom consumers
+
+- `core/` owns provider-independent principles. `overlays/` contains reusable optional custom variants, while `domains/` contains concern-specific guidance. These are different functions, not three copies of one rule. Keep their existing paths and select only what the task needs.
+- A custom consumer owns its current operating preferences, hardware and account observations, model choices, budgets and concurrency policy. Keep credentials, private work and live usage outside the public library. Native hosts own actual authentication, permissions, hooks, tools, models and delegation.
+- The six committed `library/profiles/*.yaml` files are pinned public examples. Their IDs, schemas, source snapshots and declarations remain usable for explicit selection and historical replay. They are not authoritative observations of a person's current setup, access or acceptance. Recheck their fit before applying them to a real consumer.
+- Private effective selections, assessments and ownership receipts stay in the caller's explicitly chosen local state. This does not move installation data or create a new profile parser. Catalog `--profile` selects an existing ID or basename; `packet --profile FILE` separately reads a task-profile declaration.
+- Keep project-specific guidance locally available, with references to selected Context resources and small owned exceptions. A personal setup does not require a Context fork. A change to shared behavior needs a reviewed generic extension, rather than another copy of the engine.
+- Retain an exact source checkout or archive and its pin. A moving pointer is not a frozen revision. Existing installed resources remain pinned until an explicit refresh preview and apply; undo preserves unmanaged instructions and edited managed files.
+- Treat local lessons as candidates for upstream generalization only after scoped evidence and useful transfer. Preserve failed trials and uncertainty. Personal preference, installation and passing tests do not establish a universal default.
+
 ## Optional use across repositories
 
 Keep a checkout or pointer at `~/.ai/context-ai` on each host where it is needed. To expose the Git-owned [standard skill](../.agents/skills/standard/SKILL.md) across local Codex projects, link that folder into `~/.agents/skills/standard`. Verify discovery in a fresh session before relying on implicit selection. Neither this guide nor a project profile changes global settings.

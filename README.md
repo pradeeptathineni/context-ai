@@ -2,6 +2,8 @@
 
 Context AI is an evidence-backed library of reusable AI development guidance and project selections. It helps an existing agent find relevant engineering principles, practices, skills and tooling, then use them in the project's own environment. Ordinary work starts with project instructions and native tools; add Context only when it addresses a concrete need.
 
+Context supplies reusable mechanisms, not one person's operating setup. A custom consumer owns its current preferences, machine and account facts, model choices and resource budgets. The public project profiles are pinned examples, not live personal configuration. See [the ownership boundary](docs/adoption.md#reusable-library-and-custom-consumers).
+
 Use one file directly, resolve several choices for a task, or pin a reusable project loadout. Context manages selected files and their lifecycle. Your agent owns interpretation and execution; its native controls own models, permissions and delegation. Signals supplies optional external research evidence, while Context owns contextual adoption and composition.
 
 ## Use one context
@@ -37,8 +39,9 @@ Selection, installation, actual use and benefit are separate observations. `veri
 | Source | Responsibility |
 | --- | --- |
 | `core/` | Canonical, provider-independent engineering behavior. |
-| `overlays/`, `domains/`, `procedures/`, `skills/` | Optional specialization and on-demand methods, with concern owners in `ownership.yaml`. |
-| `library/` | Catalog options, recurring project profiles and due AI-engineering interests. |
+| `overlays/` | Reusable optional custom variants of core guidance; their paths remain stable. |
+| `domains/`, `procedures/`, `skills/` | Concern-specific modules and on-demand methods, with concern owners in `ownership.yaml`. |
+| `library/` | Catalog options, pinned example project profiles and scoped AI-engineering interests. A custom consumer owns its current selection and private state. |
 | `loadouts/`, `capabilities.yaml`, `resources.yaml` | Composition declarations, trusted definitions and explicit resource dependencies. |
 | `scripts/context_ai.py`, `schemas/` | Declaration validation, destination discovery, pinned delivery, verification, refresh, recovery and undo. |
 | `concepts.yaml`, `signals/`, `sources.yaml`, `decisions/` | Decision vocabulary, sourced candidates, original sources and current contextual choices. |

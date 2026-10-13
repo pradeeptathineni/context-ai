@@ -1,7 +1,7 @@
 schema_version: 3
 project: context-ai
-mission: Maintain personal AI-engineering standards, equipment choices and evidence; select, deliver and
-  evolve fitting project setups under explicit policies.
+mission: Maintain reusable AI-engineering guidance, equipment options and evidence; select, deliver and
+  evolve independently owned consumer setups under explicit policies.
 scope: All listed features are required. Role describes contribution, not priority or optionality. Required
   support does not mean enabled by default.
 roles:
@@ -13,8 +13,8 @@ features:
   name: Core context & standards
   role: core
   type: knowledge
-  intent: Maintain the personal standards and reusable guidance that projects can share without requiring
-    the same setup or extra instructions for every task.
+  intent: Maintain provider-independent principles and optional custom variants that projects can select
+    without requiring the same setup or extra instructions for every task.
   assessment:
     delivery: working
     value: 2
@@ -76,8 +76,9 @@ features:
   name: Project profiles & policies
   role: core
   type: configuration
-  intent: Maintain AI-engineering target requirements, host environment and authorized equipment/update
-    policies; reference Signals-owned project context without duplicating general project analysis.
+  intent: Provide reusable profile mechanisms and pinned public example configurations. The consuming
+    project owns its current requirements, environment, choices and authorized equipment/update policies;
+    reference Signals-owned project context without duplicating general project analysis.
   assessment:
     delivery: working
     value: 2

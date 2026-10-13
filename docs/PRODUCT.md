@@ -1,6 +1,6 @@
 # Context AI — product
 
-Maintain personal AI-engineering standards, equipment choices and evidence; select, deliver and evolve fitting project setups under explicit policies.
+Maintain reusable AI-engineering guidance, equipment options and evidence; select, deliver and evolve independently owned consumer setups under explicit policies.
 
 Generated from product.yaml. Delivery and scoped value are separate.
 

@@ -1,6 +1,6 @@
 # Custom project standards
 
-`overlays/` contains the maintainer's opinionated practice distilled from repeated work. A personal entry point can make its relevant files defaults across projects; another project can adopt selected files. [`core/`](../core/) remains the canonical, broadly reusable layer. These files compose its general rules into a house style without replacing a project's own contract.
+`overlays/` contains reusable optional custom variants distilled from repeated work. A consumer selects the relevant standards and keeps its own preferences or exceptions locally. [`core/`](../core/) remains the canonical, broadly reusable layer; these files specialize its rules without replacing a project's own contract. The name describes their composition role, so existing paths remain stable. They are not one person's live operating configuration or mandatory defaults for every project.
 
 ## Load by need
 

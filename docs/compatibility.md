@@ -75,3 +75,9 @@ approves apply, installation or inference. See [local contract](context-handoff.
 New React selections ship the unmodified `sourced/vercel/react/compiled-guide.upstream.txt` instead of the redundant adapted `.md` copy, with the same upstream revision and attribution. Existing installations retain their previous pinned bytes until an explicit refresh/apply; reproduce their original lock from its exact source commit. No third-party snapshot was edited. Superseded prior-art guidance is retained in Git rather than a second archive; the active owner is `core/prior-art.md`.
 
 The latest published library tag is v0.3.0. Routing `release_version` and the private validation package version identify that release; later content belongs to Unreleased. Schema versions are independent.
+
+## Custom consumer ownership clarification
+
+The reusable-library boundary separates shared mechanisms from a consumer's current personal choices. The existing six public profile files retain their exact bytes, IDs and schema-1 meanings as pinned examples; explicit selection, policy checks and private effective-state processing are unchanged. No profile is relocated, renamed, disabled or automatically refreshed. Earlier product assessments remain at their recorded source and scope.
+
+`overlays/` remains the path for optional reusable custom variants. No file is promoted into universal core or restored under the removed historical `custom/` router path. Personal guidance and volatile host/account/model/budget facts belong to the custom consumer. They do not become public catalog policy merely because that consumer uses Context. Refer to [adoption](adoption.md#reusable-library-and-custom-consumers) for the ownership boundary and the existing delivery lifecycle for update and undo.
