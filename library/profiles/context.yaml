@@ -1,6 +1,6 @@
 schema_version: 1
 id: context
-project: https://github.com/pradeeptathineni/context-ai
+project: null
 snapshot:
   revision: source-tree:52bc7ef19c0be5f21ad8aeb7ad93df84d09953640a08673e0a3a95c014bc4c7b
   files:
@@ -8,14 +8,13 @@ snapshot:
     sha256: 3f7c9c7ec8263cbacd2ad908d9325639c9d773691b707af0fcfbc31c2630a73c
   - path: scripts/context_ai.py
     sha256: 5cbf402fd61bf3e61bc2052ffab7ed296b6b49d5e189a53211a42d95d514f825
-purpose: Maintain Context source and stress its user-edit preservation boundary at consequential lifecycle
-  changes.
+purpose: 'Example: combine project-native checks with an optional isolated preservation-stress method.'
 environment:
-  runtime: CPython 3.12 macOS x86_64 in deny-default sandbox
-  normal_work: Source-local Python tests and Ruby validation; ordinary work needs no extra task guidance
+  snapshot_scope: Historical source provenance retained for compatibility; no current consumer runtime
+    or personal policy is declared.
 priorities:
-- Preserve unmanaged bytes, edited resources and exact ownership
-- Keep generated stress tests optional alongside deterministic regressions
+- Preserve unmanaged bytes, edited resources and exact ownership.
+- Keep optional stress checks separate from ordinary deterministic checks.
 policy:
   trials:
   - context-output
@@ -26,9 +25,9 @@ policy:
   schedule: false
 selections:
 - option: native
-  reason: Existing project instructions and deterministic checks own ordinary development.
+  reason: Project instructions and existing checks own ordinary development.
   concern: ordinary-work
 - option: hypothesis
-  reason: For this explicit preservation-stress profile only, execute a reviewed pinned recipe in an isolated
-    disposable consumer.
+  reason: For this explicit example only, a reviewed pinned recipe may test preservation in a disposable
+    consumer.
   concern: preservation-testing

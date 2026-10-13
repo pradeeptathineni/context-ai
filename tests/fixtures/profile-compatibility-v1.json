@@ -1,0 +1,223 @@
+{
+  "base": "f36b47fec14f5bcaec5941601f8837b1008fda7c",
+  "profiles": {
+    "context": {
+      "schema_version": 1,
+      "selections": [
+        {
+          "option": "native",
+          "concern": "ordinary-work"
+        },
+        {
+          "option": "hypothesis",
+          "concern": "preservation-testing"
+        }
+      ],
+      "policy": {
+        "trials": [
+          "context-output",
+          "context-tdd",
+          "hypothesis"
+        ],
+        "updates": [
+          "hypothesis"
+        ],
+        "schedule": false
+      },
+      "snapshot_sha256": "fbda7c6316f2b7e3dc25d57386ec4cba0cfb183adc19215ccec06247e2a89103",
+      "loadouts": [],
+      "capabilities": [],
+      "direct_upstream_ids": [
+        "hypothesis"
+      ],
+      "provider": "both",
+      "resource_hashes": {
+        "LICENSE": "69e8bc0e7e498d3dbc421855f3be2857130648cc0ef343e81d95afd2ad168296"
+      },
+      "source_tree_sha256": "61e2f53ae19c2ad5b4b290cd98839bfefe3a8eca40c8f416b4d5e75da662000f"
+    },
+    "home-lab": {
+      "schema_version": 1,
+      "selections": [
+        {
+          "option": "native",
+          "concern": "ordinary-work"
+        },
+        {
+          "option": "context-output",
+          "concern": "output-handling"
+        }
+      ],
+      "policy": {
+        "trials": [],
+        "updates": [],
+        "schedule": false
+      },
+      "snapshot_sha256": "622214eb12dcd53d0787ec45962b7ffa0ab88e36c20d412592eb781e510df8e4",
+      "loadouts": [],
+      "capabilities": [
+        "context-output"
+      ],
+      "direct_upstream_ids": [],
+      "provider": "both",
+      "resource_hashes": {
+        "LICENSE": "69e8bc0e7e498d3dbc421855f3be2857130648cc0ef343e81d95afd2ad168296",
+        "procedures/output.md": "3b340b43899016608c28ff703b31ffd44127fce8304d1213f6bb538928f25fcd",
+        "scripts/context_output.py": "ab4690ec6ee860c5fef6403571fe95f944a4cfe9dd51ee527c8e22504a4b9ca1"
+      },
+      "source_tree_sha256": "6c7d940c2f0305e95668cd6e92681db68c332bf821aa81bd4103225f575da2a3"
+    },
+    "labs": {
+      "schema_version": 1,
+      "selections": [
+        {
+          "option": "native",
+          "concern": "ordinary-work"
+        },
+        {
+          "option": "research-evidence",
+          "concern": "research"
+        }
+      ],
+      "policy": {
+        "trials": [
+          "context-tdd"
+        ],
+        "updates": [],
+        "schedule": false
+      },
+      "snapshot_sha256": "73f01586e5839b10766be8a33fd3457178aaf2ffcb349c82b3f504490617f4d4",
+      "loadouts": [
+        "research-evidence"
+      ],
+      "capabilities": [],
+      "direct_upstream_ids": [],
+      "provider": "both",
+      "resource_hashes": {
+        "LICENSE": "69e8bc0e7e498d3dbc421855f3be2857130648cc0ef343e81d95afd2ad168296",
+        "core/engineering.md": "fbb7bdf251f1310329eec33f7adaf0ac8911f9e5fc069f08bff36e3d0fa4c657",
+        "core/prior-art.md": "10978874f93efa9f3c97bd407ff265d1406fd14c935c755f9ef32c9ce57b1f3a",
+        "core/research.md": "c28861cf5cbbd7bce10614e0f3c44931fddfbe6362252f11cc6007e01b02e189",
+        "core/testing.md": "9d423038a8000331a536995c84825368f90062de01ded9cebdb7c488974b764f",
+        "docs/loadouts.md": "0cd664a08578adfa6aff1c78bc97286023d7048e70297e8dbacf4cef2961d864",
+        "docs/task-profiles.md": "aa7d976584867e737d8d7394ce92b87503ea851c170c5b324157e6de8dc5fe7b",
+        "loadouts/research-evidence.yaml": "d42e280926a759070daed27d2ff1010743c81613324f2eab894c937c4deb99a7",
+        "overlays/evidence-claims.md": "842911a933db6ae2b3cbd84e786cfff6c9f95993b7369de44d6619207a6975be",
+        "procedures/current-docs.md": "477285b172c45abd58a70c87436a89c35eb1e707abe02eef7ec7dd966f5e5f2f",
+        "procedures/research-evidence.md": "f1b741e4618622f9083433bf3da6e36a972837ed3b4cb40b65abd38a809577da",
+        "providers/anthropic/claude-code.md": "77b75e74da733e8a6c0f4378d45d213cfb2946bf9bb3506f5035405d5c7648c3",
+        "providers/openai/codex.md": "43bbb5316f7f4b43a249fee25999e5c66a49afcba77a0caf6e8ad62b04795b3e",
+        "skills/context-loadout/SKILL.md": "9fc0d5e202df030fe7729b483934cb0e3a18d7bec0cbf40cce561ad9bdbce071",
+        "sourced/mattpocock/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        "sourced/mattpocock/research/instruction.md": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4"
+      },
+      "source_tree_sha256": "a64c8c7e16faf8093b298f96dc1ca85be262dd5983cc2c4063f3c3dc94a2daf6"
+    },
+    "principles": {
+      "schema_version": 1,
+      "selections": [
+        {
+          "option": "native",
+          "concern": "ordinary-work"
+        }
+      ],
+      "policy": {
+        "trials": [],
+        "updates": [],
+        "schedule": false
+      },
+      "snapshot_sha256": "98d9ea00ce76ac4b1ca8d7ab36cd646f4682c19008afc25e842c6354ecf3b880",
+      "loadouts": [],
+      "capabilities": [],
+      "direct_upstream_ids": [],
+      "provider": "both",
+      "resource_hashes": {
+        "LICENSE": "69e8bc0e7e498d3dbc421855f3be2857130648cc0ef343e81d95afd2ad168296"
+      },
+      "source_tree_sha256": "61e2f53ae19c2ad5b4b290cd98839bfefe3a8eca40c8f416b4d5e75da662000f"
+    },
+    "signals": {
+      "schema_version": 1,
+      "selections": [
+        {
+          "option": "native",
+          "concern": "ordinary-work"
+        },
+        {
+          "option": "context-output",
+          "concern": "output-handling"
+        },
+        {
+          "option": "research-evidence",
+          "concern": "research"
+        }
+      ],
+      "policy": {
+        "trials": [
+          "context-output",
+          "context-tdd",
+          "hypothesis"
+        ],
+        "updates": [
+          "context-output",
+          "context-tdd",
+          "hypothesis"
+        ],
+        "schedule": false
+      },
+      "snapshot_sha256": "2714260b9cb89c5eac4fb9087e8bed23c97b24c5b492f0fb448d1744c9f877e9",
+      "loadouts": [
+        "research-evidence"
+      ],
+      "capabilities": [
+        "context-output"
+      ],
+      "direct_upstream_ids": [],
+      "provider": "both",
+      "resource_hashes": {
+        "LICENSE": "69e8bc0e7e498d3dbc421855f3be2857130648cc0ef343e81d95afd2ad168296",
+        "core/engineering.md": "fbb7bdf251f1310329eec33f7adaf0ac8911f9e5fc069f08bff36e3d0fa4c657",
+        "core/prior-art.md": "10978874f93efa9f3c97bd407ff265d1406fd14c935c755f9ef32c9ce57b1f3a",
+        "core/research.md": "c28861cf5cbbd7bce10614e0f3c44931fddfbe6362252f11cc6007e01b02e189",
+        "core/testing.md": "9d423038a8000331a536995c84825368f90062de01ded9cebdb7c488974b764f",
+        "docs/loadouts.md": "0cd664a08578adfa6aff1c78bc97286023d7048e70297e8dbacf4cef2961d864",
+        "docs/task-profiles.md": "aa7d976584867e737d8d7394ce92b87503ea851c170c5b324157e6de8dc5fe7b",
+        "loadouts/research-evidence.yaml": "d42e280926a759070daed27d2ff1010743c81613324f2eab894c937c4deb99a7",
+        "overlays/evidence-claims.md": "842911a933db6ae2b3cbd84e786cfff6c9f95993b7369de44d6619207a6975be",
+        "procedures/current-docs.md": "477285b172c45abd58a70c87436a89c35eb1e707abe02eef7ec7dd966f5e5f2f",
+        "procedures/output.md": "3b340b43899016608c28ff703b31ffd44127fce8304d1213f6bb538928f25fcd",
+        "procedures/research-evidence.md": "f1b741e4618622f9083433bf3da6e36a972837ed3b4cb40b65abd38a809577da",
+        "providers/anthropic/claude-code.md": "77b75e74da733e8a6c0f4378d45d213cfb2946bf9bb3506f5035405d5c7648c3",
+        "providers/openai/codex.md": "43bbb5316f7f4b43a249fee25999e5c66a49afcba77a0caf6e8ad62b04795b3e",
+        "scripts/context_output.py": "ab4690ec6ee860c5fef6403571fe95f944a4cfe9dd51ee527c8e22504a4b9ca1",
+        "skills/context-loadout/SKILL.md": "9fc0d5e202df030fe7729b483934cb0e3a18d7bec0cbf40cce561ad9bdbce071",
+        "sourced/mattpocock/LICENSE": "0e7ac423bf2c6e223b7c5b156f8cf72da49d748e56a1641402c31f22ad07dbb5",
+        "sourced/mattpocock/research/instruction.md": "985569f15739c713d6784887c3d186d4ef9ac85bec5ad9c068d25bf0739928e4"
+      },
+      "source_tree_sha256": "6367ba0c015f7d4dcb3fbc61a616495412fdc2ae8aa2467c0a15639731c5ecd6"
+    },
+    "simulation": {
+      "schema_version": 1,
+      "selections": [
+        {
+          "option": "native",
+          "concern": "ordinary-work"
+        }
+      ],
+      "policy": {
+        "trials": [],
+        "updates": [],
+        "schedule": false
+      },
+      "snapshot_sha256": "0e15eb0cedf99e04eaecad51e31580d0d6ea976be756b714845c7c3100e8df56",
+      "loadouts": [],
+      "capabilities": [],
+      "direct_upstream_ids": [],
+      "provider": "both",
+      "resource_hashes": {
+        "LICENSE": "69e8bc0e7e498d3dbc421855f3be2857130648cc0ef343e81d95afd2ad168296"
+      },
+      "source_tree_sha256": "61e2f53ae19c2ad5b4b290cd98839bfefe3a8eca40c8f416b4d5e75da662000f"
+    }
+  }
+}

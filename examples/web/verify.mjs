@@ -81,7 +81,7 @@ try {
     if ([320,1440].includes(width)) { await page.evaluate(()=>scrollTo(0,0)); await page.screenshot({path:out+`native-loadout-${width}.png`}); }
     await page.getByLabel('Project setup').selectOption('signals');
     await expect(page.locator('.profile-card')).toContainText(data.library.options.find(item=>item.id==='context-output').name);
-    await expect(page.locator('.profile-card')).toContainText('reciprocal consumer');
+    await expect(page.locator('.profile-card')).toContainText(data.library.profiles.find(profile => profile.id === 'signals').selections.find(choice => choice.option === 'context-output').reason);
     await page.locator('.profile-card summary').click();
     await assertNoOverflow('profile details');
     if ([320,1440].includes(width)) { await page.evaluate(()=>scrollTo(0,0)); await page.screenshot({path:out+`loadout-${width}.png`}); }
@@ -103,7 +103,7 @@ try {
     const request=JSON.parse(await readFile(await download.path(),'utf8'));
     assert.deepEqual(Object.keys(request).sort(),['constraints','findings','method','profile_id','project_ref','request_id','schema_version']);
     assert.equal(request.profile_id,'signals');assert.equal(request.method,'plan');
-    assert.deepEqual(request.project_ref,{id:'signals',source_ref:data.library.profiles.find(item=>item.id==='signals').project});
+    assert.deepEqual(request.project_ref,{id:'signals',source_ref:data.library.profiles.find(item=>item.id==='signals').project || 'interest:signals'});
     assert.deepEqual(request.constraints,[]);assert.deepEqual(request.findings,[]);
     assert(!JSON.stringify(request).includes('/Users/'));
     await expect(page.locator('#request-status')).toContainText('nothing was installed');

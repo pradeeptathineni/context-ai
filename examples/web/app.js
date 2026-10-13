@@ -85,7 +85,7 @@ function renderProfiles() {
     li.append(link); choices.append(li);
   }
   card.append(choices, disclosure('Environment, policy and evidence', [
-    profile.project ? sourceLink('Public project', profile.project) : el('p', 'Exploratory interest; no repository declared.'),
+    profile.project ? sourceLink('Public project', profile.project) : el('p', 'Unbound example; no current consumer repository declared.'),
     factsList([['Environment', Object.entries(profile.environment).map(([key, value]) => `${key}: ${joined(value)}`)], ['Snapshot revision', profile.snapshot.revision || 'No repository snapshot'], ['Priorities', profile.priorities], ['Allowed trials', profile.policy.trials], ['Allowed updates', profile.policy.updates], ['Schedule', profile.policy.schedule ? 'Configured' : 'Not configured'], ['Evidence boundary', 'Public source fit assessment; private local status is excluded.']])
   ])); document.querySelector('#profile-results').replaceChildren(card);
   document.querySelector('#request-profile').textContent = `Plan request for ${profile.id}. Local target binding and permission checks belong to the trusted caller.`;

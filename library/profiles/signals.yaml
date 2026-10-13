@@ -1,6 +1,6 @@
 schema_version: 1
 id: signals
-project: https://github.com/pradeeptathineni/signals-ai
+project: null
 snapshot:
   revision: 135cd3537901b956d4c7decd1bbb7d97ab805e8e
   files:
@@ -10,18 +10,13 @@ snapshot:
     sha256: 052b1332e9c3afaf52b00928a5a4365d78b827f2fa78884ab7db000777eee926
   - path: AGENTS.md
     sha256: ae0c01ce8f56c3e1d82386142ff9169c79f7cbb9e102f9142330de00e4b6684c
-purpose: Equip AI-assisted Signals development with focused output handling and source-evidence review
-  while Signals owns research and project opportunities.
+purpose: 'Example: select focused output handling and source review for an evidence-producing application.'
 environment:
-  language: Node.js >=24.19.0 <25 / TypeScript
-  package_manager: npm >=12.1.0 <13; exact package lock
-  checks:
-  - npm run verify
-  snapshot_scope: Public source inspection at the recorded revision; peer greenfield owner may supersede
-    it.
+  snapshot_scope: Historical source provenance retained for compatibility; no current consumer runtime
+    or personal policy is declared.
 priorities:
-- Preserve immutable evidence, private research state and historical policy during AI-assisted changes.
-- Use focused guidance at the relevant engineering action; no candidate execution by Signals.
+- Preserve immutable evidence, private state and historical policy.
+- Use focused guidance at the relevant engineering action, with no candidate execution.
 policy:
   trials:
   - context-output
@@ -34,12 +29,11 @@ policy:
   schedule: false
 selections:
 - option: native
-  reason: Signals already owns native research, evidence validation, its CLI and Corpus.
+  reason: Consumer instructions own research, evidence validation and storage.
   concern: ordinary-work
 - option: context-output
-  reason: Give the reciprocal consumer one narrow output capability, invoked explicitly before its command.
+  reason: Invoke the narrow output capability explicitly before a verbose command.
   concern: output-handling
 - option: research-evidence
-  reason: Use at source assessment and interchange boundaries while preserving producer mode and missing
-    revisions.
+  reason: Use focused source review while preserving producer mode and missing revisions.
   concern: research

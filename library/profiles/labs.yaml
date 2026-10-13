@@ -1,6 +1,6 @@
 schema_version: 1
 id: labs
-project: https://github.com/pradeeptathineni/labs
+project: null
 snapshot:
   revision: 5967c563e783e190ee8723a4446dd700c588870b
   files:
@@ -14,18 +14,13 @@ snapshot:
     sha256: 2e6295847ae1a69cc104cfde02c44599fb23e8b2964b6c0d1e8997f1caf8c92d
   - path: niches/code/devops/orchestration/kubernetes/ckad/ck-x/ckad-002/lab.json
     sha256: b6587576836557e75225ab1c3883a3c0e7c317ce7a2e40e2602808b88971e123
-purpose: Equip AI-assisted Labs metadata, site and source-review tasks using the project's own commands
-  and a focused evidence route.
+purpose: 'Example: add focused source-evidence guidance to metadata and catalog work.'
 environment:
-  language: Python metadata tooling; static HTML/CSS/JavaScript catalog
-  checks:
-  - python3 .meta/scripts/catalog.py --check
-  - python3 .meta/scripts/lab_sync.py --check
-  - python3 -m unittest discover -s .meta/tests
-  snapshot_scope: Committed public project files; no runtime probe.
+  snapshot_scope: Historical source provenance retained for compatibility; no current consumer runtime
+    or personal policy is declared.
 priorities:
-- Preserve project-owned exercise status and source notices during AI-assisted edits.
-- Read research guidance only at an actual evidence or permission decision.
+- Preserve consumer-owned exercise status and source notices.
+- Read research guidance at an actual evidence or permission decision.
 policy:
   trials:
   - context-tdd
@@ -33,8 +28,9 @@ policy:
   schedule: false
 selections:
 - option: native
-  reason: The project already owns metadata, source registry, catalog and status commands.
+  reason: Consumer-owned metadata, catalog and status commands remain the ordinary workflow.
   concern: ordinary-work
 - option: research-evidence
-  reason: Use only for source/license and environment decisions before an imported lab is run.
+  reason: Use focused guidance for source, license and environment decisions before imported material
+    runs.
   concern: research

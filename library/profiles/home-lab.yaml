@@ -1,6 +1,6 @@
 schema_version: 1
 id: home-lab
-project: https://github.com/pradeeptathineni/home-lab
+project: null
 snapshot:
   revision: 7768131dc21f5a3bb1e46aeebce16fe8972cc887
   files:
@@ -14,19 +14,13 @@ snapshot:
     sha256: 9dd25692271f38b2eae3a8306c22b2075d940efc41bd7fc1bfe95380d99dd1c1
   - path: docs/recovery.md
     sha256: 44f7beb54789f237a91ff8f85d8b38dde88250b0970dfa0aae84d0f488857631
-purpose: Equip AI-assisted home-lab changes with bounded diagnostics while leaving operations and recovery
-  authority with the project.
+purpose: 'Example: opt into bounded output diagnostics for a service-management project.'
 environment:
-  language: Python >=3.12
-  runtime: Mac host with Lima Linux VM; runtime state not probed
-  checks:
-  - python -m pytest
-  - python -m ruff check .
-  - ./bin/labctl validate
-  snapshot_scope: Committed public HEAD only; uncommitted changes and private runtime data were not inspected.
+  snapshot_scope: Historical source provenance retained for compatibility; no current consumer runtime
+    or personal policy is declared.
 priorities:
 - Keep private runtime data outside model context and public exports.
-- Use the existing project commands under task authority; no implicit service operation.
+- Use consumer-owned commands under task authority, with no implicit service operation.
 - Keep output handling explicit before verbose validation.
 policy:
   trials: []
@@ -34,8 +28,8 @@ policy:
   schedule: false
 selections:
 - option: native
-  reason: The existing labctl, tests and operations own service and recovery actions.
+  reason: Consumer operations, tests and recovery retain their authority.
   concern: ordinary-work
 - option: context-output
-  reason: Opt in before verbose validate/test commands to retain failures without repeating service actions.
+  reason: Opt in before verbose commands to retain failures without repeating service actions.
   concern: output-handling

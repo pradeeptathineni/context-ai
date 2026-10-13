@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Unbind five compatibility profile examples from maintainer project/runtime metadata. Preserve six IDs, ordered equipment choices, policy and snapshot identity, existing loader/state semantics and the untouched simulation example; retain originals before changes. Full personal policy migration remains incomplete.
+
 - Separate reusable Context guidance/mechanisms from custom consumers' current personal setups. Keep optional custom variants at their existing overlay paths and all six public profile examples byte-exact, with unchanged IDs, schemas, policy checks and delivery/refresh/undo behavior.
 - Preserve returning snapshot decreases and last-known counters through missing-field transitions in optional usage receipts; suppress misleading interval deltas.
 - Add opt-in native usage receipt parsing with missing/cumulative/reset boundaries; no hooks, collection, inferred costs or automatic model changes.
