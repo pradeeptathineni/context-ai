@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Share one thread-scope check and one counter-observation step between the `codex-exec` and `app-server` usage receipt parsers. Receipt JSON, refusal messages and their precedence, duplicate/discontinuity handling and last-event tokens are unchanged.
+
 - Reconcile the adoption guide with the caller-owned profile entry point. Keep legacy catalog-policy/history replay separate from data-only recurring files; no state migration or consumer refresh is performed.
 
 - Add `--library-profile FILE` for `select`, `plan`, `apply` and `refresh`: resolve and deliver recurring selections from a caller-owned schema-v1 profile file through the existing loader, catalog validation and native lifecycle. The file keeps its own ID, is never modified, and is exclusive of `--profile`, selections, overrides and `--state`; declared policy/snapshot is data only. `--profile`, the six public examples and standing-policy/history ownership are unchanged.

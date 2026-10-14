@@ -128,8 +128,28 @@ def receipt(raw, format, requested_model=None, requested_effort=None):
                     'signal': text(termination.get('signal')), 'trigger': text(termination.get('trigger'))}
             result['semantics'] = 'native-session-reported; not individual provider calls'
         elif format in ('codex-exec', 'app-server'):
-            previous, first, previous_identity, scope, turn = None, None, None, None, 0
+            previous, first, previous_identity, turn = None, None, None, 0
             last_known = dict.fromkeys(FIELDS)
+
+            def bind(thread, conflict):
+                if result['thread_id'] is not None and thread != result['thread_id']:
+                    raise Invalid(conflict)
+                result['thread_id'] = thread
+
+            def observe(identity, current, observation):
+                nonlocal previous, first, previous_identity
+                if identity == previous_identity:
+                    result['duplicates'] += 1
+                    return
+                previous_identity = identity
+                if decreasing(last_known, current):
+                    result['counter_discontinuity'] = True
+                last_known.update({key: value for key, value in current.items() if value is not None})
+                if first is None:
+                    first = current
+                result['observations'].append(observation)
+                result['tokens'] = previous = current
+
             for line in raw.splitlines():
                 if not line.strip():
                     continue
@@ -139,11 +159,7 @@ def receipt(raw, format, requested_model=None, requested_effort=None):
                 if format == 'codex-exec':
                     kind = event.get('type')
                     if kind == 'thread.started':
-                        thread = text(event.get('thread_id'))
-                        if scope is not None and thread != scope:
-                            raise Invalid('one receipt cannot combine threads')
-                        scope = thread
-                        result['thread_id'] = thread
+                        bind(text(event.get('thread_id')), 'one receipt cannot combine threads')
                     elif kind == 'turn.started':
                         turn += 1
                         result['status'] = 'interrupted'
@@ -152,17 +168,8 @@ def receipt(raw, format, requested_model=None, requested_effort=None):
                     elif kind in ('turn.completed', 'turn.failed'):
                         result['status'] = 'completed' if kind == 'turn.completed' else 'failed'
                         current = counters(event.get('usage'))
-                        identity = (turn, kind, json.dumps(current, sort_keys=True))
-                        if identity == previous_identity:
-                            result['duplicates'] += 1
-                            continue
-                        previous_identity = identity
-                        if decreasing(last_known, current):
-                            result['counter_discontinuity'] = True
-                        last_known.update({key: value for key, value in current.items() if value is not None})
-                        result['observations'].append({'turn_ordinal': turn, 'tokens': current})
-                        result['tokens'] = current
-                        previous = current
+                        observe((turn, kind, json.dumps(current, sort_keys=True)), current,
+                                {'turn_ordinal': turn, 'tokens': current})
                     # Item text, tool arguments and error messages are never retained.
                 else:
                     method = event.get('method')
@@ -171,36 +178,18 @@ def receipt(raw, format, requested_model=None, requested_effort=None):
                         thread = text(params.get('threadId'))
                         if thread is None:
                             raise Invalid('usage notification needs thread identity')
-                        if scope is not None and thread != scope:
-                            raise Invalid('one receipt cannot combine threads')
-                        scope = thread
-                        result['thread_id'] = thread
+                        bind(thread, 'one receipt cannot combine threads')
                         usage = object_value(params.get('tokenUsage'))
                         current = counters(usage.get('total'), camel=True)
                         last = counters(usage.get('last'), camel=True)
                         turn_id = text(params.get('turnId'))
-                        identity = (thread, turn_id, json.dumps([current, last], sort_keys=True))
-                        if identity == previous_identity:
-                            result['duplicates'] += 1
-                            continue
-                        previous_identity = identity
-                        if decreasing(last_known, current):
-                            result['counter_discontinuity'] = True
-                        last_known.update({key: value for key, value in current.items() if value is not None})
-                        if first is None:
-                            first = current
-                        result['observations'].append({'turn_id': turn_id, 'total': current, 'last': last})
-                        result['tokens'] = current
-                        previous = current
+                        observe((thread, turn_id, json.dumps([current, last], sort_keys=True)), current,
+                                {'turn_id': turn_id, 'total': current, 'last': last})
                     elif method in ('turn/started', 'turn/completed'):
                         params = object_value(event.get('params'))
-                        completed_thread = text(params.get('threadId'))
-                        if scope is not None and completed_thread != scope:
-                            raise Invalid('completion belongs to another thread')
-                        if completed_thread is None:
+                        bind(text(params.get('threadId')), 'completion belongs to another thread')
+                        if result['thread_id'] is None:
                             raise Invalid('turn notification needs thread identity')
-                        scope = completed_thread
-                        result['thread_id'] = completed_thread
                         state = object_value(params.get('turn')).get('status')
                         if method == 'turn/started':
                             result['status'] = 'interrupted'
