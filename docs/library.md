@@ -35,6 +35,37 @@ Codex and Claude receive thin routers to one pinned resource copy. New or change
 
 Direct upstream options, including a whole ECC harness, retain their own installation boundary. Context never silently executes that installer or delivers a duplicate copied skill. Inspect its selected revision, dependencies and scope, then follow its own installer under project authority.
 
+## Deliver from your own profile file
+
+`--library-profile FILE` resolves recurring selections from one caller-owned schema-v1 profile file (the [library profile schema](../schemas/library-profile.schema.json)) without adding it to Context's committed examples:
+
+```sh
+.venv/bin/python scripts/context_ai.py select --library-profile /absolute/my-profile.yaml
+.venv/bin/python scripts/context_ai.py plan --library-profile /absolute/my-profile.yaml --project /absolute/consumer --provider both
+.venv/bin/python scripts/context_ai.py apply --library-profile /absolute/my-profile.yaml --project /absolute/consumer --provider both
+.venv/bin/python scripts/context_ai.py refresh --library-profile /absolute/my-profile.yaml --project /absolute/consumer
+```
+
+The four entry points differ in what they read:
+
+| Entry point | Reads | Does |
+| --- | --- | --- |
+| `--profile` | A committed catalog profile selected by the basename of its argument | Legacy delivery of the six public examples, with optional `--state` effective selections. Unchanged. |
+| `--library-profile FILE` | That exact absolute regular file, whatever its name | Preview or explicitly authorized delivery of its selections. |
+| `packet --profile FILE` | A task profile | An advisory one-task packet; installs nothing. |
+| `--with CAPABILITY` | Registered resources | Delivers resources, with no recurring selection or reason record. |
+
+The file's own `id` is its identity, never its filename, and it need not match any committed profile; the same basename as a committed example selects only what the file declares. Reading uses the existing bounded safe YAML reader and schema, then the normal catalog checks: every option must exist, its concern must match, and no concern may have two owners. Failures are reported before any consumer or state write. The same selection delivers exactly the resources that the equivalent explicit `--with` selection would, through the same preview, edit protection, recovery and undo. `select` output carries an `origin` record (path and SHA-256 of the file) so the source of a selection is visible.
+
+Limits:
+
+- Only `select`, `plan`, `apply` and `refresh` accept the flag. It is refused with `--profile`, positional selections, `--lock`, `--with`, `--option`, `--brand`, `--design-procedure` and `--state`, and with every other command including `verify`, `export`, `undo`, `trial`, `evolve`, `decide`, `catalog`, `profiles`, `packet` and `handoff`.
+- The file is only read; Context never writes to it. Its declared `policy` and `snapshot` are preserved data, not permission: no trial, update, scheduling or installer is executed or authorized by them, and no state events apply to it.
+- An option delivered by direct upstream can be previewed, but `apply` refuses it as before; use its own native installer.
+- An applied consumer stays pinned to its exact installed lock. Editing the file changes nothing installed; run a new `plan`, then a separately authorized `apply`. `refresh` with the flag only previews. `verify`, `export` and `undo` use the installed lock, not the file, and roll back through the native lifecycle.
+
+This closes external recurring selection and delivery only. The six public profile examples still own the committed standing policy and snapshot identity, and private history and policy seeded by those records have not moved; full policy/history extraction remains incomplete.
+
 ## Use a controlled trial
 
 Trial planning is read-only. Execution accepts a registered recipe, an empty disposable directory and its reviewed isolation boundary. Arbitrary candidate commands are never accepted.

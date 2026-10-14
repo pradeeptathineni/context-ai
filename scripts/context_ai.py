@@ -40,7 +40,10 @@ def mapping(loader, node, deep=False):
 UniqueLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, mapping)
 
 def read_yaml(path):
-    data = path.read_text(encoding='utf-8')
+    return parse_yaml(path.read_text(encoding='utf-8'))
+
+def parse_yaml(data):
+    """Parse one captured text value with the same bounded safe YAML rules."""
     if len(data) > 2_000_000:
         raise Invalid('YAML exceeds bounded input size')
     if any(isinstance(e, yaml.AliasEvent) for e in yaml.parse(data)):
@@ -1169,6 +1172,7 @@ def main():
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
     parser.add_argument('--profile',type=Path,help='Task profile for packet, or catalog project profile for delivery')
+    parser.add_argument('--library-profile',type=Path,metavar='FILE',help='Exact caller-owned schema-v1 recurring profile file for select, plan, apply or refresh; declared policy is data only')
     parser.add_argument('--state',type=Path,help='Private local library assessment/evolution state')
     parser.add_argument('--input',type=Path,help='Exact pinned Signals evidence bundle')
     parser.add_argument('--sha256')
@@ -1193,7 +1197,7 @@ def main():
     if args.command=='handoff':
         if not all((args.input,args.project,args.allow_root,args.project_id,args.profile,args.source_ref)):
             raise Invalid('handoff requires request input and an explicit trusted local project/profile binding')
-        if any((args.loadouts,args.state,args.sha256,args.producer,args.commit,args.interest,args.fixture,args.wheel_cache,args.destination,args.execute,args.lock,args.brand,args.design_procedure,args.option,args.extras)):
+        if any((args.loadouts,args.library_profile,args.state,args.sha256,args.producer,args.commit,args.interest,args.fixture,args.wheel_cache,args.destination,args.execute,args.lock,args.brand,args.design_procedure,args.option,args.extras)):
             raise Invalid('handoff supports only read-only request and trusted binding arguments')
         from context_handoff import read_request, handle_request, public_result
         binding={'path':args.project,'allow_root':args.allow_root,'profile_id':str(args.profile),'source_ref':args.source_ref}
@@ -1204,6 +1208,25 @@ def main():
         return
     if args.allow_root is not None or args.project_id is not None or args.source_ref is not None or args.public:
         raise Invalid('trusted handoff binding arguments require the handoff command')
+    if args.library_profile is not None:
+        if args.command not in ('select','plan','apply','refresh'):
+            raise Invalid('--library-profile applies only to select, plan, apply and refresh')
+        if any((args.profile is not None,args.loadouts,args.state is not None,args.lock,args.extras,args.option,
+                args.brand is not None,args.design_procedure is not None,args.input is not None,args.sha256 is not None,
+                args.producer is not None,args.commit is not None,args.interest is not None,args.fixture,
+                args.wheel_cache is not None,args.destination is not None,args.execute)):
+            raise Invalid('--library-profile is exclusive of --profile, selections, --state, lock, extras, options, brand and design overrides')
+        from context_library import external_selection, external_delivery
+        if args.command=='select':
+            if args.project is not None or args.provider is not None:
+                raise Invalid('select with --library-profile takes no --project or --provider')
+            result=external_selection(args.library_profile)
+        else:
+            if not args.project:
+                raise Invalid('profile delivery needs --project')
+            result=external_delivery(args.library_profile,args.project,args.provider,args.command)
+        print(encoded(result).decode(),end='')
+        return
     if args.command in ('catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess'):
         from context_library import dispatch
         result=dispatch(args)

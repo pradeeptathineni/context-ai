@@ -6,7 +6,10 @@ import json
 from pathlib import Path
 import re
 
-from context_ai import ROOT, Invalid, read_yaml, encoded, digest, inside, atomic, validate_schema
+import yaml
+from jsonschema import ValidationError
+
+from context_ai import ROOT, Invalid, read_yaml, parse_yaml, encoded, digest, inside, atomic, validate_schema
 
 # Trusted local activation limit; candidate data cannot enlarge it.
 TRIALS_PER_ACTIVATION = 2
@@ -40,6 +43,11 @@ def profile(id):
     value = document('profiles/' + id)
     if value['id'] != id:
         raise Invalid('profile identity mismatch')
+    return checked_profile(value)
+
+
+def checked_profile(value):
+    """Option, concern and overlap checks shared by catalog and caller-owned profiles."""
     options = inventory()
     concerns = set()
     for choice in value['selections']:
@@ -55,6 +63,24 @@ def profile(id):
     # one live owner and are recovered through the frozen migration export.
     value.pop('suggestions', None)
     return value
+
+
+def external_profile(path):
+    """One exact caller-owned schema-v1 profile file; its basename carries no identity."""
+    path = Path(path)
+    if not path.is_absolute() or path.is_symlink() or not path.is_file():
+        raise Invalid('--library-profile needs an existing absolute regular profile file')
+    try:
+        raw = path.read_bytes()
+        value = parse_yaml(raw.decode('utf-8'))
+        validate_schema('library-profile', value)
+    except (OSError, UnicodeError, yaml.YAMLError):
+        raise Invalid('library profile file is unreadable or not valid YAML') from None
+    except ValidationError:
+        raise Invalid('library profile file does not match the library profile schema') from None
+    if not re.fullmatch(r'[a-z][a-z0-9-]{0,63}', value['id']):
+        raise Invalid('unsafe profile id')
+    return checked_profile(value), digest(raw)
 
 
 def profiles():
@@ -152,6 +178,21 @@ def selection(id, state=None):
         for update in e.get('profile_updates', []):
             if update['profile'] == id:
                 p['selections'] = update.get('selections')
+    return selected(p)
+
+
+def external_selection(path):
+    """Selection from a caller-owned profile file; no state events apply to it."""
+    p, raw = external_profile(path)
+    result = selected(p)
+    result['origin'] = {
+        'kind': 'library-profile-file', 'path': str(Path(path)), 'sha256': raw,
+        'authority': 'Selection input for this preview or explicitly authorized apply only; '
+                     'declared policy and snapshot are preserved data, not permission or catalog identity.'}
+    return result
+
+
+def selected(p):
     opts = inventory()
     # Only the final effective choices are checked, so a superseded historical
     # choice absent from the current catalog cannot block a valid later update.
@@ -184,6 +225,14 @@ def selection(id, state=None):
 
 
 def delivery(id, project, provider=None, action='plan', state=None):
+    return deliver(lambda: selection(id, state), project, provider, action)
+
+
+def external_delivery(path, project, provider=None, action='plan'):
+    return deliver(lambda: external_selection(path), project, provider, action)
+
+
+def deliver(pick, project, provider, action):
     from context_ai import resolve, plan, apply, installed
     if action not in ('plan', 'apply', 'refresh'):
         raise Invalid('unsupported profile delivery action')
@@ -191,7 +240,8 @@ def delivery(id, project, provider=None, action='plan', state=None):
     if not project.is_absolute() or not project.is_dir() or project.is_symlink():
         raise Invalid('delivery needs an existing absolute consumer directory')
     project=project.resolve()
-    picked = selection(id, state)
+    picked = pick()
+    id = picked['profile']['id']
     if picked['direct_upstream'] and action == 'apply':
         raise Invalid('direct-upstream profile requires its inspected native installer; no implicit execution')
     previous = installed(project)

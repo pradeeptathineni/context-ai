@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Add `--library-profile FILE` for `select`, `plan`, `apply` and `refresh`: resolve and deliver recurring selections from a caller-owned schema-v1 profile file through the existing loader, catalog validation and native lifecycle. The file keeps its own ID, is never modified, and is exclusive of `--profile`, selections, overrides and `--state`; declared policy/snapshot is data only. `--profile`, the six public examples and standing-policy/history ownership are unchanged.
+
 - Unbind five compatibility profile examples from maintainer project/runtime metadata. Preserve six IDs, ordered equipment choices, policy and snapshot identity, existing loader/state semantics and the untouched simulation example; retain originals before changes. Full personal policy migration remains incomplete.
 
 - Separate reusable Context guidance/mechanisms from custom consumers' current personal setups. Keep optional custom variants at their existing overlay paths and all six public profile examples byte-exact, with unchanged IDs, schemas, policy checks and delivery/refresh/undo behavior.
