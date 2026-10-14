@@ -99,7 +99,18 @@ def events(state):
     if directory.exists():
         for path in sorted(directory.glob('*.json')):
             inside(state, path.relative_to(state).as_posix())
-            result.append(json.loads(path.read_text()))
+            try:
+                value = json.loads(path.read_text())
+            except ValueError:
+                raise Invalid('malformed event file ' + path.name) from None
+            if not isinstance(value, dict):
+                raise Invalid('malformed event file ' + path.name)
+            updates = value.get('profile_updates', [])
+            if not isinstance(updates, list) or not all(
+                    isinstance(u, dict) and isinstance(u.get('profile'), str) and u['profile']
+                    for u in updates):
+                raise Invalid('malformed profile update identity in event file ' + path.name)
+            result.append(value)
     return result
 
 
@@ -140,12 +151,23 @@ def selection(id, state=None):
     for e in events(state):
         for update in e.get('profile_updates', []):
             if update['profile'] == id:
-                p['selections'] = update['selections']
+                p['selections'] = update.get('selections')
     opts = inventory()
+    # Only the final effective choices are checked, so a superseded historical
+    # choice absent from the current catalog cannot block a valid later update.
+    if not isinstance(p['selections'], list):
+        raise Invalid('effective profile selections must be a list')
     loads, capabilities, direct = [], [], []
     concerns = set()
     for choice in p['selections']:
+        if (not isinstance(choice, dict) or set(choice) != {'option', 'reason', 'concern'}
+                or not all(isinstance(v, str) and v for v in choice.values())):
+            raise Invalid('effective profile has a malformed selection')
+        if choice['option'] not in opts:
+            raise Invalid('effective profile selects an unknown option')
         row = opts[choice['option']]
+        if choice['concern'] != row['concern']:
+            raise Invalid('effective profile selection has a mismatched concern')
         if row['concern'] in concerns:
             raise Invalid('effective profile has overlapping owners')
         concerns.add(row['concern'])
