@@ -34,6 +34,8 @@ def decide(admitted, need):
     for candidate in admitted['recommendations']:
         reasons=[];blocked=[]
         supported=[id for id in candidate['claim_ids'] if claims[id]['status'] in ('observed','supported')]
+        # Only this candidate's own cited claims count; a Context assessment never revises claim status.
+        contradicted=[id for id in candidate['claim_ids'] if claims[id]['status']=='contradicted']
         item=advice.get(candidate['id'])
         unknown=[]
         # Context's own inspection outranks producer-reported facts; both stay visible.
@@ -72,15 +74,18 @@ def decide(admitted, need):
         if addresses is None:
             unknown.append('capability')
             reasons.append('no recommendation states which capability this addresses; map it before a trial')
+        if contradicted:
+            reasons.append('cited contradicted claims '+', '.join(contradicted)+'; study pending reassessment before any trial')
         if blocked:
             decision='reject' if any(not b.startswith('no supported') for b in blocked) else 'study'
-        elif unknown:
+        elif unknown or contradicted:
             decision='study'
         else:
             # Adoption needs a passing project trial; evidence alone earns a trial, never adoption.
             decision='trial'
         decisions.append({'candidate':candidate['id'],'name':candidate['name'],'decision':decision,
                           'blocked_by':blocked,'notes':reasons,'supporting_claims':supported,
+                          'contradicted_claims':contradicted,
                           'context_assessment':assessment,
                           'verification':{'state':verification,'fact_origin':origin,
                                           'unverified_constraints':gaps if assessment else constrained},

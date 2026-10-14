@@ -135,5 +135,137 @@ class Adoption(unittest.TestCase):
         self.assertIn('procedures/current-docs.md',files)
         self.assertFalse(any('signals' in p.lower() for p in files if p.startswith(('scripts/','signals/'))))
 
+BAD='claim-urllib3-bad'
+GOOD='claim-urllib3'
+NEED={'capability':'http-retry'}
+
+class CitedContradictions(unittest.TestCase):
+    """Authored copies of the recommendation fixture; the shipped fixture is only read."""
+    def bundle(self,cited=(GOOD,BAD),disposition='consider',candidate='cand-urllib3'):
+        bundle=json.loads(FIXTURE.read_text())
+        bundle['claims'].append({'id':BAD,'text':'urllib3 Retry ignores status_forcelist for requests adapters.',
+                                 'source_ids':['src-urllib3'],'status':'contradicted'})
+        target=[x for x in bundle['candidates'] if x['id']==candidate][0]
+        target['claim_ids']=list(cited);target['disposition']=disposition
+        return bundle
+
+    def admit(self,bundle):
+        tmp=tempfile.TemporaryDirectory();self.addCleanup(tmp.cleanup)
+        path=Path(tmp.name)/'bundle.json';path.write_text(json.dumps(bundle))
+        return admit(path)
+
+    def verdicts(self,admitted,need=NEED):
+        return {d['candidate']:d for d in decide(admitted,need)['decisions']}
+
+    def assertVisible(self,d,ids):
+        self.assertEqual(d['contradicted_claims'],ids)
+        self.assertIn('cited contradicted claims '+', '.join(ids)+'; study pending reassessment before any trial',d['notes'])
+
+    def test_admitted_mixed_citations_study_for_every_lower_disposition_in_both_orders(self):
+        for disposition in ('consider','defer','reject'):
+            for cited in ((GOOD,BAD),(BAD,GOOD)):
+                with self.subTest(disposition=disposition,cited=cited):
+                    d=self.verdicts(self.admit(self.bundle(cited,disposition)))['cand-urllib3']
+                    self.assertEqual(d['decision'],'study');self.assertEqual(d['blocked_by'],[])
+                    self.assertEqual(d['supporting_claims'],[GOOD]);self.assertVisible(d,[BAD])
+                    self.assertEqual(d['producer_disposition'],disposition)
+
+    def test_admission_still_refuses_producer_adopt_or_trial_for_the_same_claims(self):
+        for disposition in ('adopt','trial'):
+            with self.subTest(disposition=disposition),self.assertRaisesRegex(c.Invalid,'contradicted claims block'):
+                self.admit(self.bundle(disposition=disposition))
+
+    def test_positive_only_citation_still_earns_trial_with_no_adverse_claims(self):
+        admitted=self.admit(self.bundle((GOOD,)))
+        d=self.verdicts(admitted)['cand-urllib3']
+        self.assertEqual(d['decision'],'trial');self.assertEqual(d['contradicted_claims'],[])
+        self.assertFalse([n for n in d['notes'] if 'contradicted' in n])
+        original=self.verdicts(admit(FIXTURE))
+        self.assertEqual(original['cand-urllib3']['decision'],'trial');self.assertEqual(original['cand-urllib3']['contradicted_claims'],[])
+
+    def test_actual_fit_or_exclusion_rejection_is_preserved_with_adverse_ids_visible(self):
+        admitted=self.admit(self.bundle())
+        for need,text in (({**NEED,'runtimes':['node']},'runtime python not in project runtimes node'),
+                          ({**NEED,'licenses_allowed':['GPL-3.0-only']},'license MIT not in allowed licenses GPL-3.0-only'),
+                          ({**NEED,'excluded':['cand-urllib3']},'excluded by project'),
+                          ({**NEED,'excluded':['urllib3 Retry']},'excluded by project'),
+                          ({'capability':'rate-limiting'},'addresses http-retry, not rate-limiting')):
+            with self.subTest(need=need):
+                d=self.verdicts(admitted,need)['cand-urllib3']
+                self.assertEqual(d['decision'],'reject');self.assertIn(text,d['blocked_by']);self.assertVisible(d,[BAD])
+
+    def test_uncited_and_other_candidate_contradictions_do_not_affect_a_candidate(self):
+        # BAD is in the bundle but cited by no candidate
+        d=self.verdicts(self.admit(self.bundle((GOOD,))))
+        self.assertEqual(d['cand-urllib3']['decision'],'trial')
+        # BAD is cited only by cand-popular; cand-urllib3 and cand-rumor stay isolated
+        bundle=self.bundle((GOOD,),candidate='cand-popular')
+        popular=[x for x in bundle['candidates'] if x['id']=='cand-popular'][0]
+        popular['claim_ids']=['claim-popular',BAD]
+        d=self.verdicts(self.admit(bundle))
+        self.assertEqual((d['cand-popular']['decision'],d['cand-popular']['contradicted_claims']),('study',[BAD]))
+        self.assertEqual((d['cand-urllib3']['decision'],d['cand-urllib3']['contradicted_claims'],d['cand-urllib3']['supporting_claims']),('trial',[],[GOOD]))
+        self.assertEqual((d['cand-rumor']['decision'],d['cand-rumor']['contradicted_claims']),('study',[]))
+        for other in ('cand-urllib3','cand-rumor'):
+            self.assertFalse([n for n in d[other]['notes'] if BAD in n])
+
+    def test_context_assessment_cannot_clear_a_cited_contradiction(self):
+        need={'capability':'http-retry','runtimes':['python'],'licenses_allowed':['MIT'],
+              'assessments':{'cand-urllib3':{'capability':'http-retry','revision':'2.8.0','facts':{'runtime':'python','license':'MIT'},
+                                             'verified':['installed Retry signature']}}}
+        bundle=self.bundle()
+        admitted=self.admit(bundle)
+        d=self.verdicts(admitted,need)['cand-urllib3']
+        self.assertEqual((d['decision'],d['verification']['state']),('study','complete'));self.assertVisible(d,[BAD])
+        self.assertEqual(d['context_assessment'],need['assessments']['cand-urllib3'])
+        # without producer recommendations the assessment is the only capability mapping, and still cannot bypass
+        del bundle['extensions']['signals.recommendations']
+        d=self.verdicts(self.admit(bundle),need)['cand-urllib3']
+        self.assertEqual(d['decision'],'study');self.assertVisible(d,[BAD])
+        # the same assessment on a positive-only citation does earn a trial
+        del bundle['extensions']
+        bundle['candidates'][1]['claim_ids']=[GOOD]
+        d=self.verdicts(self.admit(bundle),need)['cand-urllib3']
+        self.assertEqual((d['decision'],d['contradicted_claims']),('trial',[]))
+
+    def test_no_support_and_uncertain_claims_keep_their_existing_meaning(self):
+        # contradicted-only citation: still the existing no-support study, with the adverse claim visible
+        admitted=self.admit(self.bundle((BAD,)))
+        d=self.verdicts(admitted)['cand-urllib3']
+        self.assertEqual((d['decision'],d['supporting_claims']),('study',[]))
+        self.assertEqual(d['blocked_by'],['no supported or observed claim']);self.assertVisible(d,[BAD])
+        # a real fit failure on the same candidate still rejects
+        self.assertEqual(self.verdicts(admitted,{**NEED,'runtimes':['node']})['cand-urllib3']['decision'],'reject')
+        # uncertain is neither support nor contradiction
+        d=self.verdicts(self.admit(self.bundle(('claim-rumor',))))
+        self.assertEqual((d['cand-urllib3']['decision'],d['cand-urllib3']['contradicted_claims']),('study',[]))
+        self.assertEqual(d['cand-urllib3']['blocked_by'],['no supported or observed claim'])
+        d=self.verdicts(self.admit(self.bundle((GOOD,'claim-rumor'))))['cand-urllib3']
+        self.assertEqual((d['decision'],d['contradicted_claims'],d['supporting_claims']),('trial',[],[GOOD]))
+        # missing capability mapping stays study, now alongside an adverse claim
+        bundle=self.bundle();del bundle['extensions']['signals.recommendations']
+        d=self.verdicts(self.admit(bundle))['cand-urllib3']
+        self.assertEqual(d['decision'],'study');self.assertVisible(d,[BAD])
+        self.assertTrue([n for n in d['notes'] if 'no recommendation states which capability' in n])
+
+    def test_inputs_and_unchanged_output_fields_are_preserved(self):
+        fixture_bytes=FIXTURE.read_bytes()
+        tmp=tempfile.TemporaryDirectory();self.addCleanup(tmp.cleanup)
+        path=Path(tmp.name)/'bundle.json';path.write_text(json.dumps(self.bundle()))
+        before=path.read_bytes()
+        admitted=admit(path);need={**NEED,'runtimes':['python'],'assessments':{}}
+        admitted_before=copy.deepcopy(admitted);need_before=copy.deepcopy(need)
+        result=decide(admitted,need)
+        self.assertEqual(admitted,admitted_before);self.assertEqual(need,need_before)
+        self.assertEqual(path.read_bytes(),before);self.assertEqual(FIXTURE.read_bytes(),fixture_bytes)
+        self.assertEqual(result['adoption_rule'],'adopt only after the trial passes in this project')
+        self.assertEqual(result['trial_authorization'],'not granted here; a trial needs the project owner\'s authority and a separate plan')
+        self.assertEqual(result['authority'],'Advice only; installation needs a separate plan and user/project authority.')
+        self.assertIs(result['activation'],False)
+        d=[x for x in result['decisions'] if x['candidate']=='cand-urllib3'][0]
+        self.assertEqual(set(d),{'candidate','name','decision','blocked_by','notes','supporting_claims','contradicted_claims','context_assessment',
+                                 'verification','producer_disposition','producer_signal','producer_action','producer_intrinsic_strength'})
+        self.assertEqual((d['producer_action'],d['producer_intrinsic_strength']),('wrap','medium'))
+
 if __name__=='__main__':
     unittest.main()
