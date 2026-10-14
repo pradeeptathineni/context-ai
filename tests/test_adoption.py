@@ -159,7 +159,16 @@ class CitedContradictions(unittest.TestCase):
 
     def assertVisible(self,d,ids):
         self.assertEqual(d['contradicted_claims'],ids)
-        self.assertIn('cited contradicted claims '+', '.join(ids)+'; study pending reassessment before any trial',d['notes'])
+        listed='cited contradicted claims '+', '.join(ids)
+        pending=listed+'; study pending reassessment before any trial'
+        rejected=listed+'; rejected on project fit or exclusion (see blocked_by), not pending reassessment'
+        # the note must describe the final result: pending study only for study, never for a fit/exclusion reject
+        if d['decision']=='reject':
+            self.assertIn(rejected,d['notes']);self.assertNotIn(pending,d['notes'])
+            self.assertFalse([n for n in d['notes'] if 'study pending' in n])
+        else:
+            self.assertEqual(d['decision'],'study')
+            self.assertIn(pending,d['notes']);self.assertNotIn(rejected,d['notes'])
 
     def test_admitted_mixed_citations_study_for_every_lower_disposition_in_both_orders(self):
         for disposition in ('consider','defer','reject'):
@@ -247,6 +256,37 @@ class CitedContradictions(unittest.TestCase):
         d=self.verdicts(self.admit(bundle))['cand-urllib3']
         self.assertEqual(d['decision'],'study');self.assertVisible(d,[BAD])
         self.assertTrue([n for n in d['notes'] if 'no recommendation states which capability' in n])
+
+    def test_verification_scope_separates_unconstrained_from_constrained_assessments(self):
+        admitted=self.admit(self.bundle((GOOD,)))
+        assessment={'capability':'http-retry','revision':'2.8.0','verified':['installed Retry signature']}
+        def verdict(need,facts=None):
+            a={**assessment,**({'facts':facts} if facts else {})}
+            return self.verdicts(admitted,{**need,'assessments':{'cand-urllib3':a}})['cand-urllib3']
+        # capability-only and unconstrained: state is complete, but covers no license/runtime fact
+        d=verdict(NEED)
+        self.assertEqual((d['decision'],d['verification']['state'],d['verification']['unverified_constraints']),('trial','complete',[]))
+        self.assertEqual(d['verification']['fact_origin'],{'license':'producer','runtime':'producer'})
+        scope=d['verification']['scope']
+        self.assertIn('capability assessment only',scope);self.assertIn('no runtime or license constraint declared',scope)
+        self.assertIn('not whole-candidate validation',scope)
+        # constrained and fully inspected: same state, but the scope names the declared constraints
+        constrained=verdict({**NEED,'runtimes':['python'],'licenses_allowed':['MIT']},{'runtime':'python','license':'MIT'})
+        self.assertEqual(constrained['verification']['state'],'complete')
+        self.assertIn('declared constraints runtime, license only',constrained['verification']['scope'])
+        self.assertIn('not runtime, privacy or legal assurance',constrained['verification']['scope'])
+        self.assertNotEqual(constrained['verification']['scope'],scope)
+        # constrained but not inspected: state stays partial with the same scope wording
+        partial=verdict({**NEED,'runtimes':['python']})
+        self.assertEqual((partial['verification']['state'],partial['verification']['unverified_constraints']),('partial',['runtime']))
+        self.assertIn('declared constraints runtime only',partial['verification']['scope'])
+        # no assessment: nothing verified, and the scope says so
+        none=self.verdicts(admitted)['cand-urllib3']
+        self.assertEqual(none['verification']['state'],'none')
+        self.assertEqual(none['verification']['scope'],'no Context assessment recorded; nothing verified by Context')
+        # the descriptor is output only: what was checked stays in context_assessment
+        self.assertEqual(d['context_assessment'],assessment)
+        self.assertEqual(set(d['verification']),{'state','fact_origin','unverified_constraints','scope'})
 
     def test_inputs_and_unchanged_output_fields_are_preserved(self):
         fixture_bytes=FIXTURE.read_bytes()

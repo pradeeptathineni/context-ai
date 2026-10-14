@@ -29,6 +29,13 @@ At a consequential tooling or workflow choice, use the standard skill when avail
 
 [Codex](../providers/openai/codex.md) and [Claude Code](../providers/anthropic/claude-code.md) describe host-specific discovery and precedence. Model routing is advice; native host controls select the actual model and reasoning. A referenced file is loaded only when read. Restart or refresh the host's instruction discovery when necessary.
 
+## Reading adoption advice
+
+The adoption decision is advice over admitted evidence; it never installs, runs or authorizes a trial.
+
+- A candidate that cites contradicted claims and also fails a project fit or exclusion check is rejected. Its note says the claims are recorded but the rejection comes from `blocked_by`. Only a genuine study case, with no fit or exclusion failure, keeps the note that a study is pending reassessment before any trial.
+- `verification.state` reports whether the project's declared license and runtime constraints were inspected by Context. With no declared constraint, a capability-only assessment can be `complete` while license and runtime stay producer-reported or unknown. `verification.scope` states this boundary. It is not operational, privacy or legal assurance and not whole-candidate validation. `context_assessment.verified` remains the record of what was actually checked.
+
 ## Check adoption
 
 In a disposable project, exercise a [usage case](../evals/usage-cases.md) and inspect its transcript and final artifact. Check that a simple task uses no unnecessary library context, selected procedures are reachable, project instructions remain authoritative, and task checks actually ran. Report explicit reads separately from observed native discovery. If a source pointer is unavailable on another host, make the exact source available there before claiming it worked.

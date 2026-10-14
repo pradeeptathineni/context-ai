@@ -74,8 +74,6 @@ def decide(admitted, need):
         if addresses is None:
             unknown.append('capability')
             reasons.append('no recommendation states which capability this addresses; map it before a trial')
-        if contradicted:
-            reasons.append('cited contradicted claims '+', '.join(contradicted)+'; study pending reassessment before any trial')
         if blocked:
             decision='reject' if any(not b.startswith('no supported') for b in blocked) else 'study'
         elif unknown or contradicted:
@@ -83,12 +81,21 @@ def decide(admitted, need):
         else:
             # Adoption needs a passing project trial; evidence alone earns a trial, never adoption.
             decision='trial'
+        if contradicted:
+            # Explain the adverse claims against the final result: a fit/exclusion rejection is not a pending study.
+            outcome='; rejected on project fit or exclusion (see blocked_by), not pending reassessment' if decision=='reject' else '; study pending reassessment before any trial'
+            reasons.append('cited contradicted claims '+', '.join(contradicted)+outcome)
+        # Describes what 'state' covers; it never adds a check or changes the state.
+        scope=('no Context assessment recorded; nothing verified by Context' if not assessment else
+               'declared constraints '+', '.join(constrained)+' only; capability assessment, not runtime, privacy or legal assurance and not whole-candidate validation' if constrained else
+               'capability assessment only; no runtime or license constraint declared, so state covers no such fact; not whole-candidate validation')
         decisions.append({'candidate':candidate['id'],'name':candidate['name'],'decision':decision,
                           'blocked_by':blocked,'notes':reasons,'supporting_claims':supported,
                           'contradicted_claims':contradicted,
                           'context_assessment':assessment,
                           'verification':{'state':verification,'fact_origin':origin,
-                                          'unverified_constraints':gaps if assessment else constrained},
+                                          'unverified_constraints':gaps if assessment else constrained,
+                                          'scope':scope},
                           'producer_disposition':candidate['disposition'],
                           'producer_signal':candidate.get('signal'),
                           'producer_action':item['action'] if item else None,
