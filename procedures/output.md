@@ -2,6 +2,8 @@
 
 Before a verbose command or large file read, use native file/search tools with explicit limits. Keep raw bytes in a local file and retrieve numbered evidence. This procedure never installs a filter, rewrites commands or grants execution authority.
 
+For discovery or migration, start at the relevant project roots and name a reason to expand. Keep detailed inventories and hash manifests on disk; return totals and a few targeted examples. Narrowing discovery or output never replaces the full integrity checks required for selected areas. Tool output estimates and caps do not measure model-token consumption.
+
 The delivered standard-library operation offers the same workflow on either host:
 
 ```sh

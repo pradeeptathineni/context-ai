@@ -15,6 +15,16 @@ import context_library as lib
 
 
 class ProfileExamples(unittest.TestCase):
+    # Keep the historical fixture intact; only these independently reviewed
+    # guidance edits change delivered bytes, never selection or policy fields.
+    reviewed_guidance = {
+        'overlays/orchestration.md': (
+            '3368af30d805e364dde687b1ea486c145294d27e621c8996d894a440a295eafb',
+            '8faeebda386d536a2946dacc5255a7797204677a2ad78e88a81f421b5a66914f'),
+        'procedures/output.md': (
+            '3b340b43899016608c28ff703b31ffd44127fce8304d1213f6bb538928f25fcd',
+            '2ecff0a89772387db26f7032ecbf8ec7efb3700947a71b15042fea3132325c3f'),
+    }
     @classmethod
     def setUpClass(cls):
         cls.baseline = json.loads((ROOT / 'tests/fixtures/profile-compatibility-v1.json').read_text())['profiles']
@@ -37,7 +47,7 @@ class ProfileExamples(unittest.TestCase):
                 self.assertEqual(c.digest(c.encoded(p['snapshot'])), expected['snapshot_sha256'])
                 self.assertEqual([{'option': x['option'], 'concern': x['concern']} for x in p['selections']], expected['selections'])
 
-    def test_same_selection_delivers_same_resource_bytes(self):
+    def test_same_selection_delivers_current_reviewed_resource_bytes(self):
         for id, expected in self.baseline.items():
             with self.subTest(profile=id):
                 s = lib.selection(id)
@@ -45,9 +55,15 @@ class ProfileExamples(unittest.TestCase):
                 self.assertEqual(s['capabilities'], expected['capabilities'])
                 self.assertEqual([x['id'] for x in s['direct_upstream']], expected['direct_upstream_ids'])
                 lock, files = c.source_resolution(s['loadouts'], 'both', extras=s['capabilities'])
-                self.assertEqual(lock['resources'], expected['resource_hashes'])
-                self.assertEqual(lock['source_tree_sha256'], expected['source_tree_sha256'])
-                self.assertEqual({name: c.digest(raw) for name, raw in files.items()}, expected['resource_hashes'])
+                self.assertEqual(c.digest(c.encoded(expected['resource_hashes'])), expected['source_tree_sha256'])
+                reviewed = expected['resource_hashes'].copy()
+                for name, (historical, current) in self.reviewed_guidance.items():
+                    if name in reviewed:
+                        self.assertEqual(reviewed[name], historical)
+                        reviewed[name] = current
+                self.assertEqual(lock['resources'], reviewed)
+                self.assertEqual(lock['source_tree_sha256'], c.digest(c.encoded(reviewed)))
+                self.assertEqual({name: c.digest(raw) for name, raw in files.items()}, reviewed)
 
     def test_metadata_changes_preserve_trial_identity_but_policy_and_snapshot_do_not(self):
         current = lib.profile('context')
