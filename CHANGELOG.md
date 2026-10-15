@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Add Runner 0.16.2 as a conditional direct-upstream catalog option. Preview retains official Intel unavailability, unverified external-session coverage and first-launch permission/trust limits; selection authorizes no installation, port, runtime action or consumer refresh.
+
 - Share one thread-scope check and one counter-observation step between the `codex-exec` and `app-server` usage receipt parsers. Receipt JSON, refusal messages and their precedence, duplicate/discontinuity handling and last-event tokens are unchanged.
 
 - Reconcile the adoption guide with the caller-owned profile entry point. Keep legacy catalog-policy/history replay separate from data-only recurring files; no state migration or consumer refresh is performed.

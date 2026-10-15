@@ -728,3 +728,50 @@ options:
     - Later Context 02d4061 was inspected, not executed; no current-source reciprocal rerun claimed.
     checked_ref: 895c86cd68e970eb0f83adbcce3f9996f6ea3b18
     grade: 2
+- id: runner
+  name: Runner native agent-session control
+  purpose: Inspect a native terminal and mission-control surface for explicitly Runner-owned CLI sessions.
+  concern: agent-session-control
+  delivery:
+    kind: direct-upstream
+    id: runner@0.16.2
+  upstream:
+    url: https://github.com/yicheng47/runner
+    revision: feb2f6804f7f0f8d35e89c2a76e6088b4df3ce43
+    license: MIT
+    license_source: https://github.com/yicheng47/runner/blob/feb2f6804f7f0f8d35e89c2a76e6088b4df3ce43/LICENSE
+  domains:
+  - coding-agents
+  - native-gui
+  - coordination
+  requirements:
+  - Official v0.16.2 artifacts target macOS arm64 or Windows x64.
+  - Review exact host compatibility and first-launch destinations before an authorized isolated trial.
+  permissions:
+  - Source-only option; no installer, provider call, trust seeding, skill, hook or permission change is authorized.
+  references:
+  - https://github.com/yicheng47/runner/releases/tag/v0.16.2
+  - https://github.com/yicheng47/runner/blob/feb2f6804f7f0f8d35e89c2a76e6088b4df3ce43/script/bundle-mac
+  - https://github.com/yicheng47/runner/blob/feb2f6804f7f0f8d35e89c2a76e6088b4df3ce43/crates/runner-core/src/protocol/permissions.rs
+  - https://github.com/yicheng47/runner/blob/feb2f6804f7f0f8d35e89c2a76e6088b4df3ce43/crates/runner-daemon/src/runtimes/codex/mod.rs
+  status: conditional
+  limits:
+  - 'macOS x86_64: unavailable from official v0.16.2 artifacts; source compilation is unproven.'
+  - Compatibility is a source-scoped note, not automatic host detection or permission to build a port.
+  - Existing external-session attachment and accurate live coverage are unverified.
+  - Stop terminates an owned process; resume starts a new process with a recorded conversation key.
+  - First launch can install CLI links and native skills; mission access defaults to Bypass.
+  - Codex native trust seeding targets and guards are not closed by this inspection.
+  - No candidate execution, independent runtime acceptance or comparative benefit is established.
+  assessments:
+  - scope: Release-source inspection on 2026-10-15; not an installation or runtime result.
+    evidence:
+    - Exact release Git blobs and SHA-256 identities checked for 45 selected source files.
+    - Rust declares both macOS targets, but release packaging hard-codes and checks arm64 binaries.
+    strengths:
+    - Upstream owns PTY sessions, provider resume plans and mission coordination.
+    weaknesses:
+    - Official Intel packaging is unavailable and arbitrary external-process coverage is unverified.
+    - First-launch installers, permission defaults and native trust seeding need separate action review.
+    checked_ref: feb2f6804f7f0f8d35e89c2a76e6088b4df3ce43
+    grade: null

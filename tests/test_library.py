@@ -6,6 +6,8 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+
+import yaml
 from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -248,6 +250,47 @@ class PersonalLibrary(unittest.TestCase):
         self.state.unlink()
         with self.assertRaisesRegex(c.Invalid, 'unknown interest'):
             lib.intake(ROOT / 'tests/fixtures/evidence-bundle-v1.fixture.json', 'a' * 64, None, None, 'invented')
+
+    def test_runner_catalog_keeps_source_and_intel_limits_visible(self):
+        row = next(o for o in lib.catalog_view()['options'] if o['id'] == 'runner')
+        self.assertEqual(row['delivery']['kind'], 'direct-upstream')
+        self.assertEqual(row['status'], 'conditional')
+        self.assertEqual(row['upstream']['revision'], 'feb2f6804f7f0f8d35e89c2a76e6088b4df3ce43')
+        self.assertEqual(row['state'], 'suggested')
+        self.assertIn('macOS x86_64: unavailable from official v0.16.2 artifacts; source compilation is unproven.', row['limits'])
+        self.assertIn('Existing external-session attachment and accurate live coverage are unverified.', row['limits'])
+        self.assertIn('Codex native trust seeding targets and guards are not closed by this inspection.', row['limits'])
+        self.assertTrue(all(a['grade'] is None for a in row['assessments']))
+        self.assertTrue(all(choice['option'] != 'runner' for p in lib.profiles().values()
+                            for choice in p['selections']))
+
+    def test_runner_preview_never_installs_or_refreshes_consumer(self):
+        project = Path(self.temp.name).resolve() / 'runner-consumer'
+        project.mkdir()
+        (project / 'AGENTS.md').write_bytes(b'Unmanaged user instructions\r\n')
+        profile = {'schema_version': 1, 'id': 'runner-preview', 'project': None,
+                   'snapshot': {'revision': None, 'files': []},
+                   'purpose': 'Authored source-only GUI option preview', 'environment': {},
+                   'priorities': ['preserve authority'],
+                   'policy': {'trials': [], 'updates': [], 'schedule': False},
+                   'selections': [{'option': 'runner', 'concern': 'agent-session-control',
+                                   'reason': 'Inspect compatibility without installing'},
+                                  {'option': 'context-output', 'concern': 'output-handling',
+                                   'reason': 'An otherwise deliverable control'}]}
+        path = Path(self.temp.name).resolve() / 'caller.yaml'
+        path.write_text(yaml.safe_dump(profile))
+        before = {p.name: p.read_bytes() for p in project.iterdir()}
+        for action in ('plan', 'refresh'):
+            preview = lib.external_delivery(path, project, action=action)
+            self.assertEqual(preview['external_delivery'][0]['status'], 'native-installer-required')
+            self.assertEqual(preview['selection']['direct_upstream'][0]['id'], 'runner')
+            self.assertIn('macOS x86_64: unavailable from official v0.16.2 artifacts; source compilation is unproven.',
+                          preview['selection']['direct_upstream'][0]['limits'])
+            self.assertEqual({p.name: p.read_bytes() for p in project.iterdir()}, before)
+        with self.assertRaisesRegex(c.Invalid, 'native installer; no implicit execution'):
+            lib.external_delivery(path, project, action='apply')
+        self.assertEqual({p.name: p.read_bytes() for p in project.iterdir()}, before)
+        self.assertEqual(yaml.safe_load(path.read_text()), profile)
 
 if __name__ == '__main__':
     unittest.main()
