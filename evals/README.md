@@ -21,6 +21,21 @@ For each scenario:
 
 Do not treat a single run or aggregate score as proof. Report distributions and practical effect sizes when sample size warrants them. Keep paid or nondeterministic calls out of required CI.
 
+## Explicit output constraints
+
+Freeze the constraint and counting scope with the task: for example, whole UTF-8 Markdown including headings/code, at most 250 words versus strictly under 120. Check the actual saved deliverable, not a plan, claimed count, intermediate draft or model self-report. [The word-limit check](../scripts/check_word_limit.py) uses Python Unicode whitespace splitting; choose a different task-defined method when required.
+
+```sh
+python3 scripts/check_word_limit.py README.md --max-words 250
+python3 scripts/check_word_limit.py final-answer.md --under-words 120
+```
+
+Exit 0 passes that bound, 1 fails it, and 2 means the input/arguments could not be checked. Use that exit status to gate the existing delivery step; a failed or unavailable check cannot authorize delivery as compliant. The JSON records the artifact SHA-256, bytes, count and exact comparison, without copying its text. A pass applies only to those bytes; any edit requires a fresh check. For readiness claims, tie every cited check to the artifact version it exercised: passes before the last relevant edit are historical, including syntax checks. Use exact check/version receipts when available; judging whether free prose misstates those facts still needs an explicit source review.
+
+When the ordinary workflow supports commands, save the final draft, run the relevant checks, and repair failures within the original task/permission/budget limits before delivery. Preserve required facts, voice, citations and formats; do not auto-truncate. Recheck the repaired artifact and its semantic requirements, then deliver that exact file or final-answer text. If the check is unavailable or the repair budget expires, report the gap instead of claiming compliance. No hook, model retry loop or automatic publication is installed by this example.
+
+A synthetic fail/pass/fail fixture establishes detection and invalidation after edits; it does not explain why generation missed a limit or demonstrate better model behavior. Word-count success alone is not task success. Keep personal styles and samples private; retain scoped trial evidence with its trial owner.
+
 ## Initial scenarios
 
 ### Complexity restraint

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Add an opt-in delivered-artifact word-limit checker with exact byte identities and strict/inclusive bounds; evaluation guidance separates mechanical checks from source review and requires repair/recheck before delivery.
+
 - Add Runner 0.16.2 as a conditional direct-upstream catalog option. Preview retains official Intel unavailability, unverified external-session coverage and first-launch permission/trust limits; selection authorizes no installation, port, runtime action or consumer refresh.
 
 - Share one thread-scope check and one counter-observation step between the `codex-exec` and `app-server` usage receipt parsers. Receipt JSON, refusal messages and their precedence, duplicate/discontinuity handling and last-event tokens are unchanged.
