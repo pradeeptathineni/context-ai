@@ -35,6 +35,28 @@ class LocalHandoff(unittest.TestCase):
     def run_request(self):
         return handoff.handle_request(self.request, bindings=self.bindings, provider='codex')
 
+    def test_trusted_principles_plan_preserves_full_qualification_without_public_leak(self):
+        folder=ROOT/'tests/fixtures/principles-export/qualified'
+        path=folder/'verification.json'
+        spec={'export':str(path),'sha256':engine.digest(path.read_bytes()),'revision':json.loads(path.read_text())['source_revision'],
+              'source_root':str(folder/'source'),'intent':'inspect'}
+        result=handoff.handle_request(self.request,bindings=self.bindings,provider='codex',principles=spec)
+        self.assertEqual(result['status'],'planned')
+        preview=result['_local']['engine_plan']['delivery']
+        self.assertEqual(preview['principles']['entries'][-1]['status'],'draft')
+        self.assertIn('qualified teacher or coach',preview['principles']['guidance'])
+        self.assertIn('superseded',preview['principles']['guidance'])
+        exported=json.dumps(handoff.public_result(result))
+        self.assertNotIn('qualified teacher or coach',exported)
+        self.assertNotIn('principles/bundle.json',exported)
+        self.assertEqual(list(self.project.iterdir()),[])
+        direct=engine.principles_delivery(self.project,spec)
+        engine.principles_delivery(self.project,spec,action='apply',expected_plan=direct['plan_id'])
+        self.request['method']='status'
+        status=handoff.handle_request(self.request,bindings=self.bindings,provider='codex',principles={**spec,'intent':'operational'})
+        self.assertEqual(status['reason_code'],'principles-repreview-required')
+        self.assertEqual(status['status'],'blocked')
+
     def test_plan_is_canonical_read_only_and_identity_tracks_input_bytes(self):
         (self.project / 'AGENTS.md').write_bytes(b'private instructions\r\n')
         with patch.object(engine, 'apply', side_effect=AssertionError('apply forbidden')):

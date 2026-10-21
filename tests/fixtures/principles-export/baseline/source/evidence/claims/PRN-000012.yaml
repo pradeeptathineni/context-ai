@@ -1,0 +1,44 @@
+schema_version: 4
+entry_id: PRN-000012
+reviewed_at: '2026-09-02'
+reviewer:
+  type: ai
+  identity: OpenAI Codex interactive evidence review
+  configuration:
+    configuration_ref: evals/configurations/corpus-claim-review-v1.yaml
+    configuration_sha256: a331e2351b4ab2ca18b520631ae91ac9afdef571026a2b3619ba0f3fa4aec7fc
+claims:
+- role: statement
+  claim_sha256: 57cb2870a3ad6b9a529a9f0cd6219bbf08655a6f30cbebca53c480856c1e5600
+  sources:
+  - source_id: SRC-000027
+    locators: [Why Write Small CLs, What is Small]
+  - source_id: SRC-000021
+    locators: [Separate Changes]
+  outcome: strong
+- role: why-1
+  claim_sha256: 4357bada0db31a83233703fd3f25f445ea2ebc38e88b65472c6997ab22a58ddc
+  sources:
+  - source_id: SRC-000027
+    locators: [Why Write Small CLs, What is Small]
+  - source_id: SRC-000021
+    locators: [Separate Changes]
+  outcome: strong
+- role: practice-1
+  claim_sha256: e9bbc63424b48a0ddc0ae64c3d60b5c906ad2494c5b4916af5e5f5d2a0bc335e
+  sources:
+  - source_id: SRC-000027
+    locators: [What is Small]
+  outcome: strong
+- role: practice-2
+  claim_sha256: fcc203749438aadb2556a7da6e5b774ff53313b4d44ba10b098e000322f0cb84
+  sources:
+  - source_id: SRC-000027
+    locators: [Splitting CLs, Don't Break the Build]
+  outcome: strong
+- role: applicability-1
+  claim_sha256: fbe5baa03a15013398d10cdcee8e55d343f38a11cd9db83b5a21132f9bc828b7
+  sources:
+  - source_id: SRC-000027
+    locators: [What is Small, When Large CLs are Okay]
+  outcome: strong

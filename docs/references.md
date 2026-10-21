@@ -306,3 +306,69 @@ The [actual consumer record](../examples/web/trial-evidence.json) retains the cu
 Portable source validation and consumer runtime discovery share reviewed declarations but have separate execution boundaries (D-019). The validator needs no consumer runtime; plan/apply and verification still enforce destination requirements. Existing Python/schema tooling owns the correction; no environment shim or new dependency was added. Current decisions retain stable IDs/revision numbers; exact earlier checkouts and installed locks retain predecessors. Opportunity migration exports/receipts and comparative evaluation evidence stay because conservation, replay and policy decisions consume them.
 
 A single native read-only subagent supplies the final artifact challenge. The callable desktop surface and [official subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents), checked on 2026-10-10, support this bounded review without a custom orchestrator. Inherited model settings remain unchanged. Review evidence does not establish human usefulness.
+
+## Native Principles consumer fixtures — reviewed 2026-10-21
+
+The dedicated v2 reader adopts the native Principles contract at `c019d42e7bef745eeb384b04dc98bec5b49bd099` (tree `d601bc8d8b7e89e0360b7234c124f51005d0185a`). It reuses Context C01 lifecycle at `bbf4933f3ac013e4111fd7a8cadc8bd09de66eef`; no external runtime or Signals parser is substituted. The local native corpus and record bytes below are retained solely as bounded consumer fixtures, not external source publications, new policies or corpus activation.
+
+Baseline fixtures preserve exact frozen native inputs. Qualified/withdrawn derivatives change native draft/source state only in a disposable source snapshot and are fully snapshot-validated by the pinned native validator before export; their `fixture-sha256:` identities distinguish them from unchanged Git corpus bytes. Source move aliases and supersession targets remain valid. Snapshot success does not prove historical transition approval. Per-variant provenance JSON and export input hashes bind every retained file. Context owns delivery; Principles owns corpus meaning, citations and source lifecycle. Native host use and human usefulness are not established.
+
+- `tests/fixtures/principles-export/baseline/source/evals/configurations/corpus-claim-review-v1.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/evidence/claims/PRN-000010.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/evidence/claims/PRN-000012.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/evidence/claims/PRN-000014.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000001.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000003.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000021.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000025.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000027.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000029.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/evals/configurations/corpus-claim-review-v1.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/evidence/claims/PRN-000010.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/evidence/claims/PRN-000012.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/evidence/claims/PRN-000014.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000001.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000003.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000021.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000025.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000027.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000029.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/evals/configurations/corpus-claim-review-v1.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/evidence/claims/PRN-000010.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/evidence/claims/PRN-000012.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/evidence/claims/PRN-000014.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000001.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000003.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000021.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000025.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000027.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000029.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.

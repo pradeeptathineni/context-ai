@@ -127,3 +127,9 @@ python3 scripts/context_ai.py verify --project APPROVED_PROJECT
 Apply is not a handoff action token. Neither a producer score nor a finding
 outcome authorizes it. Existing [profile selections](library.md) and
 [delivery lifecycle](loadouts.md) remain canonical.
+
+## Trusted Principles v2 input
+
+`handle_request(request, bindings=..., principles=SPEC)` accepts an optional **trusted local** Principles specification, never a new field in the remote v1 request. SPEC uses `export`, `sha256`, `revision`, `source_root`, optional `intent` (`operational` or `inspect`), and optional matching `full_export` / `full_sha256` for minimal references. The same dedicated reader and delivery lifecycle described in [loadouts](loadouts.md#explicit-native-principles-selection) validate it.
+
+A plan exposes full selected lifecycle, applicability, exceptions and source identity under the private canonical engine preview. The ordinary handoff remains read-only; it does not apply or mint an action token. Status compares freshly supplied bound source/selection observations with the installed snapshot and reports `principles-repreview-required` when they differ. Without SPEC, status checks only installed integrity. Portable public exports omit the private Principles payload and continue to describe the static catalog selection with local state unknown. Explicit apply uses the Context CLI's current-source preview and exact plan ID, separately authorized by the user.

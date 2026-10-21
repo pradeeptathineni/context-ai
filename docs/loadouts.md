@@ -100,3 +100,27 @@ This library equips existing agents. It includes no runtime, independent signal-
 ## Pre-1 publication
 
 The validator rejects a stable `release_version` and stable tag refs in `GITHUB_REF`; CI runs it on pushes and pull requests. There is no automatic publisher. Before a manual 0.x tag/release, require the intended remote commit and successful repository/web checks, then create a new annotated tag. The withdrawn `v1.0.0` name stays reserved; stable publication needs a separate future user decision.
+
+## Explicit native Principles selection
+
+Context explicitly supports Principles derived export **v2** through `scripts/context_principles.py`. This is separate from the Signals evidence-bundle v1 parser. Derived v1/unknown versions are rejected before delivery: regenerate them with a supported producer; never relabel or silently upgrade an old artifact. The caller supplies exact export SHA-256, declared source revision and retained native input directory. Context verifies artifact/profile structure, cross-profile input binding, each native input's actual bytes/hash, corpus qualification and native source identity/lifecycle. These checks bind local observations; they do not authenticate a Git revision, prove semantic review or fetch remote source freshness.
+
+Preview a selected export on an existing disposable or approved project, then use its exact `plan_id` for explicit apply:
+
+```sh
+python3 scripts/context_ai.py plan --project /approved/project --provider both \
+  --principles-export /approved/export.json --principles-sha256 EXACT_EXPORT_SHA256 \
+  --principles-revision EXACT_DECLARED_REVISION --principles-source /approved/native-inputs
+python3 scripts/context_ai.py apply --project /approved/project --provider both \
+  --principles-export /approved/export.json --principles-sha256 EXACT_EXPORT_SHA256 \
+  --principles-revision EXACT_DECLARED_REVISION --principles-source /approved/native-inputs \
+  --expected-plan EXACT_PREVIEW_PLAN_ID
+```
+
+The operational default selects only native active corpus entries whose cited sources are active or moved. Drafts and superseded/withdrawn/unavailable sources are excluded from that operational selection. `--principles-intent inspect` explicitly preserves the entire selected export as nonauthoritative inspection, including drafts, active citations, supersession and withdrawal. Drafts never become active authority. Complete authored Why, Practices and Applicability paragraphs—including exceptions—remain intact; profile omissions, qualification, claim/source IDs, exact revision and input hashes travel with the guidance. Minimal is reference-only: supply `--principles-full FULL_EXPORT --principles-full-sha256 FULL_SHA256` from the same bound selection before delivery. A mismatched or still-minimal full fetch fails.
+
+Context retains the validated export and native bytes in the optional `principles` lock field and owned `principles/bundle.json`; `principles/selected.md` is a derived view, not a new canonical corpus. Existing installation/portable-lock schema 2 gains this optional field; older Context readers reject it and must not strip it to simulate compatibility. Current tooling can reopen/export/rebind the exact snapshot; applying a Principles pin still requires a current reviewed plan. Canonical Principles references own corpus meaning and citations; Context references own reusable engineering guidance and delivery. This resolves CTX-08/PRI-04 without a second generic principle corpus or an automatic precedence/activation decision.
+
+Use the same explicit source arguments with `refresh` to observe updated local native inputs. A changed artifact/source hash refuses stale input; a changed input binding returns `principles_review_conflict`. An old plan ID cannot apply the changed selection. Review the new preview and explicitly apply its new ID. Target byte or mode changes also invalidate the preview. Ordinary `refresh` without these arguments previews only the installed pinned snapshot, with no current-source observation. `verify` establishes local installation integrity, not remote freshness, host discovery or human usefulness. Existing C01 ownership, mode-aware recovery, foreign-edit conflicts and undo apply to these resources. Ordinary tasks can omit Principles entirely and select zero extra guidance.
+
+After manually reconciling a legacy schema-1 recovery journal's unknown permissions, deliberately archive/clear that journal while preserving evidence and foreign edits; rerunning recovery intentionally continues to refuse it.

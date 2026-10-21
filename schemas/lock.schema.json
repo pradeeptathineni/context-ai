@@ -160,6 +160,10 @@
         "type": "string",
         "pattern": "^context-[a-z0-9-]+$"
       }
+    },
+    "principles": {
+      "type": "object",
+      "description": "Explicit native Principles v2 selection and retained source-bound bundle; validated by the dedicated reader."
     }
   },
   "required": [

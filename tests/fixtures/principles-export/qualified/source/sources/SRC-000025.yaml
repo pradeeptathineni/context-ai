@@ -1,0 +1,12 @@
+schema_version: 4
+id: SRC-000025
+title: Code of Ethics for Software Engineers
+publisher: IEEE Computer Society and Association for Computing Machinery
+evidence_kind: normative-authority
+canonical_url: https://www.computer.org/education/code-of-ethics
+url_aliases: []
+published_or_version: Version 5.2
+first_retrieved: '2026-09-02'
+last_reviewed: '2026-09-02'
+status: active
+superseded_by: null

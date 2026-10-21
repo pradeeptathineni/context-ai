@@ -1,0 +1,328 @@
+{
+  "schema_version": 2,
+  "usage": "qualified-guidance",
+  "omitted_sections": [
+    "goals",
+    "tags",
+    "sources",
+    "evidence"
+  ],
+  "input_sha256": "ef48712fb61a48390af4fab8dd97fcfc81a7e111ea9639a3bffa5b9d7ac3bf89",
+  "profile": "standard",
+  "source_revision": "fixture-sha256:9f4f74f663234d0d21f799c3d634a8ca4c7ae2ec98633a3e70d0845ec2801ab7",
+  "filters": {
+    "files": [],
+    "principles": [
+      "PRN-000010",
+      "PRN-000012",
+      "PRN-000014"
+    ]
+  },
+  "inputs": [
+    {
+      "path": "domains/coding/personal-growth.md",
+      "sha256": "28104038955ce7ebcb8e7a7a0eb6c65d0661fdc1f5eec949732f66e9823e9cb0"
+    },
+    {
+      "path": "domains/coding/principles.md",
+      "sha256": "91c4304a4c07fdabc55a5f32c9197974b8815011831a880a68e6370bc6f854ae"
+    },
+    {
+      "path": "evals/configurations/corpus-claim-review-v1.yaml",
+      "sha256": "a331e2351b4ab2ca18b520631ae91ac9afdef571026a2b3619ba0f3fa4aec7fc"
+    },
+    {
+      "path": "evidence/claims/PRN-000010.yaml",
+      "sha256": "03f171aa65bad5a7d5865da243b88589bef864a6390575d231f42e88f1effa72"
+    },
+    {
+      "path": "evidence/claims/PRN-000012.yaml",
+      "sha256": "17fbfa73645feee835655201f6a8437bc810746155fda2aa533f690b01d074e9"
+    },
+    {
+      "path": "evidence/claims/PRN-000014.yaml",
+      "sha256": "a6cf58515bb39e8f5d278bddb59371ddbc3041a6f518b281e92107c571eb83a9"
+    },
+    {
+      "path": "sources/SRC-000001.yaml",
+      "sha256": "f1fb77f94702a69a981f8d053bd37c35e3f1d5ffc72779bc3e3039afec112905"
+    },
+    {
+      "path": "sources/SRC-000003.yaml",
+      "sha256": "3c659f9eeff33010b0ccec7c29b16137c9139c77db480aed80df98aac7779872"
+    },
+    {
+      "path": "sources/SRC-000021.yaml",
+      "sha256": "def5ffa1b48709fdd9481345f8b328753582aa652f101a016ac1e81a51e43fa7"
+    },
+    {
+      "path": "sources/SRC-000025.yaml",
+      "sha256": "aa19fa16e2cb9357c5ab54ee9e8052f6b202c8b984acaf6dc609501d27677cf4"
+    },
+    {
+      "path": "sources/SRC-000027.yaml",
+      "sha256": "901cd4b2b31677770afcc455f64055aa98a6c7a0fd2600e763a7bf149b70b15f"
+    },
+    {
+      "path": "sources/SRC-000029.yaml",
+      "sha256": "792e2fe8193f7a2d3f05cbee4580fc33b4535c24d6e9d080ec21ce45cb901d3f"
+    }
+  ],
+  "entries": [
+    {
+      "id": "PRN-000010",
+      "title": "Make intent easy to recover",
+      "file_id": "coding.principles",
+      "file_path": "domains/coding/principles.md",
+      "status": "active",
+      "last_reviewed": "2026-09-02",
+      "reviewed_content_sha256": "906c9069300bbc9b1bede38f27c2c6eb5285f614de59721137821854f7aeca2b",
+      "input_sha256": "91c4304a4c07fdabc55a5f32c9197974b8815011831a880a68e6370bc6f854ae",
+      "statement": {
+        "role": "statement",
+        "text": "Write code so another person can recover its purpose, behavior, and constraints without reconstructing avoidable complexity. [coding.principles:1], [coding.principles:2]",
+        "claim_sha256": "8d110b134afe968acae0acf2fc169de946e4278dade506da05f3b3097ef93ee1",
+        "source_ids": [
+          "SRC-000001",
+          "SRC-000003"
+        ]
+      },
+      "source_ids": [
+        "SRC-000001",
+        "SRC-000003"
+      ],
+      "source_inputs": [
+        {
+          "id": "SRC-000001",
+          "status": "withdrawn",
+          "path": "sources/SRC-000001.yaml",
+          "input_sha256": "f1fb77f94702a69a981f8d053bd37c35e3f1d5ffc72779bc3e3039afec112905"
+        },
+        {
+          "id": "SRC-000003",
+          "status": "active",
+          "path": "sources/SRC-000003.yaml",
+          "input_sha256": "3c659f9eeff33010b0ccec7c29b16137c9139c77db480aed80df98aac7779872"
+        }
+      ],
+      "references": [
+        {
+          "label": "coding.principles:1",
+          "source_id": "SRC-000001",
+          "title": "Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a"
+        },
+        {
+          "label": "coding.principles:2",
+          "source_id": "SRC-000003",
+          "title": "What to look for in a code review"
+        }
+      ],
+      "why": [
+        {
+          "role": "why-1",
+          "text": "Code is repeatedly read, reviewed, tested, debugged, and changed. Simple structure, meaningful names, and explicit boundaries reduce the mental context required for those activities and make defects easier to notice. [coding.principles:1], [coding.principles:2]",
+          "claim_sha256": "704a9c5fa429488d85cc6067b7c4509124c53b0a14f1f189be66b77bf1b0eba5",
+          "source_ids": [
+            "SRC-000001",
+            "SRC-000003"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "role": "practice-1",
+          "text": "Prefer direct control flow, domain-meaningful names, and cohesive units over clever compression. [coding.principles:1], [coding.principles:2]",
+          "claim_sha256": "76e8fc932a2d8fa29850bdabdd9546c2ec182eaede445bd81c9df97c11d49152",
+          "source_ids": [
+            "SRC-000001",
+            "SRC-000003"
+          ]
+        },
+        {
+          "role": "practice-2",
+          "text": "Put non-obvious reasons and constraints where future readers will encounter the affected code. [coding.principles:2]",
+          "claim_sha256": "116ebb11fe4184b4fd03796e71ce6ce11ba17b0ec3502963d7706d619db841a1",
+          "source_ids": [
+            "SRC-000003"
+          ]
+        }
+      ],
+      "applicability": []
+    },
+    {
+      "id": "PRN-000012",
+      "title": "Separate independent engineering decisions",
+      "file_id": "coding.principles",
+      "file_path": "domains/coding/principles.md",
+      "status": "active",
+      "last_reviewed": "2026-09-02",
+      "reviewed_content_sha256": "906c9069300bbc9b1bede38f27c2c6eb5285f614de59721137821854f7aeca2b",
+      "input_sha256": "91c4304a4c07fdabc55a5f32c9197974b8815011831a880a68e6370bc6f854ae",
+      "statement": {
+        "role": "statement",
+        "text": "Separate decisions that can be understood, verified, and reversed independently; combine work only when separation would leave an incomplete change. [coding.principles:4], [coding.principles:5]",
+        "claim_sha256": "57cb2870a3ad6b9a529a9f0cd6219bbf08655a6f30cbebca53c480856c1e5600",
+        "source_ids": [
+          "SRC-000027",
+          "SRC-000021"
+        ]
+      },
+      "source_ids": [
+        "SRC-000027",
+        "SRC-000021"
+      ],
+      "source_inputs": [
+        {
+          "id": "SRC-000027",
+          "status": "moved",
+          "path": "sources/SRC-000027.yaml",
+          "input_sha256": "901cd4b2b31677770afcc455f64055aa98a6c7a0fd2600e763a7bf149b70b15f"
+        },
+        {
+          "id": "SRC-000021",
+          "status": "superseded",
+          "path": "sources/SRC-000021.yaml",
+          "input_sha256": "def5ffa1b48709fdd9481345f8b328753582aa652f101a016ac1e81a51e43fa7"
+        }
+      ],
+      "references": [
+        {
+          "label": "coding.principles:4",
+          "source_id": "SRC-000027",
+          "title": "Small CLs"
+        },
+        {
+          "label": "coding.principles:5",
+          "source_id": "SRC-000021",
+          "title": "gitworkflows — An overview of recommended workflows with Git"
+        }
+      ],
+      "why": [
+        {
+          "role": "why-1",
+          "text": "Isolating one decision preserves causal information and limits the work that must be reconsidered when evidence fails. The useful unit is a complete idea, not an arbitrary line count. [coding.principles:4], [coding.principles:5]",
+          "claim_sha256": "4357bada0db31a83233703fd3f25f445ea2ebc38e88b65472c6997ab22a58ddc",
+          "source_ids": [
+            "SRC-000027",
+            "SRC-000021"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "role": "practice-1",
+          "text": "Split work into self-contained outcomes that reviewers can understand and verify without relying on unfinished future work. [coding.principles:4]",
+          "claim_sha256": "e9bbc63424b48a0ddc0ae64c3d60b5c906ad2494c5b4916af5e5f5d2a0bc335e",
+          "source_ids": [
+            "SRC-000027"
+          ]
+        },
+        {
+          "role": "practice-2",
+          "text": "For dependent outcomes, order the steps so each completed step keeps the system working and carries the context needed to understand the next. [coding.principles:4]",
+          "claim_sha256": "fcc203749438aadb2556a7da6e5b774ff53313b4d44ba10b098e000322f0cb84",
+          "source_ids": [
+            "SRC-000027"
+          ]
+        }
+      ],
+      "applicability": [
+        {
+          "role": "applicability-1",
+          "text": "A complete change may be large when its parts cannot work or be evaluated independently; splitting must not create misleading or broken intermediate states. [coding.principles:4]",
+          "claim_sha256": "fbe5baa03a15013398d10cdcee8e55d343f38a11cd9db83b5a21132f9bc828b7",
+          "source_ids": [
+            "SRC-000027"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "PRN-000014",
+      "title": "Turn feedback into the next practice",
+      "file_id": "coding.personal-growth",
+      "file_path": "domains/coding/personal-growth.md",
+      "status": "draft",
+      "last_reviewed": null,
+      "reviewed_content_sha256": null,
+      "input_sha256": "28104038955ce7ebcb8e7a7a0eb6c65d0661fdc1f5eec949732f66e9823e9cb0",
+      "statement": {
+        "role": "statement",
+        "text": "Use feedback from real work to choose one coding skill or decision pattern for focused, repeated practice. [coding.personal-growth:1], [coding.personal-growth:2]",
+        "claim_sha256": "818c94be5f4ff70eb0545f417a4e332c28e3984ce6649643b82dbcdfc9611a12",
+        "source_ids": [
+          "SRC-000029",
+          "SRC-000025"
+        ]
+      },
+      "source_ids": [
+        "SRC-000029",
+        "SRC-000025"
+      ],
+      "source_inputs": [
+        {
+          "id": "SRC-000029",
+          "status": "active",
+          "path": "sources/SRC-000029.yaml",
+          "input_sha256": "792e2fe8193f7a2d3f05cbee4580fc33b4535c24d6e9d080ec21ce45cb901d3f"
+        },
+        {
+          "id": "SRC-000025",
+          "status": "active",
+          "path": "sources/SRC-000025.yaml",
+          "input_sha256": "aa19fa16e2cb9357c5ab54ee9e8052f6b202c8b984acaf6dc609501d27677cf4"
+        }
+      ],
+      "references": [
+        {
+          "label": "coding.personal-growth:1",
+          "source_id": "SRC-000029",
+          "title": "Deliberate Practice and Proposed Limits on the Effects of Practice on the Acquisition of Expert Performance: Why the Original Definition Matters and Recommendations for Future Research"
+        },
+        {
+          "label": "coding.personal-growth:2",
+          "source_id": "SRC-000025",
+          "title": "Code of Ethics for Software Engineers"
+        }
+      ],
+      "why": [
+        {
+          "role": "why-1",
+          "text": "Experience alone does not create focused improvement. Practice built around a specific goal, repeated attempts, and informative feedback exposes the gap between current and intended performance. [coding.personal-growth:1]",
+          "claim_sha256": "8176b29cbe4756e58ebddeb8c57ad49b93bd24b8536a22ade3679890fc04e179",
+          "source_ids": [
+            "SRC-000029"
+          ]
+        }
+      ],
+      "practices": [
+        {
+          "role": "practice-1",
+          "text": "Set a concrete objective just beyond current reliable performance, rehearse it, and seek feedback that identifies the next adjustment. [coding.personal-growth:1]",
+          "claim_sha256": "4664936d24af0bdd24228ca39a16699f92aaa3598058ae0f8a57f0f30f1943f9",
+          "source_ids": [
+            "SRC-000029"
+          ]
+        },
+        {
+          "role": "practice-2",
+          "text": "Reassess observed performance and revise the exercise or objective instead of repeating practice that no longer targets the gap. [coding.personal-growth:1]",
+          "claim_sha256": "3e06f4f6267147aa4df4477880f496a52b1511c7a5b4e06d56d5cbea581b0cb2",
+          "source_ids": [
+            "SRC-000029"
+          ]
+        }
+      ],
+      "applicability": [
+        {
+          "role": "applicability-1",
+          "text": "Self-directed work with these features is purposeful practice. The cited research reserves deliberate practice for activities designed and monitored by a qualified teacher or coach, and its effects should not be generalized without regard to the field and learner. [coding.personal-growth:1]",
+          "claim_sha256": "dc766c4cb245dab277e619651d44af6949301f542e0b00c382ed3baf33b22985",
+          "source_ids": [
+            "SRC-000029"
+          ]
+        }
+      ]
+    }
+  ]
+}

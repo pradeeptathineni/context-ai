@@ -141,7 +141,7 @@ def selected_options(picked):
             for choice in picked['profile']['selections']]
 
 
-def handle_request(request, *, bindings, provider=None):
+def handle_request(request, *, bindings, provider=None, principles=None):
     """Return private local data; use public_result before any portable export."""
     validate_request(request)
     project = bind(request, bindings)
@@ -165,6 +165,9 @@ def handle_request(request, *, bindings, provider=None):
         result['selection_pins'] = pins(selection_lock)
         if request['method'] == 'plan':
             preview = library.delivery(request['profile_id'], project, provider=provider, action='plan')
+            if principles is not None:
+                preview['delivery']=engine.principles_delivery(project,principles,provider=provider or 'both',
+                                                               ids=picked['loadouts'],extras=picked['capabilities'])
             plan = preview['delivery']
             # Exact existing target bytes affect plan identity without exposing instructions.
             inputs = {}
@@ -193,6 +196,13 @@ def handle_request(request, *, bindings, provider=None):
                                             'project_checks': verification['project_checks'],
                                             'required_command_probes': verification['required_command_probes']})
                 result['_local']['engine_status'] = verification
+                if principles is not None:
+                    from context_principles import read
+                    current=read(principles)
+                    pinned=state['resolution'].get('principles',{})
+                    if any(current[key]!=pinned.get(key) for key in ('input_sha256','artifact_sha256','intent','selected_ids')):
+                        result.update(status='blocked',reason_code='principles-repreview-required')
+                        result['_local']['error']='Principles source/input changed; re-preview before delivery'
     except (engine.Invalid, OSError, ValueError) as error:
         result.update(status='blocked', reason_code='engine-check-failed')
         result['_local']['error'] = str(error)

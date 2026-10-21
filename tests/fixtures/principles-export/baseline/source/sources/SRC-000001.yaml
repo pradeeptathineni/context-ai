@@ -1,0 +1,12 @@
+schema_version: 4
+id: SRC-000001
+title: Guide to the Software Engineering Body of Knowledge (SWEBOK Guide), Version 4.0a
+publisher: IEEE Computer Society
+evidence_kind: expert-synthesis
+canonical_url: https://ieeecs-media.computer.org/media/education/swebok/swebok-v4.pdf
+url_aliases: []
+published_or_version: Version 4.0a
+first_retrieved: '2026-09-01'
+last_reviewed: '2026-09-01'
+status: active
+superseded_by: null
