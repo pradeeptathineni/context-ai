@@ -239,7 +239,11 @@ class ReviewEquipment(unittest.TestCase):
             scopes = [e['scope'] for e in option['evidence']]
             self.assertTrue(any(s.startswith('Source-supported') for s in scopes), scopes)
             self.assertTrue(any(s.startswith('Locally tested') for s in scopes), scopes)
-        self.assertIn('pending', ' '.join(options['matt-pocock-code-review']['evidence'][-1]['weaknesses']))
+        observed = options['matt-pocock-code-review']['evidence'][-1]
+        self.assertTrue(observed['scope'].startswith('Native pair observed'), observed)
+        self.assertEqual(observed['checked_ref'], '0042b0c6b1cc4b35ea8fd14f2916e6a02331dc83')
+        self.assertIn('no quality uplift', ' '.join(observed['weaknesses']).lower())
+        self.assertIn('does not judge other tasks', ' '.join(observed['weaknesses']))
 
     def test_preview_apply_verify_refresh_and_undo_preserve_authored_bytes(self):
         project = self.consumer('consumer')
