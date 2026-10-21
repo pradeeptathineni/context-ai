@@ -699,13 +699,11 @@ def materialized(lock, files):
             output[SKILL_DIRS[host]+'/'+skill+'/SKILL.md'] = body.encode()
     return output
 
-def atomic(path,data):
+def atomic(path,data,mode=None):
     path.parent.mkdir(parents=True,exist_ok=True)
     # mkstemp creates 0600; keep an existing file's mode, else the umask default.
-    if path.exists():
-        mode=path.stat().st_mode & 0o7777
-    else:
-        umask=os.umask(0);os.umask(umask);mode=0o666 & ~umask
+    if mode is None:
+        mode=path.stat().st_mode & 0o7777 if path.exists() else creation_mode()
     fd,tmp = tempfile.mkstemp(prefix='.context-ai-write-',dir=path.parent)
     try:
         with os.fdopen(fd,'wb') as f:
@@ -715,6 +713,13 @@ def atomic(path,data):
     finally:
         if os.path.exists(tmp):
             os.unlink(tmp)
+
+def creation_mode():
+    umask=os.umask(0);os.umask(umask)
+    return 0o666 & ~umask
+
+def file_mode(path):
+    return path.stat().st_mode & 0o7777 if path.is_file() else None
 
 SKILL_ROUTER = r'\.(agents|claude)/skills/context-[a-z0-9-]+/SKILL\.md'
 
@@ -760,28 +765,38 @@ def recover(project):
     journal=inside(project,'.context-ai/pending.json')
     if not journal.exists():return {'recovered':True,'preserved_conflicts':[]}
     state=json.loads(journal.read_text())
-    if state.get('schema_version')!=1 or state.get('bound_project')!=str(project) or set(state.get('before',{}))!=set(state.get('after',{})):
+    if state.get('schema_version')==1:
+        raise Invalid('legacy byte-only recovery record: original modes are unknown; preserve the journal and reconcile bytes and permissions manually')
+    if state.get('schema_version')!=2 or state.get('bound_project')!=str(project) or set(state.get('before',{}))!=set(state.get('after',{})):
         raise Invalid('invalid or differently bound recovery record')
+    for field in ('before_modes','after_modes'):
+        if not isinstance(state.get(field),dict) or set(state[field])!=set(state['before']):
+            raise Invalid('invalid recovery mode metadata')
     operations=[]
     for name, before in state['before'].items():
         p=transaction_path(project,name)
         old=base64.b64decode(before,validate=True) if before is not None else None
         expected=state['after'][name]
         if expected is not None and not re.fullmatch('[0-9a-f]{64}',expected):raise Invalid('invalid recovery digest')
-        operations.append((name,p,old,expected))
+        old_mode=state['before_modes'][name];expected_mode=state['after_modes'][name]
+        for data,mode in ((old,old_mode),(expected,expected_mode)):
+            if (data is None and mode is not None) or (data is not None and (type(mode) is not int or not 0<=mode<=0o7777)):
+                raise Invalid('invalid recovery mode metadata')
+        operations.append((name,p,old,expected,old_mode,expected_mode))
     conflicts=[]
-    for name,p,old,expected in operations:
+    for name,p,old,expected,old_mode,expected_mode in operations:
         if p.exists() and not p.is_file():
             conflicts.append(name);continue
         current=p.read_bytes() if p.exists() else None
-        if current==old:continue
+        current_mode=file_mode(p)
+        if current==old and current_mode==old_mode:continue
         current_sha=digest(current) if current is not None else None
-        if current_sha!=expected:
+        if current_sha!=expected or current_mode!=expected_mode:
             conflicts.append(name);continue
         if old is None:
             p.unlink()
         else:
-            atomic(p,old)
+            atomic(p,old,mode=old_mode)
     if not conflicts:journal.unlink()
     return {'recovered':not conflicts,'preserved_conflicts':conflicts}
 
@@ -998,25 +1013,30 @@ def preflight(project, lock, files):
 
 def publish(project, desired, before):
     """Journal exact before bytes and reject edits before each owned publish."""
-    def unchanged(name, expected):
+    def unchanged(name, expected, mode=None, check_mode=False):
         p=transaction_path(project,name)
         current=p.read_bytes() if p.is_file() else None
-        if (p.exists() and not p.is_file()) or current!=expected:
+        if (p.exists() and not p.is_file()) or current!=expected or (check_mode and file_mode(p)!=mode):
             raise Invalid('changed during lifecycle: '+name+'; preserve the edit and run recover if pending')
         return p
     for name in desired:unchanged(name,before[name])
+    before_modes={name:file_mode(transaction_path(project,name)) for name in desired}
+    default_mode=creation_mode()
+    after_modes={name:None if value is None else (before_modes[name] if before_modes[name] is not None else default_mode)
+                 for name,value in desired.items()}
     journal=inside(project,'.context-ai/pending.json')
-    atomic(journal,encoded({'schema_version':1,'bound_project':str(project),
+    atomic(journal,encoded({'schema_version':2,'bound_project':str(project),
                             'before':{name:base64.b64encode(value).decode() if value is not None else None for name,value in before.items()},
+                            'before_modes':before_modes,'after_modes':after_modes,
                             'after':{name:digest(value) if value is not None else None for name,value in desired.items()}}))
     try:
         for name,value in desired.items():
-            p=unchanged(name,before[name])
+            p=unchanged(name,before[name],before_modes[name],True)
             if value is None:
                 if p.exists():p.unlink()
             elif not p.exists() or p.read_bytes()!=value:
                 atomic(p,value)
-        for name,value in desired.items():unchanged(name,value)
+        for name,value in desired.items():unchanged(name,value,after_modes[name],True)
     except Exception:
         try:
             recover(project)

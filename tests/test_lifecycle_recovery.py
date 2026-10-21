@@ -30,7 +30,8 @@ if boundary == 'preflight':
         pause()
         return result
     c.preflight = preflight
-elif operation == 'undo':
+elif operation == 'undo' or boundary.startswith('unlink:'):
+    boundary = boundary.removeprefix('unlink:')
     original = Path.unlink
     def unlink(path, *args, **kwargs):
         result = original(path, *args, **kwargs)
@@ -40,21 +41,23 @@ elif operation == 'undo':
     Path.unlink = unlink
 else:
     original = c.atomic
-    def atomic(path, data):
-        original(path, data)
+    def atomic(path, data, **kwargs):
+        original(path, data, **kwargs)
         if path.relative_to(project).as_posix() == boundary:
             pause()
     c.atomic = atomic
 if operation == 'undo':
     c.undo(project)
+elif operation == 'recover':
+    c.recover(project)
 else:
-    lock, files = c.resolve(['essentials'], project, 'both')
+    lock, files = c.resolve([] if operation == 'apply-empty' else ['essentials'], project, 'both')
     c.apply(project, lock, files)
 '''
 
 
 def inventory(project):
-    return {p.relative_to(project).as_posix(): c.digest(p.read_bytes())
+    return {p.relative_to(project).as_posix(): (c.digest(p.read_bytes()), p.stat().st_mode & 0o7777)
             for p in project.rglob('*') if p.is_file() and not p.is_symlink()
             and '.git' not in p.relative_to(project).parts}
 

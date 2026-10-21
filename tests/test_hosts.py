@@ -213,10 +213,10 @@ class ClaudeAndBothHosts(unittest.TestCase):
         (self.project/'CLAUDE.md').write_text('Rules\n')
         lock,files=c.resolve(['essentials'],self.project,'claude')
         original=c.atomic;calls=[]
-        def failing(path,data):
+        def failing(path,data,**kwargs):
             calls.append(path)
             if path.name=='CLAUDE.md':raise OSError('disk full')
-            return original(path,data)
+            return original(path,data,**kwargs)
         with patch.object(c,'atomic',side_effect=failing):
             with self.assertRaises(OSError):c.apply(self.project,lock,files)
         self.assertEqual((self.project/'CLAUDE.md').read_text(),'Rules\n')

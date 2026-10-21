@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Preserve original POSIX modes through interrupted lifecycle recovery with mode-aware journal schema 2; retain foreign mode conflicts and refuse legacy byte-only recovery whose original permissions are unknown.
+
 - Serialize local consumer lifecycle operations with POSIX directory locks, check observed bytes before publishing, and journal undo through the existing recovery format. Preserve foreign edits and exact CRLF/Unicode bytes through interrupted apply, replacement and undo.
 
 - Add an opt-in delivered-artifact word-limit checker with exact byte identities and strict/inclusive bounds; evaluation guidance separates mechanical checks from source review and requires repair/recheck before delivery.
