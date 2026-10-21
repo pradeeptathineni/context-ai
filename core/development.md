@@ -13,7 +13,7 @@ Use the lightest version of this loop that matches the change:
 ## Research and implement
 
 - Research when current facts, unfamiliar interfaces, standards, security, licensing, or unresolved design choices can affect correctness.
-- Implement the smallest complete change consistent with the existing design.
+- Implement the smallest complete change consistent with the existing design. For substantial work, make the first milestone a useful end-to-end user path; let real use justify broader machinery.
 - Preserve unrelated work and avoid opportunistic scope expansion.
 - Handle meaningful boundaries and failures at the layer that owns them.
 
