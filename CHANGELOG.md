@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Verify complete ordered Principles export blocks, citations and verification evidence against retained native inputs before delivery; reject correctly rehashed but omitted/substituted clauses and unsupported native projection syntax.
+
 - Add explicit native Principles v2 consumption through source-bound preview/apply/reopen/refresh/undo, preserving draft/source lifecycle, qualifications, complete applicability and exceptions. Minimal references require a matching full export; unsupported versions and stale plans fail before delivery.
 
 - Preserve original POSIX modes through interrupted lifecycle recovery with mode-aware journal schema 2; retain foreign mode conflicts and refuse legacy byte-only recovery whose original permissions are unknown.

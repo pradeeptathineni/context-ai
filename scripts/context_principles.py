@@ -4,6 +4,7 @@ from datetime import date
 import json
 from pathlib import Path
 import re
+import unicodedata
 
 import context_ai as engine
 
@@ -53,6 +54,124 @@ def parse(raw):
 def native_yaml(raw):
     value = engine.parse_yaml(raw.decode('utf-8'))
     return json.loads(json.dumps(value, default=lambda item: item.isoformat()))
+
+
+def native_plain(raw):
+    """Exact supported native inline projection; unsupported syntax fails closed."""
+    # The pinned producer renders plain text and inline code, normalizes NFC,
+    # and collapses ECMAScript whitespace. Do not guess other Markdown nodes.
+    pieces = raw.split('`')
+    require(len(pieces) % 2 == 1, 'unsupported native inline code; use supported export derivation')
+    for index, piece in enumerate(pieces):
+        if index % 2:
+            require(piece and '\n' not in piece and not re.search(r'[^ ]\s| {2,}', piece), 'unsupported native inline code')
+        else:
+            require(not re.search(r'[\[\]*_\\<>]|&(?:#\w+|[A-Za-z]+);', piece),
+                    'unsupported native inline Markdown; exact derivation unavailable')
+    value = unicodedata.normalize('NFC', ''.join(pieces))
+    return re.sub(r'[\t\n\v\f\r \u00a0\u1680\u2000-\u200a\u2028\u2029\u202f\u205f\u3000\ufeff]+', ' ', value).strip(' ')
+
+
+def native_entry(raw, entry_id, file_id):
+    """Derive complete ordered claim views from the bound canonical entry."""
+    text = raw.decode('utf-8')
+    require('\r' not in text and text.count('\n## References\n') == 1, 'unsupported native document layout')
+    references_text = text.split('\n## References\n', 1)[1]
+    refs = []
+    definitions = []
+    for line in references_text.splitlines():
+        if not line:
+            continue
+        reference = re.fullmatch(r'(\d+)\. \[([^\[\]]+)\]\[(\d+)\] — `(SRC-\d{6})`', line)
+        definition = re.fullmatch(r'\[(\d+)\]: (https?://\S+)', line)
+        if reference:
+            ordinal, title, label, source_id = reference.groups()
+            require(not definitions and ordinal == label == str(len(refs) + 1), 'unsupported native bibliography order')
+            refs.append({'label': file_id + ':' + label, 'source_id': source_id, 'title': native_plain(title)})
+        elif definition:
+            require(definition[1] == str(len(definitions) + 1), 'unsupported native reference definition order')
+            definitions.append(definition[2])
+        else:
+            require(False, 'unsupported native bibliography; exact derivation unavailable')
+    require(refs and len(refs) == len(definitions), 'incomplete native bibliography')
+    source_by_label = {ref['label']: ref['source_id'] for ref in refs}
+    matches = [(match[2], match[3]) for match in re.finditer(r'^### (PRN-\d{6}) — ([^\n]+)\n([\s\S]*?)(?=^### |^## References|\Z)', text, re.M) if match[1] == entry_id]
+    require(len(matches) == 1, 'native entry identity missing or duplicated')
+    title, body = matches[0]
+    sections = re.split(r'^#### ([^\n]+)\n', body, flags=re.M)
+    blocks = {'statement': sections[0]}
+    order = ['Why', 'Practices', 'Applicability', 'Goals', 'Tags']
+    seen = []
+    for name, content in zip(sections[1::2], sections[2::2]):
+        require(name in order and name not in seen and (not seen or order.index(name) > order.index(seen[-1])), 'unsupported native section order')
+        seen.append(name)
+        blocks[name.lower()] = content
+    require('Why' in seen and 'Practices' in seen, 'native entry lacks required sections')
+
+    def paragraphs(content):
+        result = [part.strip() for part in re.split(r'\n[ \t]*\n', content.strip()) if part.strip()]
+        require(all(not re.search(r'^(?:\s{4}|\s*[#>|]|\s*[-+*] |\s*\d+[.)] )', part, re.M) for part in result), 'unsupported native paragraph block')
+        return result
+
+    def items(content):
+        result = []
+        blank = False
+        for line in content.strip().splitlines():
+            if not line.strip():
+                blank = True
+                continue
+            match = re.fullmatch(r'[-+*] (.+)', line)
+            if match:
+                result.append(match[1]);blank = False
+            else:
+                require(result and not blank and re.match(r'^ {2,3}\S', line), 'unsupported native list item shape')
+                result[-1] += '\n' + line.lstrip()
+        return result
+
+    def claim(content, role):
+        cited = re.search(r'\s+(\[[1-9]\d*\](?:, \[[1-9]\d*\])*)$', content)
+        require(cited is not None or role.startswith('goal-'), 'native required claim lacks citations')
+        labels = re.findall(r'\[(\d+)\]', cited[1]) if cited else []
+        namespaced = [file_id + ':' + label for label in labels]
+        require(all(label in source_by_label for label in namespaced), 'native citation missing bibliography identity')
+        plain = native_plain(content[:cited.start()] if cited else content)
+        require(bool(plain), 'empty native claim')
+        suffix = ' ' + ', '.join('[' + label + ']' for label in namespaced) if labels else ''
+        return {'role': role, 'text': plain + suffix, 'claim_sha256': engine.digest(plain.encode()) if labels else None,
+                'source_ids': list(dict.fromkeys(source_by_label[label] for label in namespaced))}
+
+    statement = paragraphs(blocks['statement'])
+    require(len(statement) == 1, 'native entry must have one statement')
+    result = {'title': title, 'statement': claim(statement[0], 'statement')}
+    for section, role in (('why', 'why'), ('practices', 'practice'), ('applicability', 'applicability'), ('goals', 'goal')):
+        values = (items if section in ('practices', 'goals') else paragraphs)(blocks[section]) if section in blocks else []
+        result[section] = [claim(value, role + '-' + str(index)) for index, value in enumerate(values, 1)]
+    result['tags'] = items(blocks['tags']) if 'tags' in blocks else []
+    require(all(re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)*', tag) for tag in result['tags']), 'unsupported native tags')
+    claims = [result['statement']] + result['why'] + result['practices'] + result['applicability'] + result['goals']
+    result['source_ids'] = list(dict.fromkeys(source for item in claims for source in item['source_ids']))
+    result['references'] = [ref for ref in refs if ref['source_id'] in result['source_ids']]
+    return result
+
+
+def verify_derivation(entry, records, profile):
+    expected = native_entry(records[entry['file_path']], entry['id'], entry['file_id'])
+    fields = ['title', 'statement', 'source_ids', 'references']
+    if profile != 'minimal':
+        fields += ['why', 'practices', 'applicability']
+    if profile in ('learning', 'verification'):
+        fields += ['goals', 'tags']
+    for field in fields:
+        require(entry[field] == expected[field], 'native derivation mismatch: ' + entry['id'] + ':' + field)
+    if profile == 'verification':
+        evidence = [native_yaml(raw) for path, raw in records.items() if path.startswith('evidence/')]
+        evidence = [value for value in evidence if isinstance(value, dict) and value.get('entry_id') == entry['id']]
+        require(len(evidence) <= 1 and entry['evidence'] == (evidence[0] if evidence else None), 'native derivation mismatch: verification evidence')
+        if evidence:
+            configuration = evidence[0].get('reviewer', {}).get('configuration')
+            if configuration and configuration.get('configuration_ref'):
+                path = configuration['configuration_ref']
+                require(path in records and engine.digest(records[path]) == configuration.get('configuration_sha256'), 'native evidence configuration binding mismatch')
 
 
 def validate(bundle, revision, artifact_sha256):
@@ -143,6 +262,7 @@ def validate(bundle, revision, artifact_sha256):
             require((not labels and claim['claim_sha256'] is None) or engine.digest(unnamespaced.encode()) == claim['claim_sha256'], 'claim digest mismatch')
         if profile == 'verification':
             require(entry['sources'] == list(source_map.values()), 'full source records differ from native bytes')
+        verify_derivation(entry, records, profile)
     require(ids == sorted(set(ids)), 'duplicate or unordered principle selection')
     binding = {'source_revision': revision, 'inputs': inputs,
                'selection': [{'id': entry['id'], 'file_id': entry['file_id']} for entry in entries]}
