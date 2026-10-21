@@ -376,3 +376,7 @@ Baseline fixtures preserve exact frozen native inputs. Qualified/withdrawn deriv
 ## Principles export completeness — reviewed 2026-10-21
 
 `scripts/context_principles.py` derives complete selected native claim views instead of trusting supplied claim arrays or their self-hashes. The bounded Python projection follows `parseClaim`, `renderClaimText`, `parseEntry`, and bibliography ordering in Principles `src/markdown.js`, plus `claimView`/profile inclusion in `src/context.js`, at exact accepted producer `c019d42e7bef745eeb384b04dc98bec5b49bd099`. No producer file was edited or runtime dependency copied into Context. Supported plain/inline-code grammar is stated in loadouts; unsupported forms fail closed rather than approximate the upstream AST. The native fixture corpus/source/evidence byte pins remain unchanged. Complete verification evidence is compared with the retained native record, without inferring that an AI review is human approval or semantic truth.
+
+## Implementation and review observations — 2026-10-21
+
+A local native coding trial returned a structured blocked result despite exit status 0; permitted test supervision completed its checks. Later independent serving-path probes exposed gaps missed by the passing suite. These observations inform the existing orchestration and review guidance above; raw project/account evidence stays private. They establish scoped use and failure recovery, not measured efficiency or human usefulness.
