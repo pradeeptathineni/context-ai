@@ -187,6 +187,27 @@
         "sourced/mattpocock/tdd/instruction.md": "5505d25bbaa8fc14a79e4d20163936958992a2995b7f1dd1d6197edc9ed722e0",
         "sourced/mattpocock/tdd/mocking.md": "3ceb807fdf4a47d6a93d4d9a891e5ba6d362a6247bd08adc451feebfc17361ef",
         "sourced/mattpocock/tdd/tests.md": "859f9e592c188fda4fc7277dd180e4ce9c7a2e13f6efe1f6f29eccc9d28c106a"
+      },
+      "packages": {
+        "sourced/mattpocock/code-review/instruction.md": "code-review"
+      },
+      "equivalent_revisions": {
+        "5beb35b040e3de97e54fa9e386d7e42d15c295c2": [
+          "sourced/mattpocock/LICENSE",
+          "sourced/mattpocock/code-review/instruction.md"
+        ]
+      }
+    },
+    {
+      "id": "agentskills",
+      "repository": "https://github.com/agentskills/agentskills",
+      "revision": "69ef37e9424c0a7ea9dd2293b559e43ec8176379",
+      "upstream_path": "skills-ref/src/skills_ref/{validator,parser,errors}.py",
+      "license": "Apache-2.0",
+      "excluded": "License only; no upstream code snapshot, CLI, prompt generator, strictyaml dependency or CC-BY-4.0 documentation is copied.",
+      "modifications": "scripts/context_skills.py is an attributed adapted slice; its header lists the changes.",
+      "files": {
+        "sourced/agentskills/LICENSE": "993da3f8d330d69108e521636555f7783ef81d46b904394c59ec5ff651331fe5"
       }
     },
     {

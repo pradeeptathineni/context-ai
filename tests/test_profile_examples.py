@@ -20,7 +20,7 @@ class ProfileExamples(unittest.TestCase):
     reviewed_guidance = {
         'docs/loadouts.md': (
             '0cd664a08578adfa6aff1c78bc97286023d7048e70297e8dbacf4cef2961d864',
-            'a296eb46817d16bd38dfdc6384d12bf945ca27a06a6c83ef0910d7153f211fa3'),
+            '3e65b749c78bfeac1c52076c4e6d7a2fe8dc3c95225e1af0251538bf06a1807d'),
         'overlays/orchestration.md': (
             '3368af30d805e364dde687b1ea486c145294d27e621c8996d894a440a295eafb',
             '8faeebda386d536a2946dacc5255a7797204677a2ad78e88a81f421b5a66914f'),

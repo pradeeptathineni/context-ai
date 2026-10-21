@@ -217,6 +217,10 @@ def source_notices(files):
                 raise Invalid('pinned upstream drift: '+path)
             if path in notices:
                 result[path] = data
+            # A pinned Agent Skills entry must also satisfy package metadata rules.
+            if path in source.get('packages',{}):
+                from context_skills import require_entry
+                require_entry(data,source['packages'][path],path)
     if any(p.startswith('sourced/') and p not in covered for p in files):
         raise Invalid('unregistered sourced resource')
     return result
@@ -688,6 +692,7 @@ def router(lock):
     return '\n'.join(lines)+'\n'
 
 def materialized(lock, files):
+    from context_skills import require_entry
     output = {'.context-ai/resources/'+p:data for p,data in files.items()}
     if len({name.casefold() for name in output}) != len(output):
         raise Invalid('case-colliding resource paths')
@@ -700,13 +705,13 @@ def materialized(lock, files):
         if path not in files:
             raise Invalid('missing selected skill instructions: '+path)
         if skill=='context-loadout':
-            metadata=yaml.safe_load(files[path].decode().split('---',2)[1])
-            description=metadata['description']
+            description=require_entry(files[path],skill,path)['description']
         else:
             description=lock['capabilities'][skill]['definition']['description']
         metadata = yaml.safe_dump({'name':skill,'description':description},sort_keys=False)
         # One canonical instruction copy; each host gets a thin router at the same depth.
         body = '---\n'+metadata+'---\n\nRead [pinned instructions](../../../.context-ai/resources/'+path+') when this procedure is relevant. Follow project instructions and user brand direction first. No tool or hook is activated by this file.\n'
+        require_entry(body.encode(),skill,'router '+skill)
         for host in hosts(lock['provider']):
             output[SKILL_DIRS[host]+'/'+skill+'/SKILL.md'] = body.encode()
     return output
@@ -1311,9 +1316,10 @@ def undo(project):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover','catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess','handoff'])
+    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover','catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess','handoff','validate-skill'])
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
+    parser.add_argument('--package',type=Path,help='Absolute candidate Agent Skills package directory for read-only validate-skill')
     parser.add_argument('--profile',type=Path,help='Task profile for packet, or catalog project profile for delivery')
     parser.add_argument('--library-profile',type=Path,metavar='FILE',help='Exact caller-owned schema-v1 recurring profile file for select, plan, apply or refresh; declared policy is data only')
     parser.add_argument('--state',type=Path,help='Private local library assessment/evolution state')
@@ -1345,6 +1351,17 @@ def main():
     parser.add_argument('--principles-full-sha256')
     parser.add_argument('--expected-plan',help='Exact current Principles preview identity, required for apply')
     args=parser.parse_args()
+    if (args.command=='validate-skill') != (args.package is not None):
+        raise Invalid('--package is required only for validate-skill')
+    if args.command=='validate-skill':
+        if any(value!=parser.get_default(key) and value!=[] for key,value in vars(args).items() if key not in ('command','package')):
+            raise Invalid('validate-skill takes only --package')
+        from context_skills import check_package
+        result=check_package(args.package)
+        print(encoded(result).decode(),end='')
+        if not result['valid']:
+            sys.exit(2)
+        return
     if args.principles_export:
         if args.command not in ('plan','apply','refresh') or args.profile or args.library_profile or args.lock:
             raise Invalid('Principles input applies only to explicit plan/apply/refresh selections')

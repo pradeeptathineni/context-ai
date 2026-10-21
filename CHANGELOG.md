@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Validate Agent Skills package metadata at acquisition and delivery with an attributed Apache-2.0 slice of the agentskills reference validator, which uses Context's strict YAML loader instead of strictyaml. The new read-only `validate-skill --package DIR` reports exact hashes and exits 2 on refusal. Pinned upstream package entries, `context-loadout` metadata and generated routers must also validate. Matt Pocock code-review bytes at `5beb35b` are recorded as identical to the existing pin; no instruction bytes changed.
+
 - Verify complete ordered Principles export blocks, citations and verification evidence against retained native inputs before delivery; reject correctly rehashed but omitted/substituted clauses and unsupported native projection syntax.
 
 - Add explicit native Principles v2 consumption through source-bound preview/apply/reopen/refresh/undo, preserving draft/source lifecycle, qualifications, complete applicability and exceptions. Minimal references require a matching full export; unsupported versions and stale plans fail before delivery.
