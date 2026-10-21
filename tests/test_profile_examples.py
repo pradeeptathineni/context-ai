@@ -18,12 +18,15 @@ class ProfileExamples(unittest.TestCase):
     # Keep the historical fixture intact; only these independently reviewed
     # guidance edits change delivered bytes, never selection or policy fields.
     reviewed_guidance = {
+        'core/prior-art.md': (
+            '10978874f93efa9f3c97bd407ff265d1406fd14c935c755f9ef32c9ce57b1f3a',
+            '988960602abefa808247a81669dda533a6ab5dead9b85c7300b0be0d3dfea001'),
         'docs/loadouts.md': (
             '0cd664a08578adfa6aff1c78bc97286023d7048e70297e8dbacf4cef2961d864',
             '3e65b749c78bfeac1c52076c4e6d7a2fe8dc3c95225e1af0251538bf06a1807d'),
         'overlays/orchestration.md': (
             '3368af30d805e364dde687b1ea486c145294d27e621c8996d894a440a295eafb',
-            '8faeebda386d536a2946dacc5255a7797204677a2ad78e88a81f421b5a66914f'),
+            '894661cce95ad6644d58cc0088cb9cfaa9ebf623d84c93b7022668652a69ea81'),
         'procedures/output.md': (
             '3b340b43899016608c28ff703b31ffd44127fce8304d1213f6bb538928f25fcd',
             '2ecff0a89772387db26f7032ecbf8ec7efb3700947a71b15042fea3132325c3f'),

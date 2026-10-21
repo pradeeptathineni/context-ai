@@ -19,6 +19,8 @@ Carry current authority changes and unresolved stops in an authorized handoff. R
 
 Before an allocated run, check that required actions, exposed tools and exact target permissions agree, including path anchoring and the execution surface. UI controls, file reads and shell/process checks have different permissions and evidence. A denied check leaves the state unverified; it proves neither presence, absence nor cleanup. Retain partial output for the appropriate checks rather than blaming a harness mismatch on the model or silently widening access.
 
+For a headless coding run, inspect the terminal event, structured result, process exit and actual diff/checks together: exit status 0 can accompany an honest blocked result. Preflight required listener/filesystem capabilities, and separate coding from a permitted test supervisor when their access differs. Keep primary output and failure evidence outside directories cleared by project cleanup or package-manager log pruning. Successful supervised recovery establishes use and recoverability, not unattended completion or comparative efficiency.
+
 Do not call a review independent merely because a second agent repeated the first agent's summary. For consequential findings, use separate evidence or a fresh artifact and show which conclusions were reproduced. If all branches need the same mutable database, checkout, or service, serialize them or isolate each branch explicitly.
 
 Use a specialist role only when its narrow responsibility changes the work: for example, database integrity, source-policy security, retrieval evaluation, accessibility, or release verification. The role is a task contract, not a new persona.

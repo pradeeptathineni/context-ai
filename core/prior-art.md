@@ -38,7 +38,9 @@ Before relying on a channel, establish the capability the decision needs, not me
 5. Obtain a bounded fresh challenge when consequence warrants it. Keep source authority, self-review, independent agent review and human use separate.
 6. Record in the project's existing ADR, decision file or issue: the need, options actually considered, selected owner, exact version, evidence verified and still unknown, and the condition that reopens the choice. Do not invent a scoring framework for one decision.
 
-Offering an option does not enable it. Keep selected, materialized, read/invoked and observed states distinct. Stop searching when another source is unlikely to change the decision. Recheck volatile facts immediately before adoption. An honest unresolved gap needs a next action, not a confident recommendation.
+For source reuse, name the user-facing feature, owning project and complete consumer workflow. Copy or adapt a coherent slice of code and tests when its license permits and it gives useful control; use a package or service when its maintenance value justifies it. Verify the selected revision and rights, retain required notices and record local changes. A contender list or architectural resemblance is not implemented reuse. Across cooperating projects, shared interfaces consume behavior from its owner. Add missing producer capabilities there rather than duplicating them in a client.
+
+Offering an option does not enable it. Keep plans, installation, use, independent checks and demonstrated benefit distinct; an earlier stage does not prove a later one. Stop searching when another source is unlikely to change the decision. Recheck volatile facts immediately before adoption. An honest unresolved gap needs a next action, not a confident recommendation.
 
 Use native skills and review controls when available. Do not create an agent runtime, mandatory receipt per small edit, unrestricted interview or peer-readiness loop.
 
