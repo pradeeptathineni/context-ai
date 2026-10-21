@@ -608,8 +608,18 @@ options:
     strengths:
     - Pinned entry validates as package code-review; router validates as context-code-review.
     weaknesses:
-    - Native discovery, reading and review usefulness pending one paired baseline/equipped trial.
+    - Native discovery, reading and review usefulness had not been observed at this checked ref; see the later paired observation below.
     checked_ref: 1413755d02c8bdad3939ee27d43d1a7dcb58db35
+    grade: null
+  - scope: 'Native pair observed 2026-10-21: one read-only baseline and one equipped review of the same authored diff.'
+    evidence:
+    - 'Coordinator COMPARISON.json SHA-256 e559c4d643efbe05f085ccfb48b87ddaa13aa0bdf49a73d9a11050f69c57b817; same prompt, model and effort.'
+    - 'Both found the stale price lookup in shop/receipt.py:9 and preserved integer-cent behavior; equipped review read its router, adapter and pinned instruction.'
+    strengths:
+    - Native equipment consumption and a useful defect finding were observed.
+    weaknesses:
+    - No quality uplift was measured in this single case because the native baseline found the same defect; this does not judge other tasks or Context overall. The installed TDD option was not invoked.
+    checked_ref: 0042b0c6b1cc4b35ea8fd14f2916e6a02331dc83
     grade: null
 - id: ecc-whole-harness
   name: ECC integrated harness
