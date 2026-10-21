@@ -66,6 +66,17 @@ Limits:
 
 This closes external recurring selection and delivery only. The six public profile examples still own the committed standing policy and snapshot identity, and private history and policy seeded by those records have not moved; full policy/history extraction remains incomplete.
 
+## Compare and equip a code review
+
+`select` output includes a `comparison` for each chosen concern. It lists every catalog option for that concern with its purpose, status, limits and scoped evidence, and labels each assessment as source-supported or locally tested. It describes fit; it never chooses for you. The `code-review` concern offers two options. `matt-pocock-code-review` delivers the pinned upstream code-review skill through a thin [adapter](../procedures/code-review.md); it runs the axes sequentially by default and needs no tracker setup or sub-agents. `context-review` is the owned [consequential-change review](../procedures/review.md) with a complexity axis and caller tracing. The synthetic [review-equipment profile](../examples/library-profiles/review-equipment.yaml) pairs the focused review with the owned `context-tdd` regression loop:
+
+```sh
+.venv/bin/python scripts/context_ai.py select --library-profile "$PWD/examples/library-profiles/review-equipment.yaml"
+.venv/bin/python scripts/context_ai.py plan --library-profile "$PWD/examples/library-profiles/review-equipment.yaml" --project /absolute/consumer --provider both
+```
+
+The plan lists the exact pinned resource hashes, the upstream pin, its license and the `context-code-review`/`context-tdd` routers before anything is written. Installation, native discovery, an actual read and a useful review are separate observations; no native review usefulness is established for either option yet.
+
 ## Use a controlled trial
 
 Trial planning is read-only. Execution accepts a registered recipe, an empty disposable directory and its reviewed isolation boundary. Arbitrary candidate commands are never accepted.

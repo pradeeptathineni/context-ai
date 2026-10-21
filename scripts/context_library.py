@@ -220,8 +220,20 @@ def selected(p):
         elif delivery['kind'] == 'direct-upstream':
             direct.append(row)
     return {'profile': p, 'loadouts': loads, 'capabilities': capabilities, 'direct_upstream': direct,
+            'comparison': comparison(p['selections'], opts),
             'authority': 'explicit profile; ordinary tasks load no extra guidance',
             'direct_limit': 'Direct upstream selection records fit and pin. Its installer is never executed implicitly.'}
+
+
+def comparison(choices, opts):
+    """Each chosen concern beside its catalog alternatives, with scoped evidence; fit stays a judgment."""
+    return [{'concern': choice['concern'], 'selected': choice['option'], 'reason': choice['reason'],
+             'options': [{'id': o['id'], 'name': o['name'], 'purpose': o['purpose'], 'status': o['status'],
+                          'delivery': o['delivery'], 'limits': o['limits'],
+                          'evidence': [{key: a[key] for key in ('scope', 'strengths', 'weaknesses', 'checked_ref')}
+                                       for a in o['assessments']]}
+                         for o in opts.values() if o['concern'] == choice['concern']]}
+            for choice in choices]
 
 
 def delivery(id, project, provider=None, action='plan', state=None):

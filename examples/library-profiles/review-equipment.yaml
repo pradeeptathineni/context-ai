@@ -1,0 +1,25 @@
+schema_version: 1
+id: review-equipment
+project: null
+snapshot:
+  revision: null
+  files: []
+purpose: 'Synthetic public example: equip a project for a focused code review, plus a regression test for any
+  confirmed defect.'
+environment: {}
+priorities:
+- Find actionable defects in a named change without reverting its valid behavior.
+- Pin a confirmed fix with the project's existing test runner.
+policy:
+  trials: []
+  updates: []
+  schedule: false
+selections:
+- option: matt-pocock-code-review
+  concern: code-review
+  reason: Fixed-point diff review on separate Standards and Spec axes. Pinned upstream bytes validate as an
+    Agent Skills package. Native usefulness has not been measured.
+- option: context-tdd
+  concern: test-first-development
+  reason: Red-green regression test at a public seam for a confirmed defect, using the existing runner. This
+    is an owned procedure delivered by existing loadout tests.

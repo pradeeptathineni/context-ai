@@ -130,6 +130,15 @@ capabilities:
       tests. Distinguish review-only authority from corrections.
     boundary: Instructions only; a review selection grants no delegation or write
       authority.
+  context-code-review:
+    kind: resource
+    stages: [review]
+    path: procedures/code-review.md
+    description: Review changes since a fixed point (commit, branch or merge-base)
+      on two separate axes, Standards and Spec, with Matt Pocock's pinned code-review
+      skill. Use when asked to review a branch, PR, commit or work-in-progress change.
+    boundary: Instructions only; no tracker setup, sub-agents, hooks or write authority
+      are activated.
   context-review-fresh:
     kind: resource
     stages: [review]

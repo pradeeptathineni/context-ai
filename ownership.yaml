@@ -41,7 +41,7 @@ concerns:
     native_names: [systematic-debugging, diagnosing-bugs, investigate]
   code-review:
     owner_kind: upstream
-    files: [procedures/review.md, core/review.md, procedures/review-fresh.md]
+    files: [procedures/review.md, core/review.md, procedures/review-fresh.md, procedures/code-review.md]
     upstream: mattpocock
     adapted_from: [ponytail]
     native_names: [code-review, review, ponytail-review]

@@ -514,6 +514,103 @@ options:
     - Upstream related-skill references may not exist in the consumer.
     checked_ref: f3fc5632f401156837ee3872f14fe33ccf1024ea
     grade: null
+- id: context-review
+  name: Context consequential-change review
+  purpose: Review a scoped change on Spec, Standards and Complexity axes, tracing callers, compatibility and
+    test discrimination before confirming a finding.
+  concern: code-review
+  delivery:
+    kind: capability
+    id: context-review
+  upstream:
+    url: https://github.com/pradeeptathineni/context-ai
+    revision: current source checkout; exact resource hashes in delivery preview and lock
+    license: MIT
+    license_source: LICENSE
+  domains:
+  - software
+  requirements:
+  - A scoped diff or responsibility
+  - Project standards and spec when available
+  permissions:
+  - Review-only unless the task authorizes corrections.
+  references:
+  - procedures/review.md
+  - core/review.md
+  - sourced/mattpocock/code-review/instruction.md
+  - sourced/ponytail/reuse/review.md
+  status: retained
+  limits:
+  - Condenses the upstream smell baseline to a linked reference.
+  - Guidance delivery alone does not prove review quality or usefulness.
+  assessments:
+  - scope: 'Source-supported: owned adaptation of pinned Matt Pocock two-axis review and Ponytail complexity
+      tags.'
+    evidence:
+    - procedures/review.md, ownership.yaml code-review owner and sources.lock.json mattpocock/ponytail pins
+    strengths:
+    - Adds complexity tags and finding discipline (trigger, consequence, location, action).
+    weaknesses:
+    - Broader procedure; may add little where native review already traces callers.
+    checked_ref: 6dfb930e6de7449d8fb58e91bb6eb788d702e2c3
+    grade: null
+  - scope: 'Locally tested: --library-profile delivery, verify and undo in a disposable consumer.'
+    evidence:
+    - tests/test_skill_validation.py ReviewEquipment, added with this option on the checked validator commit
+    strengths:
+    - Installs with its pinned upstream notices through the existing lifecycle.
+    weaknesses:
+    - No native review outcome recorded for this option.
+    checked_ref: 1413755d02c8bdad3939ee27d43d1a7dcb58db35
+    grade: null
+- id: matt-pocock-code-review
+  name: Matt Pocock focused code review
+  purpose: Review changes since a fixed point on separate Standards and Spec axes with a full code-smell baseline.
+  concern: code-review
+  delivery:
+    kind: capability
+    id: context-code-review
+  upstream:
+    url: https://github.com/mattpocock/skills
+    revision: f3fc5632f401156837ee3872f14fe33ccf1024ea
+    license: MIT
+    license_source: sourced/mattpocock/LICENSE
+  domains:
+  - software
+  requirements:
+  - A fixed point (commit, branch or merge-base) or named change
+  - Git history readable by the reviewer
+  permissions:
+  - Review-only unless the task authorizes corrections; no tracker setup or sub-agents are activated.
+  references:
+  - procedures/code-review.md
+  - sourced/mattpocock/code-review/instruction.md
+  - sources.lock.json
+  status: experimental
+  limits:
+  - Not selected alongside context-review for the same concern.
+  - Upstream prose assumes parallel sub-agents and a tracker setup skill; the adapter makes both non-defaults.
+  - No complexity axis or explicit caller-tracing step.
+  assessments:
+  - scope: 'Source-supported: pinned upstream skill bytes and license inspected; equal at 5beb35b.'
+    evidence:
+    - sourced/mattpocock/code-review/instruction.md 09eb147f793e4647949edd32dbad278f0554dfb56e0d46b699cd4c2c55bf0357
+    strengths:
+    - Concrete fixed-point diff procedure, standards discovery and a fixed two-heading report.
+    weaknesses:
+    - Upstream describes its intended behavior; no review outcome is established by source inspection.
+    checked_ref: 5beb35b040e3de97e54fa9e386d7e42d15c295c2
+    grade: null
+  - scope: 'Locally tested: Agent Skills package validation, --library-profile delivery, verify, refresh and
+      undo in a disposable consumer.'
+    evidence:
+    - tests/test_skill_validation.py, journey cases added with this option on the checked validator commit
+    strengths:
+    - Pinned entry validates as package code-review; router validates as context-code-review.
+    weaknesses:
+    - Native discovery, reading and review usefulness pending one paired baseline/equipped trial.
+    checked_ref: 1413755d02c8bdad3939ee27d43d1a7dcb58db35
+    grade: null
 - id: ecc-whole-harness
   name: ECC integrated harness
   purpose: Consider a complete upstream engineering profile when its workflow, hooks and native lifecycle fit
