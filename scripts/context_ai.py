@@ -3,7 +3,7 @@
 import argparse
 import base64
 import fnmatch
-from functools import lru_cache
+from functools import lru_cache, wraps
 import hashlib
 import json
 import os
@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
@@ -717,11 +718,44 @@ def atomic(path,data):
 
 SKILL_ROUTER = r'\.(agents|claude)/skills/context-[a-z0-9-]+/SKILL\.md'
 
+_lifecycle_state = threading.local()
+
+def lifecycle(write=False):
+    """Hold a local POSIX directory lock across one consumer operation."""
+    def decorate(operation):
+        @wraps(operation)
+        def guarded(project, *args, **kwargs):
+            if project.is_symlink():raise Invalid('symlink project directory')
+            key=(os.getpid(),str(project.resolve()))
+            held=getattr(_lifecycle_state,'held',{})
+            if key in held:
+                if write and not held[key]:raise Invalid('cannot write during a read-only lifecycle operation')
+                return operation(project,*args,**kwargs)
+            try:
+                import fcntl
+            except ImportError as error:
+                raise Invalid('consumer lifecycle locking requires a local POSIX filesystem') from error
+            # The directory inode is stable; never unlink or age out a live lock.
+            fd=os.open(project,os.O_RDONLY | getattr(os,'O_DIRECTORY',0))
+            try:
+                try:
+                    fcntl.flock(fd,(fcntl.LOCK_EX if write else fcntl.LOCK_SH) | fcntl.LOCK_NB)
+                except BlockingIOError as error:
+                    raise Invalid('another lifecycle operation active for '+str(project)+'; wait for it to finish, then retry') from error
+                _lifecycle_state.held=held
+                held[key]=write
+                try:return operation(project,*args,**kwargs)
+                finally:del held[key]
+            finally:os.close(fd)
+        return guarded
+    return decorate
+
 def transaction_path(project, name):
     if name not in ('AGENTS.md','.context-ai/lock.json','CLAUDE.md','.claude/CLAUDE.md') and not (name.startswith('.context-ai/resources/') or re.fullmatch(SKILL_ROUTER,name)):
         raise Invalid('unapproved recovery path: '+name)
     return inside(project,name)
 
+@lifecycle(write=True)
 def recover(project):
     journal=inside(project,'.context-ai/pending.json')
     if not journal.exists():return {'recovered':True,'preserved_conflicts':[]}
@@ -752,6 +786,7 @@ def recover(project):
     return {'recovered':not conflicts,'preserved_conflicts':conflicts}
 
 
+@lifecycle()
 def installed(project, allow_rebind=False):
     if inside(project,'.context-ai/pending.json').exists():
         raise Invalid('incomplete application; run recover before ownership operations')
@@ -866,6 +901,13 @@ def preflight(project, lock, files):
     states=capability_states(
         {key:entry['requirement'] for key,entry in lock['capabilities'].items()},
         {key:entry['definition'] for key,entry in lock['capabilities'].items()},project)
+    before={}
+    def observed(name):
+        if name not in before:
+            p=transaction_path(project,name)
+            before[name]=p.read_bytes() if p.is_file() else None
+        return before[name]
+    observed('.context-ai/lock.json')
     previous=installed(project)
     targets=materialized(lock,files)
     conflicts=[]
@@ -887,12 +929,13 @@ def preflight(project, lock, files):
     for name in set(targets)|set(old_owned):
         p=inside(project,name)
         if p.exists():
-            if not p.is_file() or name not in old_owned or digest(p.read_bytes())!=old_owned[name]:
+            if not p.is_file() or name not in old_owned or digest(observed(name))!=old_owned[name]:
                 conflicts.append('user file conflict: '+name)
         elif name in old_owned:
             conflicts.append('missing owned file: '+name)
+        observed(name)
     agents=inside(project,'AGENTS.md')
-    text=agents.read_bytes().decode("utf-8") if agents.exists() else ''
+    text=(observed('AGENTS.md') or b'').decode('utf-8')
     old_block=previous['routing_block'] if previous else None
     updated=None
     if old_block:
@@ -912,7 +955,7 @@ def preflight(project, lock, files):
     want=routing.get('claude',{}).get('mode')=='managed-block'
     if old_claude and (not want or routing['claude']['path']!=old_claude['path']):
         p=inside(project,old_claude['path'])
-        ctext=p.read_bytes().decode("utf-8") if p.exists() else ''
+        ctext=(observed(old_claude['path']) or b'').decode('utf-8')
         try:current=instruction_block(ctext)
         except Invalid:current=None
         if current!=old_claude['block']:
@@ -925,7 +968,7 @@ def preflight(project, lock, files):
     if want:
         name=routing['claude']['path']
         p=inside(project,name)
-        ctext=p.read_bytes().decode("utf-8") if p.exists() else ''
+        ctext=(observed(name) or b'').decode('utf-8')
         if old_claude:
             try:current=instruction_block(ctext)
             except Invalid:current=None
@@ -949,28 +992,31 @@ def preflight(project, lock, files):
     desired.update(claude_desired)
     desired.update({name:None for name in set(old_owned)-set(targets)})
     return {'previous':previous,'targets':targets,'old_owned':old_owned,'state':state,'desired':desired,
+            'before':{name:before[name] for name in desired},
             'conflicts':conflicts,'duplicates':duplicates,'inventory':inventory,'host_routing':routing,
             'capabilities':states}
 
-def apply(project,lock,files):
-    check=preflight(project,lock,files)
-    if check['conflicts']:
-        raise Invalid('; '.join(check['conflicts']))
-    desired=check['desired']
-    before={}
-    for name in desired:
+def publish(project, desired, before):
+    """Journal exact before bytes and reject edits before each owned publish."""
+    def unchanged(name, expected):
         p=transaction_path(project,name)
-        before[name]=base64.b64encode(p.read_bytes()).decode() if p.exists() else None
+        current=p.read_bytes() if p.is_file() else None
+        if (p.exists() and not p.is_file()) or current!=expected:
+            raise Invalid('changed during lifecycle: '+name+'; preserve the edit and run recover if pending')
+        return p
+    for name in desired:unchanged(name,before[name])
     journal=inside(project,'.context-ai/pending.json')
-    atomic(journal,encoded({'schema_version':1,'bound_project':str(project),'before':before,
+    atomic(journal,encoded({'schema_version':1,'bound_project':str(project),
+                            'before':{name:base64.b64encode(value).decode() if value is not None else None for name,value in before.items()},
                             'after':{name:digest(value) if value is not None else None for name,value in desired.items()}}))
     try:
         for name,value in desired.items():
-            p=transaction_path(project,name)
+            p=unchanged(name,before[name])
             if value is None:
                 if p.exists():p.unlink()
             elif not p.exists() or p.read_bytes()!=value:
                 atomic(p,value)
+        for name,value in desired.items():unchanged(name,value)
     except Exception:
         try:
             recover(project)
@@ -978,6 +1024,14 @@ def apply(project,lock,files):
             raise Invalid('application interrupted; recovery bytes retained in .context-ai/pending.json') from recovery_error
         raise
     journal.unlink()
+
+@lifecycle(write=True)
+def apply(project,lock,files):
+    check=preflight(project,lock,files)
+    if check['conflicts']:
+        raise Invalid('; '.join(check['conflicts']))
+    desired=check['desired']
+    publish(project,desired,check['before'])
     return {'selection_outcome':'focused' if lock['stages'] or lock['capabilities'] else 'native-sufficient',
             'applied':lock['loadouts'],'provider':lock['provider'],'resource_count':len(files),
             'lock_sha256':digest(desired['.context-ai/lock.json']),'host_routing':check['host_routing']}
@@ -991,6 +1045,7 @@ def upstream_pins(files):
                          'license':source['license'],'files':selected,'update_owner':'context (sources.lock.json)'})
     return pins
 
+@lifecycle()
 def plan(project, lock, files):
     check=preflight(project,lock,files)
     previous=check['previous']
@@ -1017,6 +1072,7 @@ def plan(project, lock, files):
             'concerns':selected_concerns(files),
             'activation':'proposed'}
 
+@lifecycle()
 def verify(project, allow_rebind=False):
     state=installed(project, allow_rebind=allow_rebind)
     if not state:
@@ -1087,6 +1143,7 @@ def probe_command(command, location=None):
         raise Invalid('unexpected Git version response')
     return output
 
+@lifecycle(write=True)
 def rebind(project):
     # Verify the copied installation before changing only its local ownership binding.
     verify(project,allow_rebind=True)
@@ -1119,51 +1176,59 @@ def pinned_files(lock):
         raise Invalid('imported capability definitions differ from reviewed source')
     return files
 
-def remove_block(project, name, block, created, added_newline):
-    path=inside(project,name)
-    text=path.read_bytes().decode("utf-8") if path.exists() else ''
+def without_block(data, block, created, added_newline):
+    text=data.decode('utf-8') if data is not None else ''
     try:
         current=instruction_block(text)
     except Invalid:
         current=None
     if current!=block:
-        return False
+        return False,data
     removable=('\n'+block) if added_newline and ('\n'+block) in text else block
     result=text.replace(removable,'',1)
-    if created and not result:
-        path.unlink()
-    else:
-        atomic(path,result.encode())
-    return True
+    return True,None if created and not result else result.encode()
 
+@lifecycle(write=True)
 def undo(project):
+    receipt=inside(project,'.context-ai/lock.json')
+    before={'.context-ai/lock.json':receipt.read_bytes() if receipt.is_file() else None}
     state=installed(project)
     if not state:
         raise Invalid('no installation')
-    conflicts=[]; retained={}
+    conflicts=[]; retained={};desired={}
     for name,sha in state['owned'].items():
         p=inside(project,name)
-        if p.is_file() and digest(p.read_bytes())==sha:
-            p.unlink()
+        before[name]=p.read_bytes() if p.is_file() else None
+        if before[name] is not None and digest(before[name])==sha:
+            desired[name]=None
         elif p.exists():
             conflicts.append(name); retained[name]=sha
     if not state.get('routing_removed'):
-        if remove_block(project,'AGENTS.md',state['routing_block'],state['agents_created'],state.get('agents_added_newline')):
+        p=inside(project,'AGENTS.md')
+        before['AGENTS.md']=p.read_bytes() if p.is_file() else None
+        removed,data=without_block(before['AGENTS.md'],state['routing_block'],state['agents_created'],state.get('agents_added_newline'))
+        if removed:
+            desired['AGENTS.md']=data
             state['routing_removed']=True
         else:
             conflicts.append('AGENTS.md')
     claude=state.get('claude_routing')
     if claude and not claude.get('removed'):
-        if remove_block(project,claude['path'],claude['block'],claude['created'],claude.get('added_newline')):
+        p=inside(project,claude['path'])
+        before[claude['path']]=p.read_bytes() if p.is_file() else None
+        removed,data=without_block(before[claude['path']],claude['block'],claude['created'],claude.get('added_newline'))
+        if removed:
+            desired[claude['path']]=data
             claude['removed']=True
         else:
             conflicts.append(claude['path'])
     if conflicts:
         state['owned']=retained
         state['undo_pending']=True
-        atomic(inside(project,'.context-ai/lock.json'),encoded(state))
+        desired['.context-ai/lock.json']=encoded(state)
     else:
-        inside(project,'.context-ai/lock.json').unlink()
+        desired['.context-ai/lock.json']=None
+    publish(project,desired,{name:before[name] for name in desired})
     return {'undone':not conflicts,'preserved_conflicts':conflicts}
 
 def main():
