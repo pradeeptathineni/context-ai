@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Select bounded project and private guidance from known task files, with per-file declared-topic precedence, provenance and refusal of unresolved ties. Add read-only receipt/context CLI output to the existing delivery resolver; adapt Continue's pinned rule applicability code and nested-scope controls.
+
 - Offer a per-concern code-review choice in the catalog. `matt-pocock-code-review` delivers the pinned upstream skill through a thin `context-code-review` adapter with no sub-agent or tracker defaults. `context-review` is the existing owned review. `select` now reports a `comparison` of each chosen concern's options with source-supported and locally tested evidence. The synthetic `examples/library-profiles/review-equipment.yaml` pairs the focused review with `context-tdd` through the existing `--library-profile` lifecycle. Native review usefulness is not yet measured.
 
 - Validate Agent Skills package metadata at acquisition and delivery with an attributed Apache-2.0 slice of the agentskills reference validator, which uses Context's strict YAML loader instead of strictyaml. The new read-only `validate-skill --package DIR` reports exact hashes and exits 2 on refusal. Pinned upstream package entries, `context-loadout` metadata and generated routers must also validate. Matt Pocock code-review bytes at `5beb35b` are recorded as identical to the existing pin; no instruction bytes changed.

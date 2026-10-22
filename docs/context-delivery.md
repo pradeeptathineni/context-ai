@@ -8,6 +8,10 @@ caller that knows the task may request an installed stage and explicit private
 task resources. The same `prepare()` function is the prelaunch entrypoint for a
 Maestro adapter; it has no model or filesystem writes.
 
+Known task files select project and private writing guidance through the same
+entrypoint; see [task guidance](task-guidance.md) for manifests, precedence,
+CLI output and the offline demo. Generic session start does not infer a task.
+
 The command adapter accepts a Codex or Claude Code `SessionStart` JSON payload
 on stdin and emits their documented `hookSpecificOutput.additionalContext` JSON.
 It handles `startup`, `resume`, `clear`, `compact`, and `fork`. A missing required

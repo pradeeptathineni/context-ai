@@ -234,6 +234,19 @@
         "sourced/neoma/LICENSE": "0d96a4ff68ad6d4b6f1f30f713b18d5184912ba8dd389f86aa7710db079abcb0",
         "sourced/neoma/markdown-compatibility.md": "0e0336ff55ebca35214c9ce7968a7517995af32cb01e2185c495f46ac958d47e"
       }
+    },
+    {
+      "id": "continue-rules",
+      "repository": "https://github.com/continuedev/continue",
+      "revision": "5522c6f44ca0ac3528b37244818fbfa39b5af470",
+      "upstream_path": "core/llm/rules",
+      "license": "Apache-2.0",
+      "files": {
+        "sourced/continue/rules/LICENSE": "b14a17598cb08c4c7c82c070731126304e0a75d001ed59fb9ea3955a0b561802",
+        "sourced/continue/rules/NOTICE.md": "649a4d7b9d79e38215ed448c0cb4496c149ce5f48244dc4625237f3e832b872a",
+        "sourced/continue/rules/nested-tests.upstream.ts": "e7d11e8b80b6c76c08606eeb9637da79f1a773477d89edd7fdfa32d5c4c607c7",
+        "sourced/continue/rules/selection.upstream.ts": "49064b70d8817a21264c966ca3cdf0be9627f5bb696ae1701dab5e3e9e818f14"
+      }
     }
   ]
 }

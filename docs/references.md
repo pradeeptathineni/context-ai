@@ -1,5 +1,12 @@
 # References and provenance
 
+File-scoped [task guidance](task-guidance.md) adapts Continue's rule applicability
+and nested-scope controls at `5522c6f44ca0ac3528b37244818fbfa39b5af470`, reviewed
+2026-10-22. Exact Apache-2.0 source/test snapshots, license and adaptation notes
+are in [sourced/continue/rules](../sourced/continue/rules/NOTICE.md), pinned in
+`sources.lock.json`. The adaptation replaces loose directory substring checks
+with project-contained paths and adds declared-topic conflict explanations.
+
 The optional [native usage procedure](../procedures/usage.md) uses documented
 [Codex JSONL completion usage](https://learn.chatgpt.com/docs/non-interactive-mode),
 [App Server thread snapshots](https://learn.chatgpt.com/docs/app-server), and
