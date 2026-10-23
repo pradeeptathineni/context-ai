@@ -16,6 +16,10 @@ A direct read needs no installation or Python environment. A link is a pointer u
 
 For several task choices, the [context-loadout skill](skills/context-loadout/SKILL.md) can resolve an optional read-only [task profile](docs/task-profiles.md). It recommends resources and development choices without installing anything or changing the active model.
 
+## Map a repository for a task
+
+Use the optional [read-only repository map](docs/repo-map.md) to find relevant tracked files and symbols for a task. It emits a compact text map or JSON without copying source content or changing the selected checkout.
+
 ## Keep a project selection
 
 The [catalog and project profiles](docs/library.md) preserve options, reasons, evidence and recurring selections. The [portal](examples/web/index.html) shows these public choices and installs nothing. Follow the source-environment setup in the library guide, then run from the Context checkout:
