@@ -71,7 +71,7 @@ class ContextPackTests(unittest.TestCase):
             "sys.stdout.buffer.write(s.export(sys.argv[4], format='text'))"
         )
         out = subprocess.check_output([
-            "/Users/pradeeptathineni/code/personal/ai-systems/context-ai/.venv/bin/python",
+            sys.executable,
             "-B", "-c", code, str(Path(__file__).resolve().parents[1] / "scripts"),
             str(self.project), str(self.store), preview["preview_id"]])
         self.assertEqual(out, preview["renders"]["text"]["content"].encode())
@@ -117,7 +117,7 @@ class ContextPackTests(unittest.TestCase):
 
     def test_cli_candidates_preview_export(self):
         cli = Path(__file__).resolve().parents[1] / "scripts" / "context_pack.py"
-        base = ["/Users/pradeeptathineni/code/personal/ai-systems/context-ai/.venv/bin/python",
+        base = [sys.executable,
                 "-B", str(cli)]
         common = ["--project", str(self.project), "--store", str(self.store),
                   "--context-root", str(Path(__file__).resolve().parents[1]),
