@@ -1,3 +1,4 @@
+import hashlib
 import json
 from pathlib import Path
 import subprocess
@@ -115,6 +116,190 @@ class ContextPackTests(unittest.TestCase):
             self.service.preview(candidate["candidate_set_id"], include_ids=[item_id], max_tokens=1)
         self.assertEqual(error.exception.code, "budget_too_small")
 
+    def test_full_and_structural_python_representations_replay_exact_segments(self):
+        source = (
+            "# Copyright 2026 Fixture Authors\n"
+            "# SPDX-License-Identifier: MIT\n"
+            '"""Invoice declarations for 雪 handling."""\n'
+            "from __future__ import annotations\n"
+            "from dataclasses import dataclass\n"
+            "\n"
+            'LABEL: str = "雪"\n'
+            "\n"
+            "@audit(\n"
+            '    "invoice",\n'
+            ")\n"
+            "@dataclass\n"
+            "class Invoice:\n"
+            '    """Public invoice record."""\n'
+            "    total: int\n"
+            "\n"
+            "    @classmethod\n"
+            "    async def calculate(\n"
+            "        cls, values: list[int], *,\n"
+            "        tax: float = 0.0,\n"
+            "    ) -> float:\n"
+            '        """Calculate the taxed total."""\n'
+            "        gross = sum(values)\n"
+            "        return gross * (1 + tax)\n"
+            "\n"
+            "def helper(value: int) -> int:\n"
+            "    return value + 1\n"
+        )
+        raw = source.replace("\n", "\r\n").encode("utf-8").removesuffix(b"\r\n")
+        path = self.project / "invoice_api.py"
+        path.write_bytes(raw)
+        self._git("add", "invoice_api.py")
+        self._git("commit", "-qm", "add structural fixture")
+        full_candidates = self.service.candidates(
+            "inspect invoice declarations", focus=["invoice_api.py"], representation="full")
+        full_item = next(item for item in full_candidates["items"] if item["kind"] == "source")
+        self.assertEqual(full_item["content"].encode("utf-8"), raw)
+        self.assertEqual(full_item["representation"]["selected_bytes"], len(raw))
+        self.assertEqual(full_item["representation"]["segments"][0]["line_start"], 1)
+        full_preview = self.service.preview(full_candidates["candidate_set_id"], max_tokens=8192)
+        self.assertEqual(self.service.export(full_preview["preview_id"], format="json"),
+                         full_preview["renders"]["json"]["content"].encode("utf-8"))
+
+        source_raw = raw + b"\r\n# already dirty before structural snapshot"
+        path.write_bytes(source_raw)
+        candidates = self.service.candidates(
+            "inspect invoice declarations", focus=["invoice_api.py"], representation="structure")
+        self.assertNotEqual(candidates["candidate_set_id"], full_candidates["candidate_set_id"])
+        item = next(row for row in candidates["items"] if row["kind"] == "source")
+        representation = item["representation"]
+        self.assertEqual(representation["selected"], "structure")
+        self.assertEqual(representation["algorithm"], "python-ast-segments-v1")
+        self.assertNotIn("line_start", item["source"])
+        self.assertNotIn("line_end", item["source"])
+        self.assertEqual(representation["original_sha256"], hashlib.sha256(source_raw).hexdigest())
+        self.assertEqual(representation["original_bytes"], len(source_raw))
+        self.assertLess(representation["selected_bytes"], representation["original_bytes"])
+        self.assertIn("@audit(\r\n    \"invoice\",\r\n)", item["content"])
+        signature = ("async def calculate(\r\n        cls, values: list[int], *,\r\n"
+                     "        tax: float = 0.0,\r\n    ) -> float:")
+        self.assertIn(signature, item["content"])
+        self.assertIn("Public invoice record.", item["content"])
+        self.assertIn("# SPDX-License-Identifier: MIT", item["content"])
+        self.assertIn("from dataclasses import dataclass", item["content"])
+        self.assertIn('LABEL: str = "雪"', item["content"])
+        self.assertNotIn("gross = sum(values)", item["content"])
+        lines = context_pack._source_lines(source_raw)
+        offsets = [0]
+        for line in lines:
+            offsets.append(offsets[-1] + len(line))
+        reconstructed = b"".join(b"".join(lines[segment["line_start"] - 1:segment["line_end"]])
+                                 for segment in representation["segments"])
+        self.assertEqual(reconstructed.decode("utf-8"), item["content"])
+        for segment in representation["segments"]:
+            selected = b"".join(lines[segment["line_start"] - 1:segment["line_end"]])
+            self.assertEqual(segment["byte_start"], offsets[segment["line_start"] - 1])
+            self.assertEqual(segment["byte_end"], offsets[segment["line_end"]])
+            self.assertEqual(segment["sha256"], hashlib.sha256(selected).hexdigest())
+        structure_preview = self.service.preview(candidates["candidate_set_id"], max_tokens=8192)
+        rendered = structure_preview["renders"]["text"]["content"]
+        self.assertIn("Presentation note (not source): omitted original lines", rendered)
+        self.assertIn("Original source lines", rendered)
+        self.assertNotIn("gross = sum(values)", rendered)
+        self.assertEqual(self.service.export(structure_preview["preview_id"], format="text"),
+                         rendered.encode("utf-8"))
+        reopened = context_pack.ContextPackService(
+            self.project, store=self.store, context_root=self.service.context_root,
+            project_id="synthetic")
+        self.assertEqual(reopened.export(structure_preview["preview_id"], format="text"),
+                         rendered.encode("utf-8"))
+
+        observation = context_pack._observation(self.project, "synthetic")
+        path.write_bytes(source_raw.replace(b"gross = sum(values)", b"gross = sum(values) + 1"))
+        self.assertEqual(context_pack._observation(self.project, "synthetic"), observation)
+        with self.assertRaises(context_pack.ContextPackError) as error:
+            self.service.export(structure_preview["preview_id"], format="text")
+        self.assertEqual(error.exception.code, "source_drift")
+
+    def test_structure_fallbacks_are_exact_and_explicit(self):
+        fixtures = {
+            "unsupported.ts": (b"export function run() { return 1; }\n", "unsupported_language"),
+            "plain.txt": ("Plain text keeps 雪 and CRLF.\r\nNo syntax extraction.".encode("utf-8"),
+                          "unsupported_language"),
+            "broken.py": (b"def broken(:\n    pass\n", "malformed_python"),
+            "small.py": (b"def small(): return 1\n", "one_line_declaration"),
+            "licensed_body.py": (
+                b"def licensed():\n    value = 1\n    # Copyright 2026 Fixture\n    return value\n",
+                                 "source_notice_not_retained"),
+        }
+        for name, (raw, reason) in fixtures.items():
+            with self.subTest(path=name):
+                path = self.project / name
+                path.write_bytes(raw)
+                self._git("add", name)
+                self._git("commit", "-qm", f"add {name}")
+                candidates = self.service.candidates(
+                    "inspect source", focus=[name], representation="structure")
+                item = next(row for row in candidates["items"] if row["kind"] == "source")
+                self.assertEqual(item["content"].encode("utf-8"), raw)
+                self.assertEqual(item["representation"]["selected"], "full")
+                self.assertEqual(item["representation"]["fallback_reason"], reason)
+                preview = self.service.preview(candidates["candidate_set_id"], max_tokens=8192)
+                self.assertEqual(self.service.export(preview["preview_id"]),
+                                 preview["renders"]["text"]["content"].encode("utf-8"))
+
+    def test_overdeep_python_falls_back_to_exact_source(self):
+        raw = ("value = " + "[" * 105 + "1" + "]" * 105 + "\n").encode("utf-8")
+        (self.project / "deep.py").write_bytes(raw)
+        self._git("add", "deep.py")
+        self._git("commit", "-qm", "add deep fixture")
+        candidates = self.service.candidates(
+            "inspect deep source", focus=["deep.py"], representation="structure")
+        item = next(row for row in candidates["items"] if row["kind"] == "source")
+        self.assertEqual(item["content"].encode("utf-8"), raw)
+        self.assertIn(item["representation"]["fallback_reason"],
+                      {"parser_depth_limit", "ast_depth_limit", "malformed_python"})
+
+    def test_overlimit_focus_is_omitted_whole_with_exact_reason(self):
+        name = "oversized.py"
+        (self.project / name).write_bytes(b"# " + b"x" * context_pack.repo_map.MAX_FILE_BYTES)
+        self._git("add", name)
+        self._git("commit", "-qm", "add oversized source")
+        candidates = self.service.candidates(
+            "inspect oversized source", focus=[name], representation="full")
+        self.assertFalse(any(item["kind"] == "source" for item in candidates["items"]))
+        self.assertTrue(any(item.get("path") == name and
+                            "exceeds 256000 byte file limit" in item["reason"]
+                            for item in candidates["omissions"]["items"]))
+
+    def test_export_rejects_rehashed_representation_metadata_tampering(self):
+        mutations = (
+            lambda representation: representation["segments"][0].update(sha256="0" * 64),
+            lambda representation: representation.update(algorithm="unreviewed-v99"),
+        )
+        for mutate in mutations:
+            with self.subTest(mutation=mutate.__code__.co_consts):
+                candidates = self.service.candidates(
+                    "inspect prices", focus=["prices.py"], representation="structure")
+                preview = self.service.preview(candidates["candidate_set_id"], max_tokens=8192)
+                candidate_path = self.store / ("candidates-" + candidates["candidate_set_id"] + ".json")
+                candidate_record = json.loads(candidate_path.read_text())
+                item = next(row for row in candidate_record["items"] if row["kind"] == "source")
+                mutate(item["representation"])
+                candidate_path.write_text(json.dumps(candidate_record, sort_keys=True,
+                                                      separators=(",", ":")))
+
+                preview_path = self.store / ("preview-" + preview["preview_id"] + ".json")
+                preview_record = json.loads(preview_path.read_text())
+                manifest = preview_record["_manifest"]
+                manifest["items"] = [item if row["item_id"] == item["item_id"] else row
+                                      for row in manifest["items"]]
+                _, wire, renders = context_pack._render_pack(
+                    {key: value for key, value in manifest.items() if key != "pack_id"})
+                preview_record["_manifest"] = wire
+                preview_record["pack_id"] = wire["pack_id"]
+                preview_record["renders"] = renders
+                preview_path.write_text(json.dumps(preview_record, sort_keys=True,
+                                                   separators=(",", ":")))
+                with self.assertRaises(context_pack.ContextPackError) as error:
+                    self.service.export(preview["preview_id"], format="text")
+                self.assertEqual(error.exception.code, "store_invalid")
+
     def test_cli_candidates_preview_export(self):
         cli = Path(__file__).resolve().parents[1] / "scripts" / "context_pack.py"
         base = [sys.executable,
@@ -131,6 +316,18 @@ class ContextPackTests(unittest.TestCase):
         exported = subprocess.check_output(base + ["export"] + common + [
             "--preview", preview["preview_id"], "--format", "json"])
         self.assertEqual(exported, raw_preview)
+        raw_full = subprocess.check_output(base + ["candidates"] + common + [
+            "--task", "inspect exact prices source", "--focus", "prices.py",
+            "--representation", "full"])
+        full = json.loads(raw_full)
+        self.assertEqual(full["representation"], "full")
+        exact_source = next(item for item in full["items"] if item["kind"] == "source")
+        self.assertEqual(exact_source["representation"]["selected"], "full")
+        raw_full_preview = subprocess.check_output(base + ["preview"] + common + [
+            "--candidates", full["candidate_set_id"], "--max-tokens", "8192", "--format", "json"])
+        full_preview = json.loads(raw_full_preview)
+        self.assertEqual(subprocess.check_output(base + ["export"] + common + [
+            "--preview", full_preview["preview_id"], "--format", "json"]), raw_full_preview)
 
     def test_default_exclusion_and_omission_budget_remain_within_both_caps(self):
         candidates = self.service.candidates("change total pricing")
