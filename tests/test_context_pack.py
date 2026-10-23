@@ -278,6 +278,31 @@ class ContextPackTests(unittest.TestCase):
         self.assertIn("def useful(\n    value: int,\n) -> int:\n", item["content"])
         self.assertNotIn("return value + 1", item["content"])
 
+    def test_multiline_header_with_multiline_inline_suite_falls_back_exactly(self):
+        fixtures = {
+            "function_multiline_suite.py": (
+                "def useful(\n    value: int,\n) -> int: return (\n"
+                "    value + 1\n)\n"),
+            "async_multiline_suite.py": (
+                "async def useful(\n    value: int,\n) -> int: return (\n"
+                "    value + 1\n)\n"),
+            "class_multiline_suite.py": (
+                "class Useful(\n    object,\n): value = (\n    1\n)\n"),
+        }
+        for name, source in fixtures.items():
+            with self.subTest(path=name):
+                raw = source.encode("utf-8")
+                (self.project / name).write_bytes(raw)
+                self._git("add", name)
+                self._git("commit", "-qm", f"add {name}")
+                candidates = self.service.candidates(
+                    "inspect declaration", focus=[name], representation="structure")
+                item = next(row for row in candidates["items"] if row["kind"] == "source")
+                self.assertEqual(item["content"].encode("utf-8"), raw)
+                self.assertEqual(item["representation"]["selected"], "full")
+                self.assertEqual(item["representation"]["fallback_reason"],
+                                 "inline_suite_on_header_line")
+
     def test_overdeep_python_falls_back_to_exact_source(self):
         raw = ("value = " + "[" * 105 + "1" + "]" * 105 + "\n").encode("utf-8")
         (self.project / "deep.py").write_bytes(raw)
