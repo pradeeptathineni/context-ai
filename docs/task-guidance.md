@@ -39,7 +39,9 @@ bound. Omission never truncates a selected instruction to fit.
 Keep personal voice rules and permissioned writing examples in Custom. An
 explicit `--private-root` may contain a private `guidance.yaml` in the same
 format, pointing to its own Markdown files. Context never copies these into the
-project. Do not put a private root in shared hook configuration.
+project. Do not put a private root in shared hook configuration. A Custom
+writing-kit export is an ordinary private resource: pass the kit directory as
+`--private-root` and `exports/NAME.md` as `--private-resource`.
 
 ## Precedence and explanations
 
