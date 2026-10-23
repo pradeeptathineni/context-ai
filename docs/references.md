@@ -1,5 +1,12 @@
 # References and provenance
 
+File-scoped [task guidance](task-guidance.md) adapts Continue's rule applicability
+and nested-scope controls at `5522c6f44ca0ac3528b37244818fbfa39b5af470`, reviewed
+2026-10-22. Exact Apache-2.0 source/test snapshots, license and adaptation notes
+are in [sourced/continue/rules](../sourced/continue/rules/NOTICE.md), pinned in
+`sources.lock.json`. The adaptation replaces loose directory substring checks
+with project-contained paths and adds declared-topic conflict explanations.
+
 The optional [native usage procedure](../procedures/usage.md) uses documented
 [Codex JSONL completion usage](https://learn.chatgpt.com/docs/non-interactive-mode),
 [App Server thread snapshots](https://learn.chatgpt.com/docs/app-server), and
@@ -90,7 +97,7 @@ The additional house files below were reviewed on **2026-10-05**. They distill p
 - [`overlays/patterns.md`](../overlays/patterns.md) draws on [Maestro ADR-004](https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/docs/architecture/ADR-004-model-led-research.md) for the model/host boundary, [ShouldaUsedThat's reuse gate](https://github.com/pradeeptathineni/shoulda-used-that/blob/6edaff07d582a2d2d2d06145643f22dbfee3ca0e/docs/architecture/dogfood-reuse-audit.md) for a minimal custom residual, and [Blueprint AI's evolution contract](https://github.com/pradeeptathineni/blueprint-ai/blob/64e7603bf3f01af98d82f4dfd6a9829b63cc3c20/docs/evolution.md) for typed postconditions and exact replay.
 - [`overlays/orchestration.md`](../overlays/orchestration.md) uses [OpenAI's Codex subagent guidance](https://learn.chatgpt.com/docs/agent-configuration/subagents) and [Maestro's reuse register](https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/docs/architecture/reuse-register.md) to distinguish useful independent work from unmeasured fanout.
 - [`overlays/model-deliberation.md`](../overlays/model-deliberation.md) uses [OpenAI model selection](https://developers.openai.com/api/docs/guides/model-selection), [reasoning guidance](https://developers.openai.com/api/docs/guides/reasoning), and [Codex model availability](https://learn.chatgpt.com/docs/models). Product access and model rankings are volatile; verify at use time.
-- [`overlays/writing.md`](../overlays/writing.md) combines the maintainer's established voice with [ShouldaUsedThat's public writing loop](https://github.com/pradeeptathineni/shoulda-used-that/blob/6edaff07d582a2d2d2d06145643f22dbfee3ca0e/docs/architecture/public-writing.md), [home-lab's reader-first README](https://github.com/pradeeptathineni/home-lab/blob/7768131dc21f5a3bb1e46aeebce16fe8972cc887/README.md), and [no-ai-slop's editorial guidance](https://github.com/petergyang/no-ai-slop/blob/main/skills/no-ai-slop/SKILL.md). The latter is a writing reference, not an installed quality gate.
+- [`overlays/writing.md`](../overlays/writing.md) combines the maintainer's established voice with [ShouldaUsedThat's public writing loop](https://github.com/pradeeptathineni/shoulda-used-that/blob/6edaff07d582a2d2d2d06145643f22dbfee3ca0e/docs/architecture/public-writing.md), [home-lab's reader-first README](https://github.com/pradeeptathineni/home-lab/blob/7768131dc21f5a3bb1e46aeebce16fe8972cc887/README.md), and [no-ai-slop's editorial guidance](https://github.com/petergyang/no-ai-slop/blob/main/skills/no-ai-slop/SKILL.md). The latter is a writing reference, not an installed quality gate. Its sample-first and claim-comparison paragraph adapts the method of [Humanizer](https://github.com/blader/humanizer/blob/8c307f367c91bd974002f10f2be2965d642c13df/SKILL.md) (MIT) in new wording; Humanizer's Wikipedia-derived pattern catalogue is not copied. Reviewed 2026-10-22.
 - [`overlays/code-comments.md`](../overlays/code-comments.md) is a maintainer preference synthesized from repeated code-review corrections and language-native documentation practice; it does not disclose private project configuration or impose a comment quota.
 - [`overlays/evidence-claims.md`](../overlays/evidence-claims.md) distills [Maestro's explicit verification limits](https://github.com/pradeeptathineni/maestro-ai/blob/f21844f12442c2fefdcf64f737c7423245959457/docs/architecture/ADR-004-model-led-research.md), [ShouldaUsedThat's source/assessment distinction](https://github.com/pradeeptathineni/shoulda-used-that/blob/6edaff07d582a2d2d2d06145643f22dbfee3ca0e/docs/architecture/product-contract.md), [Labs' plan-versus-work distinction](https://github.com/pradeeptathineni/labs/blob/6037ea6bd0c39f0dd1a2375a4d4250b143bf1e3d/README.md), and the existing testing and benchmarking contexts.
 
@@ -176,7 +183,7 @@ Canonical additions `core/code-comments.md`, `core/version-control.md`, `core/pr
 
 `sources.lock.json` is the single authority for snapshot revision, license and exact-file hashes. `procedures/web-design.md` selects an instruction-only Impeccable adapter. Executable launchers, downloads, hooks and extensions were inspected as optional mechanisms and excluded; none was activated. MIT Vercel licensing is declared by the preserved upstream README/skill metadata; Apache notices/terms remain with Impeccable/Anthropic.
 
-[`sources.lock.json`](../sources.lock.json) is the authoritative inventory of vendored bytes, exact upstream revisions, licenses and excluded execution paths. It pins Impeccable and Anthropic design documentation, Vercel React/web guidance, ECC search-first, Matt Pocock TDD/review/research, Ponytail reuse/review and Neoma Markdown compatibility. The selected closures are declared in `resources.yaml` and capability definitions; `source_notices()` validates hashes and includes the relevant notices during delivery. Optional source files stay in the source checkout and are not pulled into a consumer by Markdown links.
+[`sources.lock.json`](../sources.lock.json) is the authoritative inventory of vendored bytes, exact upstream revisions, licenses and excluded execution paths. It pins Impeccable and Anthropic design documentation, Vercel React/web guidance, ECC search-first, Matt Pocock TDD/review/research, Ponytail reuse/review, Neoma Markdown compatibility and the Agent Skills validator license. The selected closures are declared in `resources.yaml` and capability definitions; `source_notices()` validates hashes and includes the relevant notices during delivery. Optional source files stay in the source checkout and are not pulled into a consumer by Markdown links.
 
 The unmodified Vercel compiled guide is the single shipped expansion of the React rules. Individual rules remain available for direct, focused source reads; their upstream build README is reference material. The duplicate Context link-repair compilation was removed on 2026-10-10. The exact raw guide retains upstream packaging links; the Context procedure points to the upstream source for those paths instead of repairing third-party bytes.
 
@@ -306,3 +313,90 @@ The [actual consumer record](../examples/web/trial-evidence.json) retains the cu
 Portable source validation and consumer runtime discovery share reviewed declarations but have separate execution boundaries (D-019). The validator needs no consumer runtime; plan/apply and verification still enforce destination requirements. Existing Python/schema tooling owns the correction; no environment shim or new dependency was added. Current decisions retain stable IDs/revision numbers; exact earlier checkouts and installed locks retain predecessors. Opportunity migration exports/receipts and comparative evaluation evidence stay because conservation, replay and policy decisions consume them.
 
 A single native read-only subagent supplies the final artifact challenge. The callable desktop surface and [official subagent documentation](https://learn.chatgpt.com/docs/agent-configuration/subagents), checked on 2026-10-10, support this bounded review without a custom orchestrator. Inherited model settings remain unchanged. Review evidence does not establish human usefulness.
+
+## Native Principles consumer fixtures — reviewed 2026-10-21
+
+The dedicated v2 reader adopts the native Principles contract at `c019d42e7bef745eeb384b04dc98bec5b49bd099` (tree `d601bc8d8b7e89e0360b7234c124f51005d0185a`). It reuses Context C01 lifecycle at `bbf4933f3ac013e4111fd7a8cadc8bd09de66eef`; no external runtime or Signals parser is substituted. The local native corpus and record bytes below are retained solely as bounded consumer fixtures, not external source publications, new policies or corpus activation.
+
+Baseline fixtures preserve exact frozen native inputs. Qualified/withdrawn derivatives change native draft/source state only in a disposable source snapshot and are fully snapshot-validated by the pinned native validator before export; their `fixture-sha256:` identities distinguish them from unchanged Git corpus bytes. Source move aliases and supersession targets remain valid. Snapshot success does not prove historical transition approval. Per-variant provenance JSON and export input hashes bind every retained file. Context owns delivery; Principles owns corpus meaning, citations and source lifecycle. Native host use and human usefulness are not established.
+
+- `tests/fixtures/principles-export/baseline/source/evals/configurations/corpus-claim-review-v1.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/evidence/claims/PRN-000010.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/evidence/claims/PRN-000012.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/evidence/claims/PRN-000014.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000001.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000003.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000021.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000025.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000027.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/baseline/source/sources/SRC-000029.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/evals/configurations/corpus-claim-review-v1.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/evidence/claims/PRN-000010.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/evidence/claims/PRN-000012.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/evidence/claims/PRN-000014.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000001.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000003.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000021.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000025.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000027.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/qualified/source/sources/SRC-000029.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/evals/configurations/corpus-claim-review-v1.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/evidence/claims/PRN-000010.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/evidence/claims/PRN-000012.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/evidence/claims/PRN-000014.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000001.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000003.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000021.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000025.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000027.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+- `tests/fixtures/principles-export/withdrawn/source/sources/SRC-000029.yaml` — exact retained native input; producer revision and per-variant byte/hash binding above.
+
+## Principles export completeness — reviewed 2026-10-21
+
+`scripts/context_principles.py` derives complete selected native claim views instead of trusting supplied claim arrays or their self-hashes. The bounded Python projection follows `parseClaim`, `renderClaimText`, `parseEntry`, and bibliography ordering in Principles `src/markdown.js`, plus `claimView`/profile inclusion in `src/context.js`, at exact accepted producer `c019d42e7bef745eeb384b04dc98bec5b49bd099`. No producer file was edited or runtime dependency copied into Context. Supported plain/inline-code grammar is stated in loadouts; unsupported forms fail closed rather than approximate the upstream AST. The native fixture corpus/source/evidence byte pins remain unchanged. Complete verification evidence is compared with the retained native record, without inferring that an AI review is human approval or semantic truth.
+
+## Agent Skills package validation — reviewed 2026-10-21
+
+`scripts/context_skills.py` adapts the metadata rules of [agentskills/agentskills@69ef37e](https://github.com/agentskills/agentskills/tree/69ef37e9424c0a7ea9dd2293b559e43ec8176379/skills-ref/src/skills_ref) `skills-ref/src/skills_ref/validator.py` (SHA-256 `b5ee3d8537c83c959c31c2cb080a5227646ede5aea545f1ac835ed3c4645f6c5`), with the frontmatter split from `parser.py` (`9a74c9a90eb217b82bec27570332eab74547acfbee2973c0a8bcd23f6c7bc211`) and error shape from `errors.py` (`5780d314db735400c3959d20ed19a8c59445786d35a1a1b7cf368f01576d91f4`). Code is Apache-2.0; the exact root license is retained as `sourced/agentskills/LICENSE` (`993da3f8…1fe5`) and pinned in `sources.lock.json`. The file header carries the attribution and change notice. No NOTICE file was among the staged retrievals, and its absence at the pin was not independently verified. No CC-BY-4.0 documentation was reused. `tests/test_skill_validation.py` adapts the upstream validator/parser test cases (`daafa296fffd05be21dbd451d93d81ea4155ab6386934a5a522c3483aee6a7e4`, `362cc3be360e9a7b1bbe61d78cbd1ec2433971a6448eb7808c21f78f132285c2`) and adds Context's boundary cases.
+
+Context did not install the `skills-ref` package or CLI. Its `strictyaml` dependency would add a second YAML parser at the trust boundary and coerce every scalar to a string. The existing bounded safe loader already rejects duplicate keys, aliases and object tags, so typed values now fail instead of being coerced. Context adds byte and file-count bounds, exact `SKILL.md` discovery, symlink and active-instruction refusal, and refusal of `allowed-tools` pre-approval for delivery. The `validate-skill --package DIR` command is the read-only acquisition check. `sources.lock.json` `packages` marks a pinned upstream entry that delivery must validate in addition to its hash. Generated Context skill routers are validated before they are written. Upstream test results were not rerun with upstream tooling; the adapted cases ran locally.
+
+The Matt Pocock `skills/engineering/code-review/SKILL.md` and `LICENSE` at [mattpocock/skills@5beb35b](https://github.com/mattpocock/skills/tree/5beb35b040e3de97e54fa9e386d7e42d15c295c2/skills/engineering/code-review) are byte-identical to the existing `f3fc563` snapshot (`09eb147f…0357`, `0e7ac423…dbb5`; MIT, Copyright (c) 2026 Matt Pocock). `sources.lock.json` records that equivalence under `equivalent_revisions`, but it keeps the original revision because the TDD and research files were not rechecked. No new instruction bytes were transferred. The narrow grant check covers these two files only, not the whole upstream repository.
+
+## Review equipment choice — reviewed 2026-10-21
+
+`procedures/code-review.md` is a thin Context adapter for the pinned Matt Pocock code-review skill above. It retains the upstream process and report format. It makes the upstream parallel sub-agents and `setup-matt-pocock-skills` tracker step explicit non-defaults, and it states review-only authority. It adds no review heuristics. The `context-code-review` capability and the `matt-pocock-code-review` catalog option deliver it beside the existing owned `context-review` option for the same `code-review` concern. The existing route could already deliver `procedures/review.md` through loadouts or `--with context-review`. It could not offer a per-concern catalog choice or deliver the focused upstream procedure with its authority assumptions neutralized. EPE-064 Rulesync was not used: the existing Codex and Claude routers rendered both options, and no renderer gap was observed.
+
+`examples/library-profiles/review-equipment.yaml` is a synthetic public `--library-profile` example with no project, path or history binding. It selects the focused review and the owned `context-tdd` loop. `tests/test_skill_validation.py` delivers it and an owned-review variant through the real CLI to disposable consumers. Native discovery, reading and review usefulness are not established by those tests.
+## Implementation and review observations — 2026-10-21
+
+A local native coding trial returned a structured blocked result despite exit status 0; permitted test supervision completed its checks. Later independent serving-path probes exposed gaps missed by the passing suite. A separate Claude Code implementation produced two local commits adapting pinned licensed source in an isolated checkout. Independent offline controller probes found two receipt-integrity gaps before provider qualification, and a positive replay checked their repair. These observations inform the existing orchestration and review guidance above; raw project/account evidence stays private. They establish scoped use and failure recovery, not measured efficiency or human usefulness.

@@ -16,4 +16,6 @@ Look for delayed payoff, vague claims, repetitive section shapes, needless three
 
 Do not use an anti-slop score as an authorship detector or quality gate. A local style tool such as the project's Vale or ZeroSlop setup may flag patterns. For a material reader-facing revision, use a first-reader pass, a read-aloud check when cadence matters, and claim-by-claim comparison with source evidence. Never let a rewriting tool invent facts, decisions, test results, or capabilities. Preserve a good sentence even if it resembles a flagged pattern.
 
+When the author supplies a writing sample or private kit, read it before revising and match its sentence length, word choice and punctuation. It outranks generic pattern advice, not the current instruction or the author's accepted preferences. After revising, compare draft and revision claim by claim: names, numbers, dates, quotes, links and citations stay unless the instruction changes them. Treat an unsupported addition or an unexplained loss as an error. A claim diff finds marked facts only; it does not verify truth.
+
 For concise status updates, lead with the outcome and evidence. For a complex decision, use a small comparison table or example if it reduces reading work. Use the length needed to be complete; do not pad for formality or compress away a consequential caveat.

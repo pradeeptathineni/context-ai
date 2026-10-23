@@ -1,0 +1,83 @@
+{
+  "producer_commit": "c019d42e7bef745eeb384b04dc98bec5b49bd099",
+  "source_revision": "fixture-sha256:7d746b8bc21b2368e20189e2ffe84d53d1175c67b4ba80a2cb5bc20c98b76c51",
+  "fixture_derivative": true,
+  "changed_native_files": {
+    "domains/coding/personal-growth.md": "28104038955ce7ebcb8e7a7a0eb6c65d0661fdc1f5eec949732f66e9823e9cb0",
+    "sources/SRC-000027.yaml": "901cd4b2b31677770afcc455f64055aa98a6c7a0fd2600e763a7bf149b70b15f",
+    "sources/SRC-000021.yaml": "def5ffa1b48709fdd9481345f8b328753582aa652f101a016ac1e81a51e43fa7"
+  },
+  "validation": {
+    "errors": 0,
+    "warnings": 0,
+    "transition_status": "not_evaluated",
+    "diagnostics": [
+      {
+        "severity": "informational",
+        "code": "TRANSITION_NOT_EVALUATED",
+        "message": "Trusted merge-base state was unavailable; identity, source, taxonomy, and corpus transition checks are not_evaluated and snapshot validity does not prove historical transition validity.",
+        "path": "<trusted-baseline>",
+        "line": 1,
+        "column": 1
+      },
+      {
+        "severity": "informational",
+        "code": "SOURCE_SUPERSESSION_TERMINAL",
+        "message": "SRC-000021 currently resolves to SRC-000001 with terminal status active.",
+        "path": "sources/SRC-000021.yaml",
+        "line": 1,
+        "column": 1
+      }
+    ]
+  },
+  "inputs": [
+    {
+      "path": "domains/coding/personal-growth.md",
+      "sha256": "28104038955ce7ebcb8e7a7a0eb6c65d0661fdc1f5eec949732f66e9823e9cb0"
+    },
+    {
+      "path": "domains/coding/principles.md",
+      "sha256": "91c4304a4c07fdabc55a5f32c9197974b8815011831a880a68e6370bc6f854ae"
+    },
+    {
+      "path": "evals/configurations/corpus-claim-review-v1.yaml",
+      "sha256": "a331e2351b4ab2ca18b520631ae91ac9afdef571026a2b3619ba0f3fa4aec7fc"
+    },
+    {
+      "path": "evidence/claims/PRN-000010.yaml",
+      "sha256": "03f171aa65bad5a7d5865da243b88589bef864a6390575d231f42e88f1effa72"
+    },
+    {
+      "path": "evidence/claims/PRN-000012.yaml",
+      "sha256": "17fbfa73645feee835655201f6a8437bc810746155fda2aa533f690b01d074e9"
+    },
+    {
+      "path": "evidence/claims/PRN-000014.yaml",
+      "sha256": "a6cf58515bb39e8f5d278bddb59371ddbc3041a6f518b281e92107c571eb83a9"
+    },
+    {
+      "path": "sources/SRC-000001.yaml",
+      "sha256": "7e1ffc1f92fc7942796545c948c22da59033fa9f9cd1f54bc203af8c3affd377"
+    },
+    {
+      "path": "sources/SRC-000003.yaml",
+      "sha256": "3c659f9eeff33010b0ccec7c29b16137c9139c77db480aed80df98aac7779872"
+    },
+    {
+      "path": "sources/SRC-000021.yaml",
+      "sha256": "def5ffa1b48709fdd9481345f8b328753582aa652f101a016ac1e81a51e43fa7"
+    },
+    {
+      "path": "sources/SRC-000025.yaml",
+      "sha256": "aa19fa16e2cb9357c5ab54ee9e8052f6b202c8b984acaf6dc609501d27677cf4"
+    },
+    {
+      "path": "sources/SRC-000027.yaml",
+      "sha256": "901cd4b2b31677770afcc455f64055aa98a6c7a0fd2600e763a7bf149b70b15f"
+    },
+    {
+      "path": "sources/SRC-000029.yaml",
+      "sha256": "792e2fe8193f7a2d3f05cbee4580fc33b4535c24d6e9d080ec21ce45cb901d3f"
+    }
+  ]
+}

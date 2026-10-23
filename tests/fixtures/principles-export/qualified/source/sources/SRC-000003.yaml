@@ -1,0 +1,12 @@
+schema_version: 4
+id: SRC-000003
+title: What to look for in a code review
+publisher: Google
+evidence_kind: institutional-practice
+canonical_url: https://google.github.io/eng-practices/review/reviewer/looking-for.html
+url_aliases: []
+published_or_version: null
+first_retrieved: '2026-09-01'
+last_reviewed: '2026-09-01'
+status: active
+superseded_by: null

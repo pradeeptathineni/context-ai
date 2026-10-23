@@ -1,0 +1,42 @@
+schema_version: 4
+entry_id: PRN-000014
+reviewed_at: '2026-09-02'
+reviewer:
+  type: ai
+  identity: OpenAI Codex interactive evidence review
+  configuration:
+    configuration_ref: evals/configurations/corpus-claim-review-v1.yaml
+    configuration_sha256: a331e2351b4ab2ca18b520631ae91ac9afdef571026a2b3619ba0f3fa4aec7fc
+claims:
+- role: statement
+  claim_sha256: 818c94be5f4ff70eb0545f417a4e332c28e3984ce6649643b82dbcdfc9611a12
+  sources:
+  - source_id: SRC-000029
+    locators: [Abstract, The Original Definition of Deliberate Practice]
+  - source_id: SRC-000025
+    locators: [Principle 8 — Self]
+  outcome: strong
+- role: why-1
+  claim_sha256: 8176b29cbe4756e58ebddeb8c57ad49b93bd24b8536a22ade3679890fc04e179
+  sources:
+  - source_id: SRC-000029
+    locators: [Introduction, The Original Definition of Deliberate Practice]
+  outcome: strong
+- role: practice-1
+  claim_sha256: 4664936d24af0bdd24228ca39a16699f92aaa3598058ae0f8a57f0f30f1943f9
+  sources:
+  - source_id: SRC-000029
+    locators: [The Original Definition of Deliberate Practice]
+  outcome: strong
+- role: practice-2
+  claim_sha256: 3e06f4f6267147aa4df4477880f496a52b1511c7a5b4e06d56d5cbea581b0cb2
+  sources:
+  - source_id: SRC-000029
+    locators: [The Original Definition of Deliberate Practice, Assessing the Modifiability of Expert Performance]
+  outcome: strong
+- role: applicability-1
+  claim_sha256: dc766c4cb245dab277e619651d44af6949301f542e0b00c382ed3baf33b22985
+  sources:
+  - source_id: SRC-000029
+    locators: [The Original Definition of Deliberate Practice, Deliberate Practice in Well-Established Domains]
+  outcome: strong

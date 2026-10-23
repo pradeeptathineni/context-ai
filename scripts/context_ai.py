@@ -3,7 +3,7 @@
 import argparse
 import base64
 import fnmatch
-from functools import lru_cache
+from functools import lru_cache, wraps
 import hashlib
 import json
 import os
@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 
 import yaml
 from jsonschema import Draft202012Validator, FormatChecker
@@ -216,6 +217,10 @@ def source_notices(files):
                 raise Invalid('pinned upstream drift: '+path)
             if path in notices:
                 result[path] = data
+            # A pinned Agent Skills entry must also satisfy package metadata rules.
+            if path in source.get('packages',{}):
+                from context_skills import require_entry
+                require_entry(data,source['packages'][path],path)
     if any(p.startswith('sourced/') and p not in covered for p in files):
         raise Invalid('unregistered sourced resource')
     return result
@@ -644,7 +649,15 @@ def source_resolution(ids, provider, options=None, extras=()):
             'decisions':decisions,'resources':file_hashes}
     return lock,files
 
-def resolve(ids, project, provider, options=None, extras=()):
+def attach_principles(lock, files, selection):
+    if selection is not None:
+        from context_principles import resources as principle_resources
+        files.update(principle_resources(selection))
+        lock['principles']=selection
+        lock['resources']={name:digest(data) for name,data in sorted(files.items())}
+        lock['source_tree_sha256']=digest(encoded(lock['resources']))
+
+def resolve(ids, project, provider, options=None, extras=(), principles=None):
     lock,files=source_resolution(ids,provider,options,extras)
     lock['capabilities']=capability_states(
         {key:entry['requirement'] for key,entry in lock['capabilities'].items()},
@@ -652,17 +665,21 @@ def resolve(ids, project, provider, options=None, extras=()):
     # Machine locations belong to local reports, never portable resource pins.
     for entry in lock['capabilities'].values():
         entry.pop('discovery',None)
+    attach_principles(lock,files,principles)
     validate_schema('lock',lock)
     return lock,files
 
 def router(lock):
     lines = [BEGIN,'## Context AI project selection',
              'Project instructions and explicit task authority take precedence. Ordinary covered work uses native tools; activate selected guidance only for a relevant risk or capability gap.']
-    if not lock['stages'] and not lock['capabilities']:
+    if not lock['stages'] and not lock['capabilities'] and not lock.get('principles',{}).get('selected_ids'):
         return '\n'.join(lines+['Selection: native-sufficient; no additional task guidance. Context manages setup/refresh/undo separately.',END])+'\n'
     if 'context-output' in lock['capabilities']:
         lines.append('Before reading a large log or running a verbose command, keep raw output outside context. Use `python3 .context-ai/resources/scripts/context_output.py inspect LOG --query error` for bounded line evidence, or `run --log NEW_LOG -- COMMAND ...` to capture once and preserve its exit status. Retrieve another query/range before concluding; omitted lines are not evidence of absence. Native Read/Grep/Glob bypass shell filters: bound those reads too.')
     lines.append('Selected modules below are available by stage; read only what the current task needs:')
+    if lock.get('principles',{}).get('selected_ids'):
+        intent=lock['principles']['intent']
+        lines.append('Principles selection ('+intent+'): read `.context-ai/resources/principles/selected.md`. Inspection is nonauthoritative; drafts never become active policy. Source state and complete applicability govern use.')
     staged=set()
     for stage, paths in lock['stages'].items():
         staged.update(paths)
@@ -675,6 +692,7 @@ def router(lock):
     return '\n'.join(lines)+'\n'
 
 def materialized(lock, files):
+    from context_skills import require_entry
     output = {'.context-ai/resources/'+p:data for p,data in files.items()}
     if len({name.casefold() for name in output}) != len(output):
         raise Invalid('case-colliding resource paths')
@@ -687,24 +705,22 @@ def materialized(lock, files):
         if path not in files:
             raise Invalid('missing selected skill instructions: '+path)
         if skill=='context-loadout':
-            metadata=yaml.safe_load(files[path].decode().split('---',2)[1])
-            description=metadata['description']
+            description=require_entry(files[path],skill,path)['description']
         else:
             description=lock['capabilities'][skill]['definition']['description']
         metadata = yaml.safe_dump({'name':skill,'description':description},sort_keys=False)
         # One canonical instruction copy; each host gets a thin router at the same depth.
         body = '---\n'+metadata+'---\n\nRead [pinned instructions](../../../.context-ai/resources/'+path+') when this procedure is relevant. Follow project instructions and user brand direction first. No tool or hook is activated by this file.\n'
+        require_entry(body.encode(),skill,'router '+skill)
         for host in hosts(lock['provider']):
             output[SKILL_DIRS[host]+'/'+skill+'/SKILL.md'] = body.encode()
     return output
 
-def atomic(path,data):
+def atomic(path,data,mode=None):
     path.parent.mkdir(parents=True,exist_ok=True)
     # mkstemp creates 0600; keep an existing file's mode, else the umask default.
-    if path.exists():
-        mode=path.stat().st_mode & 0o7777
-    else:
-        umask=os.umask(0);os.umask(umask);mode=0o666 & ~umask
+    if mode is None:
+        mode=path.stat().st_mode & 0o7777 if path.exists() else creation_mode()
     fd,tmp = tempfile.mkstemp(prefix='.context-ai-write-',dir=path.parent)
     try:
         with os.fdopen(fd,'wb') as f:
@@ -715,43 +731,94 @@ def atomic(path,data):
         if os.path.exists(tmp):
             os.unlink(tmp)
 
+def creation_mode():
+    umask=os.umask(0);os.umask(umask)
+    return 0o666 & ~umask
+
+def file_mode(path):
+    return path.stat().st_mode & 0o7777 if path.is_file() else None
+
 SKILL_ROUTER = r'\.(agents|claude)/skills/context-[a-z0-9-]+/SKILL\.md'
+
+_lifecycle_state = threading.local()
+
+def lifecycle(write=False):
+    """Hold a local POSIX directory lock across one consumer operation."""
+    def decorate(operation):
+        @wraps(operation)
+        def guarded(project, *args, **kwargs):
+            if project.is_symlink():raise Invalid('symlink project directory')
+            key=(os.getpid(),str(project.resolve()))
+            held=getattr(_lifecycle_state,'held',{})
+            if key in held:
+                if write and not held[key]:raise Invalid('cannot write during a read-only lifecycle operation')
+                return operation(project,*args,**kwargs)
+            try:
+                import fcntl
+            except ImportError as error:
+                raise Invalid('consumer lifecycle locking requires a local POSIX filesystem') from error
+            # The directory inode is stable; never unlink or age out a live lock.
+            fd=os.open(project,os.O_RDONLY | getattr(os,'O_DIRECTORY',0))
+            try:
+                try:
+                    fcntl.flock(fd,(fcntl.LOCK_EX if write else fcntl.LOCK_SH) | fcntl.LOCK_NB)
+                except BlockingIOError as error:
+                    raise Invalid('another lifecycle operation active for '+str(project)+'; wait for it to finish, then retry') from error
+                _lifecycle_state.held=held
+                held[key]=write
+                try:return operation(project,*args,**kwargs)
+                finally:del held[key]
+            finally:os.close(fd)
+        return guarded
+    return decorate
 
 def transaction_path(project, name):
     if name not in ('AGENTS.md','.context-ai/lock.json','CLAUDE.md','.claude/CLAUDE.md') and not (name.startswith('.context-ai/resources/') or re.fullmatch(SKILL_ROUTER,name)):
         raise Invalid('unapproved recovery path: '+name)
     return inside(project,name)
 
+@lifecycle(write=True)
 def recover(project):
     journal=inside(project,'.context-ai/pending.json')
     if not journal.exists():return {'recovered':True,'preserved_conflicts':[]}
     state=json.loads(journal.read_text())
-    if state.get('schema_version')!=1 or state.get('bound_project')!=str(project) or set(state.get('before',{}))!=set(state.get('after',{})):
+    if state.get('schema_version')==1:
+        raise Invalid('legacy byte-only recovery record: original modes are unknown; preserve the journal and reconcile bytes and permissions manually')
+    if state.get('schema_version')!=2 or state.get('bound_project')!=str(project) or set(state.get('before',{}))!=set(state.get('after',{})):
         raise Invalid('invalid or differently bound recovery record')
+    for field in ('before_modes','after_modes'):
+        if not isinstance(state.get(field),dict) or set(state[field])!=set(state['before']):
+            raise Invalid('invalid recovery mode metadata')
     operations=[]
     for name, before in state['before'].items():
         p=transaction_path(project,name)
         old=base64.b64decode(before,validate=True) if before is not None else None
         expected=state['after'][name]
         if expected is not None and not re.fullmatch('[0-9a-f]{64}',expected):raise Invalid('invalid recovery digest')
-        operations.append((name,p,old,expected))
+        old_mode=state['before_modes'][name];expected_mode=state['after_modes'][name]
+        for data,mode in ((old,old_mode),(expected,expected_mode)):
+            if (data is None and mode is not None) or (data is not None and (type(mode) is not int or not 0<=mode<=0o7777)):
+                raise Invalid('invalid recovery mode metadata')
+        operations.append((name,p,old,expected,old_mode,expected_mode))
     conflicts=[]
-    for name,p,old,expected in operations:
+    for name,p,old,expected,old_mode,expected_mode in operations:
         if p.exists() and not p.is_file():
             conflicts.append(name);continue
         current=p.read_bytes() if p.exists() else None
-        if current==old:continue
+        current_mode=file_mode(p)
+        if current==old and current_mode==old_mode:continue
         current_sha=digest(current) if current is not None else None
-        if current_sha!=expected:
+        if current_sha!=expected or current_mode!=expected_mode:
             conflicts.append(name);continue
         if old is None:
             p.unlink()
         else:
-            atomic(p,old)
+            atomic(p,old,mode=old_mode)
     if not conflicts:journal.unlink()
     return {'recovered':not conflicts,'preserved_conflicts':conflicts}
 
 
+@lifecycle()
 def installed(project, allow_rebind=False):
     if inside(project,'.context-ai/pending.json').exists():
         raise Invalid('incomplete application; run recover before ownership operations')
@@ -857,8 +924,13 @@ def preflight(project, lock, files):
     validate_schema('lock',lock)
     if {name:digest(data) for name,data in files.items()} != lock['resources'] or digest(encoded(lock['resources'])) != lock['source_tree_sha256']:
         raise Invalid('application bytes do not match the pin')
+    from context_principles import resources as principle_resources
+    derived=principle_resources(lock['principles']) if 'principles' in lock else {}
     for name in files:
-        resource_path(ROOT,name)
+        if name in derived:
+            if files[name]!=derived[name]:raise Invalid('Principles delivery differs from bound full selection')
+        else:resource_path(ROOT,name)
+    if not set(derived)<=set(files):raise Invalid('missing Principles selection resources')
     if any(path not in files for paths in lock['stages'].values() for path in paths):
         raise Invalid('missing selected stage instructions')
     if lock['schema_version']==1 and lock['project']!=str(project):
@@ -866,6 +938,13 @@ def preflight(project, lock, files):
     states=capability_states(
         {key:entry['requirement'] for key,entry in lock['capabilities'].items()},
         {key:entry['definition'] for key,entry in lock['capabilities'].items()},project)
+    before={}
+    def observed(name):
+        if name not in before:
+            p=transaction_path(project,name)
+            before[name]=p.read_bytes() if p.is_file() else None
+        return before[name]
+    observed('.context-ai/lock.json')
     previous=installed(project)
     targets=materialized(lock,files)
     conflicts=[]
@@ -887,12 +966,13 @@ def preflight(project, lock, files):
     for name in set(targets)|set(old_owned):
         p=inside(project,name)
         if p.exists():
-            if not p.is_file() or name not in old_owned or digest(p.read_bytes())!=old_owned[name]:
+            if not p.is_file() or name not in old_owned or digest(observed(name))!=old_owned[name]:
                 conflicts.append('user file conflict: '+name)
         elif name in old_owned:
             conflicts.append('missing owned file: '+name)
+        observed(name)
     agents=inside(project,'AGENTS.md')
-    text=agents.read_bytes().decode("utf-8") if agents.exists() else ''
+    text=(observed('AGENTS.md') or b'').decode('utf-8')
     old_block=previous['routing_block'] if previous else None
     updated=None
     if old_block:
@@ -912,7 +992,7 @@ def preflight(project, lock, files):
     want=routing.get('claude',{}).get('mode')=='managed-block'
     if old_claude and (not want or routing['claude']['path']!=old_claude['path']):
         p=inside(project,old_claude['path'])
-        ctext=p.read_bytes().decode("utf-8") if p.exists() else ''
+        ctext=(observed(old_claude['path']) or b'').decode('utf-8')
         try:current=instruction_block(ctext)
         except Invalid:current=None
         if current!=old_claude['block']:
@@ -925,7 +1005,7 @@ def preflight(project, lock, files):
     if want:
         name=routing['claude']['path']
         p=inside(project,name)
-        ctext=p.read_bytes().decode("utf-8") if p.exists() else ''
+        ctext=(observed(name) or b'').decode('utf-8')
         if old_claude:
             try:current=instruction_block(ctext)
             except Invalid:current=None
@@ -949,28 +1029,36 @@ def preflight(project, lock, files):
     desired.update(claude_desired)
     desired.update({name:None for name in set(old_owned)-set(targets)})
     return {'previous':previous,'targets':targets,'old_owned':old_owned,'state':state,'desired':desired,
+            'before':{name:before[name] for name in desired},
             'conflicts':conflicts,'duplicates':duplicates,'inventory':inventory,'host_routing':routing,
             'capabilities':states}
 
-def apply(project,lock,files):
-    check=preflight(project,lock,files)
-    if check['conflicts']:
-        raise Invalid('; '.join(check['conflicts']))
-    desired=check['desired']
-    before={}
-    for name in desired:
+def publish(project, desired, before):
+    """Journal exact before bytes and reject edits before each owned publish."""
+    def unchanged(name, expected, mode=None, check_mode=False):
         p=transaction_path(project,name)
-        before[name]=base64.b64encode(p.read_bytes()).decode() if p.exists() else None
+        current=p.read_bytes() if p.is_file() else None
+        if (p.exists() and not p.is_file()) or current!=expected or (check_mode and file_mode(p)!=mode):
+            raise Invalid('changed during lifecycle: '+name+'; preserve the edit and run recover if pending')
+        return p
+    for name in desired:unchanged(name,before[name])
+    before_modes={name:file_mode(transaction_path(project,name)) for name in desired}
+    default_mode=creation_mode()
+    after_modes={name:None if value is None else (before_modes[name] if before_modes[name] is not None else default_mode)
+                 for name,value in desired.items()}
     journal=inside(project,'.context-ai/pending.json')
-    atomic(journal,encoded({'schema_version':1,'bound_project':str(project),'before':before,
+    atomic(journal,encoded({'schema_version':2,'bound_project':str(project),
+                            'before':{name:base64.b64encode(value).decode() if value is not None else None for name,value in before.items()},
+                            'before_modes':before_modes,'after_modes':after_modes,
                             'after':{name:digest(value) if value is not None else None for name,value in desired.items()}}))
     try:
         for name,value in desired.items():
-            p=transaction_path(project,name)
+            p=unchanged(name,before[name],before_modes[name],True)
             if value is None:
                 if p.exists():p.unlink()
             elif not p.exists() or p.read_bytes()!=value:
                 atomic(p,value)
+        for name,value in desired.items():unchanged(name,value,after_modes[name],True)
     except Exception:
         try:
             recover(project)
@@ -978,7 +1066,17 @@ def apply(project,lock,files):
             raise Invalid('application interrupted; recovery bytes retained in .context-ai/pending.json') from recovery_error
         raise
     journal.unlink()
-    return {'selection_outcome':'focused' if lock['stages'] or lock['capabilities'] else 'native-sufficient',
+
+@lifecycle(write=True)
+def apply(project,lock,files,expected_plan=None):
+    if 'principles' in lock and expected_plan!=delivery_plan_id(project,lock,files):
+        raise Invalid('Principles requires current-source preview and exact expected plan; re-preview')
+    check=preflight(project,lock,files)
+    if check['conflicts']:
+        raise Invalid('; '.join(check['conflicts']))
+    desired=check['desired']
+    publish(project,desired,check['before'])
+    return {'selection_outcome':'focused' if lock['stages'] or lock['capabilities'] or lock.get('principles',{}).get('selected_ids') else 'native-sufficient',
             'applied':lock['loadouts'],'provider':lock['provider'],'resource_count':len(files),
             'lock_sha256':digest(desired['.context-ai/lock.json']),'host_routing':check['host_routing']}
 
@@ -991,13 +1089,14 @@ def upstream_pins(files):
                          'license':source['license'],'files':selected,'update_owner':'context (sources.lock.json)'})
     return pins
 
+@lifecycle()
 def plan(project, lock, files):
     check=preflight(project,lock,files)
     previous=check['previous']
     old=previous['resolution']['resources'] if previous else {}
     old_owned=check['old_owned']; targets=check['targets']
     registry=check['capabilities']
-    return {'selection_outcome':'focused' if lock['stages'] or lock['capabilities'] else 'native-sufficient',
+    return {'selection_outcome':'focused' if lock['stages'] or lock['capabilities'] or lock.get('principles',{}).get('selected_ids') else 'native-sufficient',
             'resolution':lock,
             'writes':sorted(set(targets)|{name for name,value in check['desired'].items() if value is not None}),
             'additions':sorted(set(targets)-set(old_owned)),
@@ -1017,6 +1116,37 @@ def plan(project, lock, files):
             'concerns':selected_concerns(files),
             'activation':'proposed'}
 
+def delivery_plan_id(project, lock, files):
+    preview=plan(project,lock,files)
+    observed={}
+    for name in set(preview['writes'])|set(preview['removals'])|{'.context-ai/lock.json'}:
+        path=transaction_path(project,name)
+        observed[name]={'sha256':digest(path.read_bytes()) if path.is_file() else None,'mode':file_mode(path)}
+    return digest(encoded({'plan':preview,'observed':observed}))
+
+@lifecycle(write=True)
+def principles_delivery(project, spec, action='plan', ids=(), provider='codex', expected_plan=None, extras=(), options=None):
+    if action not in ('plan','refresh','apply'):raise Invalid('Principles permits preview or explicit apply only')
+    from context_principles import read, parse
+    selected=read(spec)
+    lock,files=resolve(list(ids),project,provider,options=options,extras=extras,principles=selected)
+    preview=plan(project,lock,files)
+    preview['plan_id']=delivery_plan_id(project,lock,files)
+    previous=installed(project)
+    old=(previous or {}).get('resolution',{}).get('principles',{})
+    changed=bool(old and old['input_sha256']!=selected['input_sha256'])
+    preview['principles_review_conflict']='Principles source/input changed; review this new preview before explicit apply' if changed else None
+    artifact=parse(base64.b64decode(selected['bundle']['artifact']))
+    preview['principles']={'intent':selected['intent'],'selected_ids':selected['selected_ids'],
+                           'source_revision':selected['source_revision'],'input_sha256':selected['input_sha256'],
+                           'entries':artifact['entries'],'guidance':files['principles/selected.md'].decode(),
+                           'authority':'explicit selection only; drafts/inspection are nonauthoritative'}
+    if action=='apply':
+        if expected_plan!=preview['plan_id']:raise Invalid('Principles plan changed or unreviewed; re-preview before apply')
+        return {**apply(project,lock,files,expected_plan=expected_plan),'principles':preview['principles']}
+    return preview
+
+@lifecycle()
 def verify(project, allow_rebind=False):
     state=installed(project, allow_rebind=allow_rebind)
     if not state:
@@ -1035,6 +1165,10 @@ def verify(project, allow_rebind=False):
         if not p.is_file() or instruction_block(p.read_bytes().decode('utf-8'))!=claude['block']:
             raise Invalid('routing block drift: '+claude['path'])
     resolution=state['resolution']
+    if 'principles' in resolution:
+        from context_principles import resources as principle_resources
+        for name,data in principle_resources(resolution['principles']).items():
+            if resolution['resources'].get(name)!=digest(data):raise Invalid('Principles receipt binding mismatch')
     probes, optional_unavailable, discovery, observed_versions = [], [], {}, {}
     for key,entry in resolution['capabilities'].items():
         definition=entry['definition']
@@ -1087,6 +1221,7 @@ def probe_command(command, location=None):
         raise Invalid('unexpected Git version response')
     return output
 
+@lifecycle(write=True)
 def rebind(project):
     # Verify the copied installation before changing only its local ownership binding.
     verify(project,allow_rebind=True)
@@ -1105,13 +1240,18 @@ def pinned_files(lock):
     if digest(encoded(lock['resources']))!=lock['source_tree_sha256']:
         raise Invalid('source tree digest does not match resource pins')
     files={}
+    from context_principles import resources as principle_resources
+    derived=principle_resources(lock['principles']) if 'principles' in lock else {}
     for name,sha in lock['resources'].items():
-        path=resource_path(ROOT,name)
-        if not path.is_file():raise Invalid('missing pinned resource: '+name)
-        data=path.read_bytes()
+        if name in derived:data=derived[name]
+        else:
+            path=resource_path(ROOT,name)
+            if not path.is_file():raise Invalid('missing pinned resource: '+name)
+            data=path.read_bytes()
         if digest(data)!=sha:raise Invalid('pinned resource drift: '+name)
         files[name]=data
-    expected,_=source_resolution(lock['loadouts'],lock['provider'],lock['options'],lock.get('extra_capabilities',[]))
+    expected,expected_files=source_resolution(lock['loadouts'],lock['provider'],lock['options'],lock.get('extra_capabilities',[]))
+    attach_principles(expected,expected_files,lock.get('principles'))
     for field in ['loadouts','stages','skills','options','checks','decisions','resources','extra_capabilities']:
         if lock.get(field)!=expected.get(field):raise Invalid('imported pin differs from reviewed source '+field)
     definitions=lambda value:{key:{'requirement':entry['requirement'],'definition':entry['definition']} for key,entry in value.items()}
@@ -1119,58 +1259,67 @@ def pinned_files(lock):
         raise Invalid('imported capability definitions differ from reviewed source')
     return files
 
-def remove_block(project, name, block, created, added_newline):
-    path=inside(project,name)
-    text=path.read_bytes().decode("utf-8") if path.exists() else ''
+def without_block(data, block, created, added_newline):
+    text=data.decode('utf-8') if data is not None else ''
     try:
         current=instruction_block(text)
     except Invalid:
         current=None
     if current!=block:
-        return False
+        return False,data
     removable=('\n'+block) if added_newline and ('\n'+block) in text else block
     result=text.replace(removable,'',1)
-    if created and not result:
-        path.unlink()
-    else:
-        atomic(path,result.encode())
-    return True
+    return True,None if created and not result else result.encode()
 
+@lifecycle(write=True)
 def undo(project):
+    receipt=inside(project,'.context-ai/lock.json')
+    before={'.context-ai/lock.json':receipt.read_bytes() if receipt.is_file() else None}
     state=installed(project)
     if not state:
         raise Invalid('no installation')
-    conflicts=[]; retained={}
+    conflicts=[]; retained={};desired={}
     for name,sha in state['owned'].items():
         p=inside(project,name)
-        if p.is_file() and digest(p.read_bytes())==sha:
-            p.unlink()
+        before[name]=p.read_bytes() if p.is_file() else None
+        if before[name] is not None and digest(before[name])==sha:
+            desired[name]=None
         elif p.exists():
             conflicts.append(name); retained[name]=sha
     if not state.get('routing_removed'):
-        if remove_block(project,'AGENTS.md',state['routing_block'],state['agents_created'],state.get('agents_added_newline')):
+        p=inside(project,'AGENTS.md')
+        before['AGENTS.md']=p.read_bytes() if p.is_file() else None
+        removed,data=without_block(before['AGENTS.md'],state['routing_block'],state['agents_created'],state.get('agents_added_newline'))
+        if removed:
+            desired['AGENTS.md']=data
             state['routing_removed']=True
         else:
             conflicts.append('AGENTS.md')
     claude=state.get('claude_routing')
     if claude and not claude.get('removed'):
-        if remove_block(project,claude['path'],claude['block'],claude['created'],claude.get('added_newline')):
+        p=inside(project,claude['path'])
+        before[claude['path']]=p.read_bytes() if p.is_file() else None
+        removed,data=without_block(before[claude['path']],claude['block'],claude['created'],claude.get('added_newline'))
+        if removed:
+            desired[claude['path']]=data
             claude['removed']=True
         else:
             conflicts.append(claude['path'])
     if conflicts:
         state['owned']=retained
         state['undo_pending']=True
-        atomic(inside(project,'.context-ai/lock.json'),encoded(state))
+        desired['.context-ai/lock.json']=encoded(state)
     else:
-        inside(project,'.context-ai/lock.json').unlink()
+        desired['.context-ai/lock.json']=None
+    publish(project,desired,{name:before[name] for name in desired})
     return {'undone':not conflicts,'preserved_conflicts':conflicts}
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover','catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess','handoff'])
+    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover','catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess','handoff','validate-skill'])
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
+    parser.add_argument('--package',type=Path,help='Absolute candidate Agent Skills package directory for read-only validate-skill')
     parser.add_argument('--profile',type=Path,help='Task profile for packet, or catalog project profile for delivery')
     parser.add_argument('--library-profile',type=Path,metavar='FILE',help='Exact caller-owned schema-v1 recurring profile file for select, plan, apply or refresh; declared policy is data only')
     parser.add_argument('--state',type=Path,help='Private local library assessment/evolution state')
@@ -1193,7 +1342,33 @@ def main():
     parser.add_argument('--design-procedure',choices=['guided','lightweight'])
     parser.add_argument('--option',action='append',default=[],metavar='KEY=VALUE',help='Explicit supported alternative; repeat for different options')
     parser.add_argument('--with',dest='extras',action='append',default=[],metavar='CAPABILITY',help='Add a registered context-* resource procedure to this project selection')
+    parser.add_argument('--principles-export',type=Path,help='Explicit native Principles v2 export; no network fetch')
+    parser.add_argument('--principles-sha256')
+    parser.add_argument('--principles-revision')
+    parser.add_argument('--principles-source',type=Path,help='Exact retained native input directory')
+    parser.add_argument('--principles-intent',choices=['operational','inspect'],default='operational')
+    parser.add_argument('--principles-full',type=Path,help='Matching full export for a reference-only minimal selection')
+    parser.add_argument('--principles-full-sha256')
+    parser.add_argument('--expected-plan',help='Exact current Principles preview identity, required for apply')
     args=parser.parse_args()
+    if (args.command=='validate-skill') != (args.package is not None):
+        raise Invalid('--package is required only for validate-skill')
+    if args.command=='validate-skill':
+        if any(value!=parser.get_default(key) and value!=[] for key,value in vars(args).items() if key not in ('command','package')):
+            raise Invalid('validate-skill takes only --package')
+        from context_skills import check_package
+        result=check_package(args.package)
+        print(encoded(result).decode(),end='')
+        if not result['valid']:
+            sys.exit(2)
+        return
+    if args.principles_export:
+        if args.command not in ('plan','apply','refresh') or args.profile or args.library_profile or args.lock:
+            raise Invalid('Principles input applies only to explicit plan/apply/refresh selections')
+        if not all((args.principles_sha256,args.principles_revision,args.principles_source)):
+            raise Invalid('Principles requires exact export digest, source revision and native input directory')
+    elif any((args.principles_sha256,args.principles_revision,args.principles_source,args.principles_full,args.principles_full_sha256,args.expected_plan)) or args.principles_intent!='operational':
+        raise Invalid('Principles arguments require --principles-export')
     if args.command=='handoff':
         if not all((args.input,args.project,args.allow_root,args.project_id,args.profile,args.source_ref)):
             raise Invalid('handoff requires request input and an explicit trusted local project/profile binding')
@@ -1318,10 +1493,19 @@ def main():
             provider=args.provider or (state['resolution'].get('provider','codex') if state else 'codex')
             extras=args.extras or (state['resolution'].get('extra_capabilities',[]) if state and args.command=='refresh' else [])
             if args.lock and args.extras:raise Invalid('--lock already pins its capabilities')
+            if args.principles_export:
+                spec={'export':args.principles_export,'sha256':args.principles_sha256,'revision':args.principles_revision,
+                      'source_root':args.principles_source,'intent':args.principles_intent,
+                      'full_export':args.principles_full,'full_sha256':args.principles_full_sha256}
+                result=principles_delivery(project,spec,action=args.command,ids=ids,provider=provider,
+                                           expected_plan=args.expected_plan,extras=extras,options=options)
+                print(encoded(result).decode(),end='')
+                return
             if args.lock:
                 lock=json.loads(args.lock.read_text());files=pinned_files(lock)
             else:
-                lock,files=resolve(ids,project,provider,options,extras)
+                retained=state['resolution'].get('principles') if state and args.command=='refresh' else None
+                lock,files=resolve(ids,project,provider,options,extras,principles=retained)
             if args.command=='apply':
                 result=apply(project,lock,files)
             else:

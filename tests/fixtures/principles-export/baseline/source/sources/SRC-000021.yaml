@@ -1,0 +1,12 @@
+schema_version: 4
+id: SRC-000021
+title: gitworkflows — An overview of recommended workflows with Git
+publisher: Git project
+evidence_kind: official-documentation
+canonical_url: https://git-scm.com/docs/gitworkflows/2.35.0
+url_aliases: []
+published_or_version: Git 2.35.0; unchanged through 2.55.0
+first_retrieved: '2026-09-02'
+last_reviewed: '2026-09-02'
+status: active
+superseded_by: null

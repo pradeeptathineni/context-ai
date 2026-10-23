@@ -16,6 +16,8 @@ Review the completed change from a fresh perspective. Use the requirements and a
 - unnecessary complexity, fragile coupling, and maintainability problems
 - scope creep and unrelated changes
 
+When a guard delegates to another layer, test the files or operations that layer actually resolves, including fallback and decoding paths. Compare a failure with the prior base to distinguish an incomplete fix from an introduced regression; retain a legitimate consumer control.
+
 For context or configuration, also inspect authority, provenance, freshness, precedence, token cost, schema compatibility, and whether provider-specific facts leaked into canonical guidance.
 
 ## Resolve

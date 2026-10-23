@@ -1,0 +1,40 @@
+schema_version: 4
+entry_id: PRN-000010
+reviewed_at: '2026-09-02'
+reviewer:
+  type: ai
+  identity: OpenAI Codex interactive evidence review
+  configuration:
+    configuration_ref: evals/configurations/corpus-claim-review-v1.yaml
+    configuration_sha256: a331e2351b4ab2ca18b520631ae91ac9afdef571026a2b3619ba0f3fa4aec7fc
+claims:
+- role: statement
+  claim_sha256: 8d110b134afe968acae0acf2fc169de946e4278dade506da05f3b3097ef93ee1
+  sources:
+  - source_id: SRC-000001
+    locators: ['Software Construction KA, sections 1.1 and 3.3, pages 4-3 and 4-7']
+  - source_id: SRC-000003
+    locators: [Complexity, Naming, Comments]
+  outcome: strong
+- role: why-1
+  claim_sha256: 704a9c5fa429488d85cc6067b7c4509124c53b0a14f1f189be66b77bf1b0eba5
+  sources:
+  - source_id: SRC-000001
+    locators: ['Software Construction KA, sections 1.1, 1.3, and 3.3, pages 4-3 to 4-7']
+  - source_id: SRC-000003
+    locators: [Complexity, Every Line]
+  outcome: strong
+- role: practice-1
+  claim_sha256: 76e8fc932a2d8fa29850bdabdd9546c2ec182eaede445bd81c9df97c11d49152
+  sources:
+  - source_id: SRC-000001
+    locators: ['Software Construction KA, sections 1.1 and 3.3, pages 4-3 and 4-7']
+  - source_id: SRC-000003
+    locators: [Complexity, Naming]
+  outcome: strong
+- role: practice-2
+  claim_sha256: 116ebb11fe4184b4fd03796e71ce6ce11ba17b0ec3502963d7706d619db841a1
+  sources:
+  - source_id: SRC-000003
+    locators: [Comments]
+  outcome: strong
