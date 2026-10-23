@@ -4,6 +4,10 @@ The pack output serializer adapts `calculateMarkdownDelimiter` and the explicit 
 
 The upstream `src/core/packager.ts` was inspected as an orchestration reference. Context does not adopt its collection, worker, cache, tokenizer, or output stack. The implementation retains only the narrow fence rule and a local serializer regression. Local changes include source-bound records, persistent preview identity, no-follow descriptor reads, hard wire budgets and a two-format export. The donor's full license text is retained below.
 
+## Structural source selection
+
+Repomix was inspected at the same pinned revision for the structural source-selection boundary: `src/core/file/fileProcessContent.ts` uses best-effort compression with exact-content fallback; `src/core/treeSitter/parseFile.ts` orders captured chunks by original source position and returns fallback on parser failure; `src/core/treeSitter/parseStrategies/PythonParseStrategy.ts` selects Python decorators, class/function signatures and docstrings; `src/core/treeSitter/queries/queryPython.ts` identifies comments, docstrings, imports, declarations and type aliases. `tests/core/file/fileProcessContent.test.ts` exercises exact fallback when parsing is unavailable or throws; `tests/core/treeSitter/parseFile.test.ts` checks retained chunk order. These files are MIT licensed under the copyright notice below. Context does not copy their implementation or add Tree-sitter; it reproduces the relevant extraction and fallback principles with Python's standard-library AST and exact tracked byte spans, then adds source-hash replay and explicit omitted ranges. The Python query's import/type-alias/documentation coverage informed the selected AST cases. No code from these files is vendored.
+
 MIT License
 
 Copyright 2024 Kazuki Yamada

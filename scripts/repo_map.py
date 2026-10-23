@@ -383,7 +383,8 @@ def _fit_final_output(result, output_limit_bytes):
         raise MapError("rendered repository map exceeds output limit")
 
 
-def build_map(project: Path, task: str, *, focus=(), max_tokens=2000, include_candidates=False) -> dict:
+def build_map(project: Path, task: str, *, focus=(), max_tokens=2000, include_candidates=False,
+              include_focused_fallbacks=False) -> dict:
     """Build a bounded map from tracked repository files without writing to it."""
     if not isinstance(task, str) or not task.strip():
         raise MapError("task must be a non-empty string")
@@ -412,7 +413,7 @@ def build_map(project: Path, task: str, *, focus=(), max_tokens=2000, include_ca
     status_before = _status(root)
     dirty = bool(status_before)
     task_terms = _tokens(task_for_map)
-    candidates, skipped, bytes_read = [], 0, 0
+    candidates, fallback_candidates, focused_omissions, skipped, bytes_read = [], [], [], 0, 0
     warnings = {"count": 0, "items": []}
     focused_records = [(mode, oid, path) for mode, oid, _, path in records if _in_focus(path, focus)]
     if focus and not any(_in_focus(path, focus) for _, _, _, path in records):
@@ -431,6 +432,36 @@ def build_map(project: Path, task: str, *, focus=(), max_tokens=2000, include_ca
             reason = _skip_reason(relative, mode)
             if reason:
                 skipped += 1
+                focused = (include_candidates and include_focused_fallbacks and focus
+                           and _in_focus(relative, focus))
+                if focused:
+                    if reason == "unsupported file type":
+                        try:
+                            data = _read_tracked(
+                                root_fd, relative, MAX_TOTAL_BYTES - bytes_counter[0],
+                                lambda amount: bytes_counter.__setitem__(0, bytes_counter[0] + amount),
+                            )
+                            bytes_read = bytes_counter[0]
+                            if b"\0" in data:
+                                focused_omissions.append({"path": relative, "reason": "binary content"})
+                            else:
+                                try:
+                                    source = data.decode("utf-8")
+                                except UnicodeDecodeError:
+                                    focused_omissions.append({"path": relative, "reason": "not UTF-8 text"})
+                                else:
+                                    fallback_candidates.append({
+                                        "path": relative, "source": source,
+                                        "language": Path(relative).suffix.lower().lstrip(".") or "text",
+                                        "symbols": [],
+                                        "reason": "explicit focus; unsupported language exact fallback",
+                                        "file_sha256": hashlib.sha256(data).hexdigest(),
+                                    })
+                        except (MapError, OSError) as exc:
+                            bytes_read = bytes_counter[0]
+                            focused_omissions.append({"path": relative, "reason": str(exc)[:160]})
+                    else:
+                        focused_omissions.append({"path": relative, "reason": reason})
                 continue
             try:
                 data = _read_tracked(
@@ -443,12 +474,18 @@ def build_map(project: Path, task: str, *, focus=(), max_tokens=2000, include_ca
                 if b"\0" in data:
                     skipped += 1
                     _warn(warnings, f"{relative}: binary content")
+                    if include_candidates and include_focused_fallbacks and focus and _in_focus(
+                            relative, focus):
+                        focused_omissions.append({"path": relative, "reason": "binary content"})
                     continue
                 try:
                     source = data.decode("utf-8")
                 except UnicodeDecodeError:
                     skipped += 1
                     _warn(warnings, f"{relative}: not UTF-8 text")
+                    if include_candidates and include_focused_fallbacks and focus and _in_focus(
+                            relative, focus):
+                        focused_omissions.append({"path": relative, "reason": "not UTF-8 text"})
                     continue
                 digest = hashlib.sha256(data).hexdigest()
                 try:
@@ -456,16 +493,34 @@ def build_map(project: Path, task: str, *, focus=(), max_tokens=2000, include_ca
                 except SyntaxError as exc:
                     skipped += 1
                     _warn(warnings, f"{relative}: malformed Python at line {exc.lineno or '?'}")
+                    if include_candidates and include_focused_fallbacks and focus and _in_focus(
+                            relative, focus):
+                        fallback_candidates.append({
+                            "path": relative, "source": source,
+                            "language": Path(relative).suffix.lower().lstrip(".") or "text",
+                            "symbols": [], "reason": "explicit focus; malformed Python exact fallback",
+                            "file_sha256": digest,
+                        })
                     continue
                 except RecursionError:
                     skipped += 1
                     _warn(warnings, f"{relative}: parser/visitor depth limit reached")
+                    if include_candidates and include_focused_fallbacks and focus and _in_focus(
+                            relative, focus):
+                        fallback_candidates.append({
+                            "path": relative, "source": source,
+                            "language": Path(relative).suffix.lower().lstrip(".") or "text",
+                            "symbols": [], "reason": "explicitly focused path; parser depth exact fallback",
+                            "file_sha256": digest,
+                        })
                     continue
                 parsed.append((relative, oid, digest, definitions, references, source))
             except (MapError, OSError) as exc:
                 bytes_read = bytes_counter[0]
                 skipped += 1
                 _warn(warnings, f"{relative}: {exc}")
+                if include_candidates and include_focused_fallbacks and focus and _in_focus(relative, focus):
+                    focused_omissions.append({"path": relative, "reason": str(exc)[:160]})
     finally:
         os.close(root_fd)
 
@@ -591,6 +646,8 @@ def build_map(project: Path, task: str, *, focus=(), max_tokens=2000, include_ca
     _fit_final_output(result, output_limit_bytes)
     if include_candidates:
         result["_candidates"] = result_candidates
+        result["_focused_fallback_candidates"] = fallback_candidates
+        result["_focused_omissions"] = focused_omissions
     return result
 
 

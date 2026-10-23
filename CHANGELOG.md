@@ -8,6 +8,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Add selectable task context packs with exact tracked-source excerpts, explicit Context guidance groups, immutable text/JSON previews, and source-verified export.
 
+- Extend task context packs with opt-in complete-source and syntax-aware Python structural views, exact original-span evidence, visible omission ranges, explicit safe fallback, and export-time source replay; the existing excerpt default remains unchanged.
+
 - Writing guidance now asks for sample-first revision and a claim-by-claim draft comparison, adapting Humanizer's method in new wording. Task guidance documents delivering a private Custom writing-kit export through the existing `--private-root`/`--private-resource` path; no resolver or private text was added.
 
 - Select bounded project and private guidance from known task files, with per-file declared-topic precedence, provenance and refusal of unresolved ties. Add read-only receipt/context CLI output to the existing delivery resolver; adapt Continue's pinned rule applicability code and nested-scope controls.

@@ -441,3 +441,41 @@ decisions:
     Use native bounded capture/search or the earlier exact source for existing pins.
   revisit_when: A real unstructured workload defeats simple retrieval, or a project-local alternative
     preserves more important evidence with lower complete-task consumption.
+
+- id: D-029
+  revision: 1
+  supersedes: null
+  concept: context.compression
+  action: adapt
+  selection: Opt-in full or Python AST structural source inside the existing source-bound task-pack lifecycle
+  rationale: The existing repository map supplies ranked, safe tracked candidates but its excerpt window can
+    omit a declaration's context or a complete source file. Extend that owner with exact full source and a
+    Python-only lossy reading view. Use the standard library AST rather than adopting Repomix's Tree-sitter
+    runtime; preserve exact spans and source identity so exports can replay deterministically. Unsupported or
+    unsafe cases use exact bounded source or an explicit omission. Guidance and notices remain complete.
+  evidence:
+  - scripts/context_pack.py
+  - scripts/repo_map.py
+  - tests/test_context_pack.py
+  - docs/context-packs.md
+  - docs/context-pack-provenance.md
+  - https://github.com/yamadashy/repomix/tree/e696384d062f08f0246ffd2580d5a206484fc0a4/src/core/treeSitter
+  applicability: Opt-in task packs for tracked source inspection; structural output is not executable,
+    behavior-equivalent source or proof of model-token savings.
+  alternatives:
+  - Existing exact ranked excerpt
+  - Full source only
+  - Adopt pinned Tree-sitter compression and its runtime dependencies
+  - Standard-library Python structure with exact full fallback
+  unknowns:
+  - No human usefulness or served-model outcome is established; Python is the only structural language.
+  validation:
+  - Synthetic exact checks cover full bytes, CRLF/Unicode/no-final-newline, imports, module assignments,
+    decorators, multiline async signatures, docstrings, license notice, discontiguous span hashes, omissions,
+    unsupported/malformed/deep/non-reducing/notice fallback and body-only source drift.
+  - Reopened previews replay source-bound representations; complete text/JSON formats remain within the
+    requested byte budget.
+  rollback: Keep the existing excerpt default; remove only the opt-in representation choice and its replay
+    metadata if a representation cannot preserve source identity or safe export.
+  revisit_when: A real Python task shows structure omits a necessary decision fact, or a maintained upstream
+    adds a substantially better bounded interface without unacceptable runtime or provenance cost.

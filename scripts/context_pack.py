@@ -2,6 +2,7 @@
 """scripts/context_pack.py - Select, freeze and export source-bound task packs."""
 
 import argparse
+import ast
 from contextlib import contextmanager
 import fcntl
 import hashlib
@@ -24,6 +25,10 @@ MAX_STORE_OBJECT = 2 * 1024 * 1024
 MAX_STORE_BYTES = 64 * 1024 * 1024
 MAX_STORE_OBJECTS = 4096
 MAX_GUIDANCE = 65536
+REPRESENTATIONS = {"excerpt", "full", "structure"}
+STRUCTURE_ALGORITHM = "python-ast-segments-v1"
+MAX_AST_DEPTH = 100
+MAX_AST_NODES = 30000
 
 
 class ContextPackError(ValueError):
@@ -126,6 +131,195 @@ def _lines_window(text, start, limit=40):
     return start, end, "".join(lines[start - 1:end])
 
 
+def _source_lines(data):
+    """Split exact source bytes using Python's physical newline sequences."""
+    lines, start = [], 0
+    for match in re.finditer(b"\r\n|\r|\n", data):
+        lines.append(data[start:match.end()])
+        start = match.end()
+    if start < len(data):
+        lines.append(data[start:])
+    return lines
+
+
+def _python_segments(data):
+    """Return exact line spans for declarations, or a fallback reason."""
+    if not data:
+        return [], "empty_source"
+    try:
+        source = data.decode("utf-8")
+        module = ast.parse(source)
+    except (UnicodeDecodeError, SyntaxError, ValueError):
+        return [], "malformed_python"
+    except RecursionError:
+        return [], "parser_depth_limit"
+
+    stack, visited = [(module, 1)], 0
+    nodes = []
+    while stack:
+        node, depth = stack.pop()
+        visited += 1
+        if depth > MAX_AST_DEPTH:
+            return [], "ast_depth_limit"
+        if visited > MAX_AST_NODES:
+            return [], "ast_node_limit"
+        nodes.append(node)
+        stack.extend((child, depth + 1) for child in ast.iter_child_nodes(node))
+
+    lines = _source_lines(data)
+    spans = []
+
+    def add(start, end, kind):
+        if start < 1 or end < start or end > len(lines):
+            raise ValueError("AST line span is outside the source")
+        spans.append((start, end, kind))
+
+    # Keep copyright, license, shebang and encoding comments at the file head.
+    prefix_end = 0
+    for number, line in enumerate(lines, 1):
+        stripped = line.strip()
+        if not stripped or stripped.startswith(b"#"):
+            prefix_end = number
+        else:
+            break
+    if prefix_end:
+        add(1, prefix_end, "leading_comments")
+
+    def docstring(statement):
+        return (isinstance(statement, ast.Expr) and isinstance(statement.value, ast.Constant)
+                and isinstance(statement.value.value, str))
+
+    if module.body and docstring(module.body[0]):
+        add(module.body[0].lineno, module.body[0].end_lineno, "module_docstring")
+    module_level = {id(node) for node in module.body}
+    for node in nodes:
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            add(node.lineno, node.end_lineno, "import")
+        elif isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+            if not node.body or node.body[0].lineno <= node.lineno:
+                return [], "one_line_declaration"
+            # A multiline header may share its closing line with an inline
+            # suite whose body continues on later lines. The span ending on
+            # the line before the first body node would cut off the signature
+            # (and suite colon); inspect the first suite line, not its end.
+            # Retain the exact file until we can represent that syntax safely.
+            body = node.body[0]
+            body_line = lines[body.lineno - 1]
+            before_body = body_line[:body.col_offset]
+            if b":" in before_body:
+                return [], "inline_suite_on_header_line"
+            decorators = [item.lineno for item in node.decorator_list]
+            start = min(decorators, default=node.lineno)
+            add(start, node.body[0].lineno - 1,
+                "class_signature" if isinstance(node, ast.ClassDef) else "function_signature")
+            if docstring(node.body[0]):
+                add(node.body[0].lineno, node.body[0].end_lineno, "declaration_docstring")
+        elif id(node) in module_level and isinstance(node, (ast.Assign, ast.AnnAssign, ast.AugAssign)):
+            add(node.lineno, node.end_lineno, "module_assignment")
+        elif hasattr(ast, "TypeAlias") and isinstance(node, ast.TypeAlias):
+            if id(node) in module_level:
+                add(node.lineno, node.end_lineno, "module_assignment")
+
+    # Duplicate spans can arise from nested AST constructs on the same line.
+    spans.sort()
+    merged = []
+    for start, end, kind in spans:
+        if merged and start <= merged[-1][1]:
+            old_start, old_end, kinds = merged[-1]
+            merged[-1] = (old_start, max(old_end, end), kinds | {kind})
+        else:
+            merged.append((start, end, {kind}))
+    if not merged:
+        return [], "no_supported_declarations"
+
+    selected = sum(sum(len(line) for line in lines[start - 1:end])
+                   for start, end, _ in merged)
+    retained_lines = {number for start, end, _ in merged for number in range(start, end + 1)}
+    notices = re.compile(rb"copyright|\xc2\xa9|spdx-license-identifier|all rights reserved|license|"
+                         rb"permission is hereby granted|mit license|apache license|"
+                         rb"gnu general public license", re.I)
+    if any(notices.search(line) and number not in retained_lines
+           for number, line in enumerate(lines, 1)):
+        return [], "source_notice_not_retained"
+    if selected >= len(data):
+        return [], "structure_not_smaller"
+    return merged, None
+
+
+def _representation(data, path, requested):
+    """Describe a byte-exact full source or Python structural view."""
+    lines = _source_lines(data)
+    language = "python" if Path(path).suffix.lower() in (".py", ".pyi") else (
+        Path(path).suffix.lower().lstrip(".") or "text")
+    fallback = None
+    if requested == "full":
+        selected_mode, algorithm = "full", "exact-source-v1"
+        spans = [(1, len(lines), "full_source")] if lines else []
+    elif language != "python":
+        selected_mode, algorithm, fallback = "full", STRUCTURE_ALGORITHM, "unsupported_language"
+        spans = [(1, len(lines), "exact_fallback")] if lines else []
+    else:
+        selected_mode, algorithm = "structure", STRUCTURE_ALGORITHM
+        spans, fallback = _python_segments(data)
+        if fallback:
+            selected_mode = "full"
+            spans = [(1, len(lines), "exact_fallback")] if lines else []
+
+    offsets, offset = [0], 0
+    for line in lines:
+        offset += len(line)
+        offsets.append(offset)
+    segments, chunks = [], []
+    covered = set()
+    for start, end, kind in spans:
+        byte_start, byte_end = offsets[start - 1], offsets[end]
+        chunk = data[byte_start:byte_end]
+        chunks.append(chunk)
+        covered.update(range(start, end + 1))
+        segments.append({"line_start": start, "line_end": end,
+                         "byte_start": byte_start, "byte_end": byte_end,
+                         "kinds": sorted(kind) if isinstance(kind, set) else [kind],
+                         "sha256": _sha(chunk)})
+    content_bytes = b"".join(chunks)
+    omitted = []
+    if selected_mode == "structure":
+        body_lines = set()
+        if language == "python":
+            try:
+                module = ast.parse(data.decode("utf-8"))
+                for node in ast.walk(module):
+                    if isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)) and node.body:
+                        body_lines.update(range(node.body[0].lineno, node.end_lineno + 1))
+            except (SyntaxError, UnicodeDecodeError, ValueError, RecursionError):
+                pass
+        start = None
+        previous_reason = None
+        for number in range(1, len(lines) + 1):
+            if number in covered:
+                if start is not None:
+                    omitted.append({"line_start": start, "line_end": number - 1,
+                                    "reason": previous_reason})
+                    start = previous_reason = None
+                continue
+            reason = "implementation_body" if number in body_lines else "unselected_source"
+            if start is None:
+                start, previous_reason = number, reason
+            elif reason != previous_reason:
+                omitted.append({"line_start": start, "line_end": number - 1,
+                                "reason": previous_reason})
+                start, previous_reason = number, reason
+        if start is not None:
+            omitted.append({"line_start": start, "line_end": len(lines), "reason": previous_reason})
+
+    representation = {"schema_version": 1, "requested": requested, "selected": selected_mode,
+                      "algorithm": algorithm, "language": language,
+                      "original_sha256": _sha(data), "original_bytes": len(data),
+                      "selected_sha256": _sha(content_bytes), "selected_bytes": len(content_bytes),
+                      "segments": segments, "omitted_ranges": omitted,
+                      "fallback_reason": fallback}
+    return representation, content_bytes.decode("utf-8")
+
+
 def _fence(content):
     """Adapt Repomix's longest-backtick-run delimiter rule (MIT; see provenance)."""
     runs = re.findall(r"`+", content)
@@ -141,12 +335,31 @@ def _render_pack(base):
              f"Context observation: {_json(base['context'])}",
              f"Included IDs: {_json(base['included_ids'])}",
              f"Limits: {_json(base['limits'])}",
-             "Selected exact excerpts and guidance follow. Advisory only; user and project instructions win."]
+             ("Selected source representations and guidance follow. Advisory only; user and project instructions win."
+              if any("representation" in row for row in base["items"])
+              else "Selected exact excerpts and guidance follow. Advisory only; user and project instructions win.")]
     for row in base["items"]:
-        fence = _fence(row["content"])
         metadata = {key: value for key, value in row.items() if key != "content"}
         parts.extend([f"\n## {row['kind']}: {row['title']} ({row['item_id']})",
-                      f"Metadata: {_json(metadata)}", fence, row["content"], fence])
+                      f"Metadata: {_json(metadata)}"])
+        representation = row.get("representation")
+        if representation:
+            raw = row["content"].encode("utf-8")
+            cursor = 0
+            for segment in representation["segments"]:
+                size = segment["byte_end"] - segment["byte_start"]
+                chunk = raw[cursor:cursor + size].decode("utf-8")
+                cursor += size
+                fence = _fence(chunk)
+                parts.extend([f"Original source lines {segment['line_start']}-{segment['line_end']} (exact):",
+                              fence, chunk, fence])
+            for omitted in representation["omitted_ranges"]:
+                parts.append(f"Presentation note (not source): omitted original lines "
+                             f"{omitted['line_start']}-{omitted['line_end']} "
+                             f"({omitted['reason']}).")
+        else:
+            fence = _fence(row["content"])
+            parts.extend([fence, row["content"], fence])
     parts.append("\nOmissions: " + (_json(base["omissions"]) if base["omissions"] else "none"))
     text_value = "\n".join(parts).rstrip("\n") + "\n"
     json_value = _json(wire) + "\n"
@@ -223,14 +436,36 @@ def _load(store, name):
         raise ContextPackError("store_invalid", "stored object version is unsupported")
     if name == "binding.json" and set(value) != {"schema_version", "binding"}:
         raise ContextPackError("store_invalid", "stored binding has unknown fields")
-    if name.startswith("candidates-") and set(value) != {
-            "schema_version", "candidate_set_id", "task", "project", "context", "items", "omissions", "limits"}:
-        raise ContextPackError("store_invalid", "stored candidate set has unknown fields")
+    if name.startswith("candidates-"):
+        expected = {"schema_version", "candidate_set_id", "task", "project", "context",
+                    "items", "omissions", "limits"}
+        if set(value) not in (expected, expected | {"representation"}):
+            raise ContextPackError("store_invalid", "stored candidate set has unknown fields")
+        representation = value.get("representation", "excerpt")
+        if not isinstance(representation, str) or representation not in REPRESENTATIONS:
+            raise ContextPackError("store_invalid", "stored candidate representation is unsupported")
     if name.startswith("preview-") and set(value) != {
             "schema_version", "preview_id", "candidate_set_id", "pack_id", "requested_ids", "included_ids",
             "omissions", "project", "context", "limits", "renders", "_manifest"}:
         raise ContextPackError("store_invalid", "stored preview has unknown fields")
     return value
+
+
+def _check_candidate_representation(candidates):
+    """Require every source item's representation to match its frozen set mode."""
+    mode = candidates.get("representation", "excerpt")
+    for item in candidates.get("items", []):
+        if not isinstance(item, dict):
+            raise ContextPackError("store_invalid", "stored candidate item is invalid")
+        if item.get("kind") != "source":
+            continue
+        if mode == "excerpt":
+            if "representation" in item:
+                raise ContextPackError(
+                    "store_invalid", "source representation differs from its candidate set")
+        elif (not isinstance(item.get("representation"), dict)
+              or item["representation"].get("requested") != mode):
+            raise ContextPackError("store_invalid", "source representation differs from its candidate set")
 
 
 class ContextPackService:
@@ -261,35 +496,62 @@ class ContextPackService:
             else:
                 _write(self.store, "binding.json", {"schema_version": 1, "binding": binding})
 
-    def candidates(self, task, *, focus=(), guidance_ids=()):
+    def candidates(self, task, *, focus=(), guidance_ids=(), representation="excerpt"):
         if not isinstance(task, str) or not task.strip() or len(task) > MAX_TASK_CHARS:
             raise ContextPackError("invalid_request", "task must contain 1 to 2048 characters")
+        if not isinstance(representation, str) or representation not in REPRESENTATIONS:
+            raise ContextPackError("invalid_request", "representation must be excerpt, full or structure")
         if len(set(guidance_ids)) != len(tuple(guidance_ids)):
             raise ContextPackError("invalid_request", "duplicate guidance ID")
         project_obs = _observation(self.project, self.project_id)
         map_result = repo_map.build_map(self.project, task, focus=focus, max_tokens=8192,
-                                        include_candidates=True)
+                                        include_candidates=True,
+                                        include_focused_fallbacks=representation != "excerpt")
         items, omissions = [], []
         ranked = map_result.get("_candidates", [])
+        if representation != "excerpt":
+            ranked = ranked + map_result.get("_focused_fallback_candidates", [])
         for candidate in ranked:
             source = candidate["source"]
-            line = candidate["symbols"][0]["line"] if candidate["symbols"] else 1
-            first, last, excerpt = _lines_window(source, line)
-            raw = excerpt.encode("utf-8")
-            if len(raw) > 4096:
-                omissions.append({"path": candidate["path"], "reason": "window exceeds 4096 bytes"})
-                continue
+            source_representation = None
+            if representation == "excerpt":
+                line = candidate["symbols"][0]["line"] if candidate["symbols"] else 1
+                first, last, excerpt = _lines_window(source, line)
+                raw = excerpt.encode("utf-8")
+                if len(raw) > 4096:
+                    omissions.append({"path": candidate["path"], "reason": "window exceeds 4096 bytes"})
+                    continue
+            else:
+                raw = source.encode("utf-8")
+                if _sha(raw) != candidate["file_sha256"]:
+                    raise ContextPackError("source_drift", "source bytes changed during representation")
+                source_representation, excerpt = _representation(raw, candidate["path"], representation)
+                first, last = 1, len(_source_lines(raw))
+            source_metadata = {"owner": "project", "path": candidate["path"],
+                               "revision": project_obs["head"], "file_sha256": candidate["file_sha256"]}
+            if source_representation is None:
+                source_metadata.update({"line_start": first, "line_end": last,
+                                        "excerpt_sha256": _sha(excerpt.encode("utf-8"))})
             item = {"item_id": secrets.token_hex(12), "kind": "source", "title": candidate["path"],
                     "rank": len(items) + 1, "reason": candidate["reason"],
-                    "source": {"owner": "project", "path": candidate["path"],
-                               "revision": project_obs["head"], "file_sha256": candidate["file_sha256"],
-                               "line_start": first, "line_end": last, "excerpt_sha256": _sha(raw)},
+                    "source": source_metadata,
                     "content": excerpt, "required_by": [], "selectable": True}
+            if source_representation is not None:
+                item["representation"] = source_representation
             items.append(item)
             if len(items) >= MAX_ITEMS:
                 break
+        focused_omissions = map_result.get("_focused_omissions", []) if representation != "excerpt" else []
+        focused_paths = {row["path"] for row in focused_omissions}
+        fallback_paths = {row["path"] for row in map_result.get("_focused_fallback_candidates", [])}
         for warning in map_result.get("diagnostics", {}).get("warnings", []):
+            if representation != "excerpt" and any(
+                    warning.startswith(path + ":" if len(path) <= 60 else path[:60])
+                    for path in focused_paths | fallback_paths):
+                continue
             omissions.append({"reason": warning[:160]})
+        omissions.extend({"path": row["path"], "reason": row["reason"]}
+                         for row in focused_omissions)
         context_reads = [map_result.get("diagnostics", {}).get("read_bytes", 0)]
         context_obs = _context_observation(self.context_root, context_reads)
         groups = []
@@ -360,7 +622,17 @@ class ContextPackService:
             if len(bounded_items) + len(group) <= MAX_ITEMS:
                 bounded_items.extend(group)
             else:
-                omissions.append({"reason": "candidate pool limit", "count": len(group)})
+                removed_sources = [item for item in group if item["kind"] == "source"]
+                if representation != "excerpt" and removed_sources:
+                    omissions.extend(
+                        {"path": item["title"],
+                         "reason": "candidate pool limit; whole source omitted"}
+                        for item in removed_sources)
+                    if len(removed_sources) != len(group):
+                        omissions.append({"reason": "candidate pool limit",
+                                          "count": len(group) - len(removed_sources)})
+                else:
+                    omissions.append({"reason": "candidate pool limit", "count": len(group)})
         items = bounded_items
         for rank, item in enumerate(items, 1):
             item["rank"] = rank
@@ -375,6 +647,8 @@ class ContextPackService:
                   "omissions": {"count": len(omissions), "items": omissions[:8]},
                   "limits": {"max_items": MAX_ITEMS, "source_window_lines": 40,
                              "source_window_bytes": 4096, "scan_read_bytes": context_reads[0]}}
+        if representation != "excerpt":
+            result["representation"] = representation
         while len(_json(result).encode("utf-8")) > 512 * 1024 and items:
             last = items[-1]
             if last["selectable"] and last["kind"] == "guidance":
@@ -382,8 +656,15 @@ class ContextPackService:
                                                if last["item_id"] in x["required_by"]}
             else:
                 removed = {last["item_id"]}
+            removed_items = [item for item in items if item["item_id"] in removed]
             items[:] = [x for x in items if x["item_id"] not in removed]
-            omissions.append({"reason": "candidate response size limit", "count": len(removed)})
+            removed_sources = [item for item in removed_items if item["kind"] == "source"]
+            if representation != "excerpt" and removed_sources:
+                omissions.extend({"path": item["title"],
+                                  "reason": "candidate response size limit; whole source omitted"}
+                                 for item in removed_sources)
+            else:
+                omissions.append({"reason": "candidate response size limit", "count": len(removed)})
             result["omissions"] = {"count": len(omissions), "items": omissions[:8]}
         with _locked(self.store):
             _write(self.store, "candidates-" + candidate_id + ".json", result)
@@ -407,12 +688,26 @@ class ContextPackService:
                 whole = data.decode("utf-8")
             except UnicodeDecodeError as e:
                 raise ContextPackError("source_drift", "bound source is no longer valid UTF-8") from e
-            if src["owner"] == "project":
+            if "representation" in item:
+                recorded = item["representation"]
+                if (not isinstance(recorded, dict) or recorded.get("requested") not in ("full", "structure")
+                        or type(recorded.get("schema_version")) is not int
+                        or recorded.get("schema_version") != 1):
+                    raise ContextPackError("store_invalid", "source representation metadata is invalid")
+                expected, exact = _representation(data, src["path"], recorded["requested"])
+                if (_json(expected) != _json(recorded) or exact != item.get("content")
+                        or any(key in src for key in ("excerpt_sha256", "line_start", "line_end"))):
+                    raise ContextPackError("store_invalid", "stored source representation does not replay")
+            elif src["owner"] == "project":
                 lines = whole.splitlines(keepends=True)
                 exact = "".join(lines[src["line_start"] - 1:src["line_end"]])
             else:
                 exact = whole
-            if exact != item.get("content") or _sha(exact.encode("utf-8")) != src["excerpt_sha256"]:
+            if "representation" in item:
+                if exact != item.get("content"):
+                    raise ContextPackError("store_invalid", "stored source representation content differs")
+            elif (exact != item.get("content")
+                  or _sha(exact.encode("utf-8")) != src["excerpt_sha256"]):
                 raise ContextPackError("source_drift", "bound excerpt differs from current source bytes")
         if _observation(self.project, self.project_id) != project_obs or \
                 _context_observation(self.context_root, total_reads) != context_obs:
@@ -432,6 +727,7 @@ class ContextPackService:
             candidates = _load(self.store, "candidates-" + candidate_set_id + ".json")
             if candidates.get("candidate_set_id") != candidate_set_id:
                 raise ContextPackError("store_invalid", "candidate set identity mismatch")
+            _check_candidate_representation(candidates)
             items = candidates["items"]
             ids = {item["item_id"] for item in items}
             explicit_include = include_ids is not None
@@ -547,12 +843,16 @@ class ContextPackService:
             manifest = preview.get("_manifest")
             if not isinstance(manifest, dict) or _sha(_json({k: v for k, v in manifest.items() if k != "pack_id"}).encode()) != preview.get("pack_id"):
                 raise ContextPackError("store_invalid", "preview manifest integrity check failed")
-            expected_id, expected_wire, expected_renders = _render_pack(
-                {key: value for key, value in manifest.items() if key != "pack_id"})
+            try:
+                expected_id, expected_wire, expected_renders = _render_pack(
+                    {key: value for key, value in manifest.items() if key != "pack_id"})
+            except (KeyError, TypeError, ValueError, UnicodeError) as exc:
+                raise ContextPackError("store_invalid", "stored source representation is invalid") from exc
             if (expected_id != preview.get("pack_id") or expected_wire != manifest
                     or expected_renders != preview.get("renders")):
                 raise ContextPackError("store_invalid", "stored renders do not match the frozen manifest")
             candidates = _load(self.store, "candidates-" + preview["candidate_set_id"] + ".json")
+            _check_candidate_representation(candidates)
             source_items = {item["item_id"]: item for item in candidates.get("items", [])}
             if any(source_items.get(item.get("item_id")) != item for item in manifest.get("items", [])):
                 raise ContextPackError("store_invalid", "preview items differ from their saved candidate set")
@@ -579,6 +879,7 @@ def _cli():
             p.add_argument("--task", required=True)
             p.add_argument("--focus", action="append", default=[])
             p.add_argument("--guidance", action="append", default=[])
+            p.add_argument("--representation", choices=sorted(REPRESENTATIONS), default="excerpt")
         elif name == "preview":
             p.add_argument("--candidates", required=True)
             p.add_argument("--include", action="append")
@@ -594,7 +895,8 @@ def _cli():
         service = ContextPackService(args.project, store=args.store, context_root=args.context_root,
                                      project_id=args.project_id)
         if args.command == "candidates":
-            result = service.candidates(args.task, focus=args.focus, guidance_ids=args.guidance)
+            result = service.candidates(args.task, focus=args.focus, guidance_ids=args.guidance,
+                                        representation=args.representation)
             raw = (_json(result) + "\n").encode()
         elif args.command == "preview":
             result = service.preview(args.candidates, include_ids=args.include,
