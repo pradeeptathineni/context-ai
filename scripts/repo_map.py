@@ -355,6 +355,34 @@ def _total_tokens(result):
     return (_output_bytes(result) + 3) // 4
 
 
+def _fit_final_output(result, output_limit_bytes):
+    """Enforce the wire-size cap after JSON escaping and all metadata are final."""
+    diagnostics = result["diagnostics"]
+    warning_count = diagnostics.get("warning_count", 0)
+    while _output_bytes(result) > output_limit_bytes and diagnostics.get("warnings"):
+        diagnostics["warnings"].pop()
+        diagnostics["warnings_omitted"] = warning_count - len(diagnostics["warnings"])
+
+    if _output_bytes(result) > output_limit_bytes and result.get("task"):
+        displayed_task_length = len(result["task"])
+        result["task"] = ""
+        result["task_truncated"] = True
+        result.setdefault("task_original_chars", displayed_task_length)
+
+    while _output_bytes(result) > output_limit_bytes and result["entries"]:
+        result["entries"].pop()
+        diagnostics["omitted_files"] += 1
+
+    result["estimated_entry_tokens"] = sum(
+        max(1, (len(_render_entry(entry).encode("utf-8")) + 3) // 4)
+        for entry in result["entries"]
+    )
+    result["estimated_tokens"] = _total_tokens(result)
+    result["budget_satisfied"] = result["estimated_tokens"] <= result["max_tokens"]
+    if _output_bytes(result) > output_limit_bytes:
+        raise MapError("rendered repository map exceeds output limit")
+
+
 def build_map(project: Path, task: str, *, focus=(), max_tokens=2000) -> dict:
     """Build a bounded map from tracked repository files without writing to it."""
     if not isinstance(task, str) or not task.strip():
@@ -551,6 +579,7 @@ def build_map(project: Path, task: str, *, focus=(), max_tokens=2000) -> dict:
         entry_tokens += cost
     result["estimated_tokens"] = _total_tokens(result)
     result["budget_satisfied"] = result["estimated_tokens"] <= max_tokens
+    _fit_final_output(result, output_limit_bytes)
     return result
 
 

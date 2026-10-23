@@ -255,6 +255,23 @@ class RepoMapTests(unittest.TestCase):
         self.assertEqual(result["diagnostics"]["warning_count"], 100)
         self.assertGreater(result["diagnostics"]["warnings_omitted"], 0)
 
+    def test_final_output_cap_counts_json_escaped_control_characters(self):
+        for number in range(8):
+            name = "\x01" * 63 + f"{number}.py"
+            self.add(name, "def broken(:\n")
+        self.commit()
+
+        result = build_map(self.root, "\x01" * 100_000, max_tokens=1)
+        text_size = len(render_text(result).encode("utf-8")) + 1
+        json_size = len(render_json(result).encode("utf-8")) + 1
+        output_limit_bytes = max(repo_map.MIN_OUTPUT_BYTES, result["max_tokens"] * 4)
+        self.assertLessEqual(text_size, output_limit_bytes)
+        self.assertLessEqual(json_size, output_limit_bytes)
+        self.assertLessEqual(repo_map._output_bytes(result), output_limit_bytes)
+        self.assertEqual(result["diagnostics"]["warning_count"], 8)
+        self.assertGreater(result["diagnostics"]["warnings_omitted"], 0)
+        self.assertTrue(result["task_truncated"])
+
     def test_secret_style_directories_are_skipped_even_when_focused(self):
         self.add("secrets/config.py", "def secret_pricing_total():\n    return 1\n")
         self.add("credentials/config.json", '{"pricing_total": 2}')
