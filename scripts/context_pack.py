@@ -198,6 +198,16 @@ def _python_segments(data):
         elif isinstance(node, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
             if not node.body or node.body[0].lineno <= node.lineno:
                 return [], "one_line_declaration"
+            # A multiline header may share its closing line with an inline
+            # suite. The span ending on the line before the first body node
+            # would then cut off part of the signature (and the suite colon).
+            # Retain the exact file until we can represent that syntax safely.
+            body = node.body[0]
+            if body.lineno == node.end_lineno:
+                body_line = lines[body.lineno - 1]
+                before_body = body_line[:body.col_offset]
+                if b":" in before_body:
+                    return [], "inline_suite_on_header_line"
             decorators = [item.lineno for item in node.decorator_list]
             start = min(decorators, default=node.lineno)
             add(start, node.body[0].lineno - 1,

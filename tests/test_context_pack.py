@@ -243,6 +243,41 @@ class ContextPackTests(unittest.TestCase):
                 self.assertEqual(self.service.export(preview["preview_id"]),
                                  preview["renders"]["text"]["content"].encode("utf-8"))
 
+    def test_multiline_header_inline_suites_fall_back_without_truncation(self):
+        fixtures = {
+            "function.py": "def useful(\n    value: int,\n) -> int: return value + 1\n",
+            "async_function.py": "async def useful(\n    value: int,\n) -> int: return value + 1\n",
+            "class.py": "class Useful(\n    object,\n): pass\n",
+        }
+        for name, source in fixtures.items():
+            with self.subTest(path=name):
+                raw = source.encode("utf-8")
+                path = self.project / name
+                path.write_bytes(raw)
+                self._git("add", name)
+                self._git("commit", "-qm", f"add {name}")
+                candidates = self.service.candidates(
+                    "inspect declaration", focus=[name], representation="structure")
+                item = next(row for row in candidates["items"] if row["kind"] == "source")
+                self.assertEqual(item["content"].encode("utf-8"), raw)
+                self.assertEqual(item["representation"]["selected"], "full")
+                self.assertEqual(item["representation"]["fallback_reason"],
+                                 "inline_suite_on_header_line")
+
+    def test_multiline_header_with_ordinary_indented_body_stays_structural(self):
+        source = ("def useful(\n    value: int,\n) -> int:\n"
+                  "    return value + 1\n")
+        raw = source.encode("utf-8")
+        (self.project / "multiline.py").write_bytes(raw)
+        self._git("add", "multiline.py")
+        self._git("commit", "-qm", "add ordinary multiline declaration")
+        candidates = self.service.candidates(
+            "inspect declaration", focus=["multiline.py"], representation="structure")
+        item = next(row for row in candidates["items"] if row["kind"] == "source")
+        self.assertEqual(item["representation"]["selected"], "structure")
+        self.assertIn("def useful(\n    value: int,\n) -> int:\n", item["content"])
+        self.assertNotIn("return value + 1", item["content"])
+
     def test_overdeep_python_falls_back_to_exact_source(self):
         raw = ("value = " + "[" * 105 + "1" + "]" * 105 + "\n").encode("utf-8")
         (self.project / "deep.py").write_bytes(raw)
