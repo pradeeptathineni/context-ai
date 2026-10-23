@@ -73,17 +73,20 @@ def inside(root, name):
         raise Invalid('escaping path: '+name)
     return target
 
-def validate_schema(name, value):
-    schema = json.loads(inside(ROOT, 'schemas/'+name+'.schema.json').read_text())
-    registry = Registry().with_resource('https://context-ai.local/schemas/lock.schema.json', Resource.from_contents(json.loads((ROOT/'schemas/lock.schema.json').read_text())))
+def validate_schema(name, value, *, root=None):
+    root = Path(root).resolve() if root is not None else ROOT
+    schema = json.loads(inside(root, 'schemas/'+name+'.schema.json').read_text())
+    registry = Registry().with_resource('https://context-ai.local/schemas/lock.schema.json', Resource.from_contents(json.loads((root/'schemas/lock.schema.json').read_text())))
     Draft202012Validator(schema, registry=registry, format_checker=FormatChecker()).validate(value)
 
-def catalogue():
-    return {p.stem: read_yaml(p) for p in (ROOT/'loadouts').glob('*.yaml')}
+def catalogue(*, root=None):
+    root = Path(root).resolve() if root is not None else ROOT
+    return {p.stem: read_yaml(p) for p in (root/'loadouts').glob('*.yaml')}
 
-def capability_registry():
-    document=read_yaml(ROOT/'capabilities.yaml')
-    validate_schema('capabilities',document)
+def capability_registry(*, root=None):
+    root = Path(root).resolve() if root is not None else ROOT
+    document=read_yaml(root/'capabilities.yaml')
+    validate_schema('capabilities',document,root=root)
     for key,spec in document['options'].items():
         if spec.get('type')=='text':continue
         if spec['default'] not in spec['alternatives']:
@@ -114,12 +117,13 @@ def current_decisions():
             decisions[d['id']] = d
     return decisions
 
-def active_files():
+def active_files(*, root=None):
     """Every guidance file a loadout, capability or packet route can load."""
+    root = Path(root).resolve() if root is not None else ROOT
     files=set(['overlays/orchestration.md','overlays/model-deliberation.md','core/prior-art.md'])
-    for d in catalogue().values():
+    for d in catalogue(root=root).values():
         for paths in d['stages'].values():files.update(paths)
-    for item in capability_registry()['capabilities'].values():
+    for item in capability_registry(root=root)['capabilities'].values():
         if item['kind']=='resource':files.add(item['path'])
     return files
 
@@ -176,8 +180,9 @@ def resource_path(root, name):
         raise Invalid('untrusted instruction activation: '+name)
     return path
 
-def resources(names):
-    registry = read_yaml(ROOT/'resources.yaml') if (ROOT/'resources.yaml').exists() else {'dependencies': {}}
+def resources(names, *, root=None):
+    root = Path(root).resolve() if root is not None else ROOT
+    registry = read_yaml(root/'resources.yaml') if (root/'resources.yaml').exists() else {'dependencies': {}}
     dependencies = registry['dependencies']
     output, active = {}, set()
     def visit(name):
@@ -185,7 +190,7 @@ def resources(names):
             raise Invalid('resource dependency cycle: '+name)
         if name in output:
             return
-        p = resource_path(ROOT, name)
+        p = resource_path(root, name)
         if not p.is_file():
             raise Invalid('missing resource: '+name)
         active.add(name)
@@ -197,12 +202,13 @@ def resources(names):
         visit(name)
     return output
 
-def source_notices(files):
-    if not (ROOT/'sources.lock.json').exists():
+def source_notices(files, *, root=None):
+    root = Path(root).resolve() if root is not None else ROOT
+    if not (root/'sources.lock.json').exists():
         return {}
     result = {}
     covered = set()
-    for source in json.loads((ROOT/'sources.lock.json').read_text())['sources']:
+    for source in json.loads((root/'sources.lock.json').read_text())['sources']:
         selected = set(files) & set(source['files'])
         if not selected:
             continue
@@ -212,7 +218,7 @@ def source_notices(files):
         if not notices:
             notices = {p for p in source['files'] if p.endswith('upstream-README.md')}
         for path in selected | notices:
-            data = inside(ROOT,path).read_bytes()
+            data = inside(root,path).read_bytes()
             if digest(data) != source['files'][path]:
                 raise Invalid('pinned upstream drift: '+path)
             if path in notices:

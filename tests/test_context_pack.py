@@ -5,6 +5,8 @@ import subprocess
 import tempfile
 import unittest
 
+import yaml
+
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import context_pack
@@ -151,6 +153,40 @@ class ContextPackTests(unittest.TestCase):
         self.assertGreater(len(bounded["omissions"][0]["item_ids"]), 0)
         for render in bounded["renders"].values():
             self.assertLessEqual(render["bytes"], 4000)
+
+    def test_context_resolver_is_bound_to_each_configured_root_in_one_process(self):
+        root_a = Path(__file__).resolve().parents[1]
+        service_a = context_pack.ContextPackService(
+            self.project, store=self.root / "store-a", context_root=root_a,
+            project_id="synthetic-a")
+        service_a.candidates("change total pricing", guidance_ids=["guidance:core/testing.md"])
+
+        root_b = self.root / "context-b"
+        subprocess.run(["git", "clone", "--local", "--no-hardlinks", "-q", str(root_a), str(root_b)],
+                       check=True)
+        registry_path = root_b / "resources.yaml"
+        registry = yaml.safe_load(registry_path.read_text(encoding="utf-8"))
+        registry["dependencies"]["core/testing.md"] = ["core/acceptance-required.md"]
+        registry_path.write_text(yaml.safe_dump(registry, sort_keys=False), encoding="utf-8")
+        required = "Required acceptance guidance unique to configured root B.\n"
+        (root_b / "core/acceptance-required.md").write_text(required, encoding="utf-8")
+        subprocess.run(["git", "-C", str(root_b), "add", "resources.yaml", "core/acceptance-required.md"],
+                       check=True)
+        subprocess.run(["git", "-C", str(root_b), "-c", "user.name=Fixture", "-c",
+                        "user.email=fixture@example.invalid", "commit", "-qm", "fixture dependency"],
+                       check=True)
+
+        service_b = context_pack.ContextPackService(
+            self.project, store=self.root / "store-b", context_root=root_b,
+            project_id="synthetic-b")
+        candidates = service_b.candidates("change total pricing", guidance_ids=["guidance:core/testing.md"])
+        required_row = next(item for item in candidates["items"]
+                            if item["title"] == "core/acceptance-required.md")
+        self.assertEqual(required_row["content"], required)
+        self.assertEqual(required_row["source"]["owner"], "context")
+        preview = service_b.preview(candidates["candidate_set_id"], max_tokens=8192)
+        exported = service_b.export(preview["preview_id"], format="text").decode("utf-8")
+        self.assertIn(required, exported)
 
 
 if __name__ == "__main__":

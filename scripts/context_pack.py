@@ -297,7 +297,11 @@ class ContextPackService:
             sys.path.insert(0, str(self.context_root / "scripts"))
             try:
                 import context_ai
-                allowed = {p for p in context_ai.active_files() if p.endswith(".md")}
+                # Resolver functions accept the service's root explicitly.  The
+                # imported Python module may already be cached from another
+                # legitimate Context checkout in this process; its ROOT constant
+                # must never decide this service's guidance closure.
+                allowed = {p for p in context_ai.active_files(root=self.context_root) if p.endswith(".md")}
                 # The resource resolver is the authority for active dependency closure.
                 for gid in guidance_ids:
                     if not isinstance(gid, str) or not gid.startswith("guidance:"):
@@ -305,8 +309,8 @@ class ContextPackService:
                     root = gid[len("guidance:"):]
                     if root not in allowed:
                         raise ContextPackError("unknown_guidance", "guidance resource is not active")
-                    closure = context_ai.resources([root])
-                    notices = context_ai.source_notices(closure)
+                    closure = context_ai.resources([root], root=self.context_root)
+                    notices = context_ai.source_notices(closure, root=self.context_root)
                     lock_raw = _read(self.context_root, "sources.lock.json",
                                      repo_map.MAX_TOTAL_BYTES - context_reads[0], context_reads)
                     pinned = {path: digest for source in json.loads(lock_raw.decode("utf-8"))["sources"]
