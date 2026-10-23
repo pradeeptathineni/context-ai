@@ -383,7 +383,7 @@ def _fit_final_output(result, output_limit_bytes):
         raise MapError("rendered repository map exceeds output limit")
 
 
-def build_map(project: Path, task: str, *, focus=(), max_tokens=2000) -> dict:
+def build_map(project: Path, task: str, *, focus=(), max_tokens=2000, include_candidates=False) -> dict:
     """Build a bounded map from tracked repository files without writing to it."""
     if not isinstance(task, str) or not task.strip():
         raise MapError("task must be a non-empty string")
@@ -511,6 +511,7 @@ def build_map(project: Path, task: str, *, focus=(), max_tokens=2000) -> dict:
                 relevant_symbols.append({"name": name, "kind": "reference", "line": source_line(source, name)})
         candidates.append({
             "path": relative,
+            "_source": source,
             "language": Path(relative).suffix.lower().lstrip(".") or "text",
             "symbols": sorted(relevant_symbols, key=lambda item: (item["line"], item["name"])),
             "reason": "; ".join(reasons),
@@ -519,6 +520,14 @@ def build_map(project: Path, task: str, *, focus=(), max_tokens=2000) -> dict:
             "_score": score,
         })
     candidates.sort(key=lambda item: (-item["_score"], item["path"]))
+    if include_candidates:
+        result_candidates = []
+        for item in candidates:
+            row = {key: value for key, value in item.items() if not key.startswith("_")}
+            row["source"] = item["_source"]
+            result_candidates.append(row)
+    else:
+        result_candidates = None
     selected = []
     entry_tokens = 0
     output_limit_bytes = max(MIN_OUTPUT_BYTES, max_tokens * 4)
@@ -580,6 +589,8 @@ def build_map(project: Path, task: str, *, focus=(), max_tokens=2000) -> dict:
     result["estimated_tokens"] = _total_tokens(result)
     result["budget_satisfied"] = result["estimated_tokens"] <= max_tokens
     _fit_final_output(result, output_limit_bytes)
+    if include_candidates:
+        result["_candidates"] = result_candidates
     return result
 
 

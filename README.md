@@ -20,6 +20,8 @@ For several task choices, the [context-loadout skill](skills/context-loadout/SKI
 
 Use the optional [read-only repository map](docs/repo-map.md) to find relevant tracked files and symbols for a task. It emits a compact text map or JSON without copying source content or changing the selected checkout.
 
+For a frozen, selectable pack of exact source excerpts and explicitly chosen guidance, see [task context packs](docs/context-packs.md). Packs persist by ID and refuse export after bound source drift.
+
 ## Keep a project selection
 
 The [catalog and project profiles](docs/library.md) preserve options, reasons, evidence and recurring selections. The [portal](examples/web/index.html) shows these public choices and installs nothing. Follow the source-environment setup in the library guide, then run from the Context checkout:
