@@ -132,6 +132,32 @@ def _fence(content):
     return "`" * max(3, max((len(run) for run in runs), default=0) + 1)
 
 
+def _render_pack(base):
+    pack_id = _sha(_json(base).encode())
+    wire = dict(base, pack_id=pack_id)
+    preview_id, task = base["preview_id"], base["task"]
+    parts = [f"# Context pack {pack_id}", f"Preview: {preview_id}", f"Task: {task}",
+             f"Project observation: {_json(base['project'])}",
+             f"Context observation: {_json(base['context'])}",
+             f"Included IDs: {_json(base['included_ids'])}",
+             f"Limits: {_json(base['limits'])}",
+             "Selected exact excerpts and guidance follow. Advisory only; user and project instructions win."]
+    for row in base["items"]:
+        fence = _fence(row["content"])
+        metadata = {key: value for key, value in row.items() if key != "content"}
+        parts.extend([f"\n## {row['kind']}: {row['title']} ({row['item_id']})",
+                      f"Metadata: {_json(metadata)}", fence, row["content"], fence])
+    parts.append("\nOmissions: " + (_json(base["omissions"]) if base["omissions"] else "none"))
+    text_value = "\n".join(parts).rstrip("\n") + "\n"
+    json_value = _json(wire) + "\n"
+    renders = {}
+    for fmt, content in (("text", text_value), ("json", json_value)):
+        raw = content.encode("utf-8")
+        renders[fmt] = {"content": content, "bytes": len(raw), "sha256": _sha(raw),
+                        "estimated_tokens": (len(raw) + 3) // 4}
+    return pack_id, wire, renders
+
+
 @contextmanager
 def _locked(store):
     fd = os.open(store / ".lock", os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600)
@@ -404,12 +430,14 @@ class ContextPackService:
                 raise ContextPackError("store_invalid", "candidate set identity mismatch")
             items = candidates["items"]
             ids = {item["item_id"] for item in items}
-            requested = list(include_ids) if include_ids is not None else [x["item_id"] for x in items if x["selectable"]]
+            explicit_include = include_ids is not None
+            requested = list(include_ids) if explicit_include else [
+                x["item_id"] for x in items if x["selectable"] and x["item_id"] not in exclude_ids]
             if any(item not in ids for item in requested + list(exclude_ids)):
                 raise ContextPackError("unknown_selection", "selection contains an unknown item ID")
             if len(set(requested)) != len(requested):
                 raise ContextPackError("invalid_request", "duplicate selection ID")
-            if set(requested) & set(exclude_ids):
+            if explicit_include and set(requested) & set(exclude_ids):
                 raise ContextPackError("invalid_request", "an item cannot be included and excluded")
             if any(not next(x for x in items if x["item_id"] == item_id)["selectable"]
                    for item_id in requested):
@@ -460,49 +488,40 @@ class ContextPackService:
             selected, budget_omissions = [], []
 
             def make_renders(rows, omitted):
+                compact_omissions = []
+                for reason in dict.fromkeys(x["reason"] for x in omitted):
+                    ids_for_reason = [x["item_id"] for x in omitted if x["reason"] == reason]
+                    compact_omissions.append({"reason": reason, "item_ids": ids_for_reason})
                 base = {"schema_version": 1, "preview_id": preview_id, "task": task,
                         "project": candidates["project"], "context": candidates["context"],
                         "included_ids": [x["item_id"] for x in rows], "items": rows,
-                        "omissions": omitted, "limits": limits,
+                        "omissions": compact_omissions, "limits": limits,
                         "qualification": "Exact selected bytes; advisory context. User and project instructions take precedence."}
-                ident = _sha(_json(base).encode())
-                wire = dict(base, pack_id=ident)
-                parts = [f"# Context pack {ident}", f"Preview: {preview_id}", f"Task: {task}",
-                         f"Project observation: {_json(candidates['project'])}",
-                         f"Context observation: {_json(candidates['context'])}",
-                         f"Included IDs: {_json([x['item_id'] for x in rows])}",
-                         f"Limits: {_json(limits)}",
-                         "Selected exact excerpts and guidance follow. Advisory only; user and project instructions win."]
-                for row in rows:
-                    fence = _fence(row["content"])
-                    metadata = {key: value for key, value in row.items() if key != "content"}
-                    parts.extend([f"\n## {row['kind']}: {row['title']} ({row['item_id']})",
-                                  f"Metadata: {_json(metadata)}",
-                                  fence, row["content"], fence])
-                parts.append("\nOmissions: " + (_json(omitted) if omitted else "none"))
-                text_value = "\n".join(parts).rstrip("\n") + "\n"
-                json_value = _json(wire) + "\n"
-                result = {}
-                for fmt, content in (("text", text_value), ("json", json_value)):
-                    raw = content.encode("utf-8")
-                    result[fmt] = {"content": content, "bytes": len(raw), "sha256": _sha(raw),
-                                   "estimated_tokens": (len(raw) + 3) // 4}
-                return ident, wire, result
+                return _render_pack(base)
 
+            accepted_groups = []
             for group in groups:
                 tentative = selected + group
                 ident, wire, renders = make_renders(tentative, omissions + budget_omissions)
                 if max(value["bytes"] for value in renders.values()) <= limits["max_bytes_per_format"]:
                     selected = tentative
+                    accepted_groups.append(group)
                 else:
                     budget_omissions.extend({"item_id": x["item_id"], "reason": "budget"} for x in group)
-            if not selected:
-                _, _, empty_renders = make_renders([], omissions + budget_omissions)
-                if max(value["bytes"] for value in empty_renders.values()) > limits["max_bytes_per_format"]:
-                    raise ContextPackError("budget_too_small", "fixed pack metadata exceeds the wire budget")
-                raise ContextPackError("empty_selection", "no selected items fit the wire budget")
-            omissions.extend(budget_omissions)
-            pack_id, wire_base, renders = make_renders(selected, omissions)
+            while True:
+                all_omissions = omissions + budget_omissions
+                pack_id, wire_base, renders = make_renders(selected, all_omissions)
+                if max(value["bytes"] for value in renders.values()) <= limits["max_bytes_per_format"]:
+                    break
+                if not accepted_groups:
+                    _, _, empty_renders = make_renders([], all_omissions)
+                    if max(value["bytes"] for value in empty_renders.values()) > limits["max_bytes_per_format"]:
+                        raise ContextPackError("budget_too_small", "fixed pack metadata exceeds the wire budget")
+                    raise ContextPackError("empty_selection", "no selected items fit the wire budget")
+                removed = accepted_groups.pop()
+                selected = [item for group in accepted_groups for item in group]
+                budget_omissions.extend({"item_id": x["item_id"], "reason": "budget"} for x in removed)
+            omissions = wire_base["omissions"]
             preview = {"schema_version": 1, "preview_id": preview_id, "candidate_set_id": candidate_set_id,
                        "pack_id": pack_id,
                        "requested_ids": requested, "included_ids": wire_base["included_ids"],
@@ -524,6 +543,11 @@ class ContextPackService:
             manifest = preview.get("_manifest")
             if not isinstance(manifest, dict) or _sha(_json({k: v for k, v in manifest.items() if k != "pack_id"}).encode()) != preview.get("pack_id"):
                 raise ContextPackError("store_invalid", "preview manifest integrity check failed")
+            expected_id, expected_wire, expected_renders = _render_pack(
+                {key: value for key, value in manifest.items() if key != "pack_id"})
+            if (expected_id != preview.get("pack_id") or expected_wire != manifest
+                    or expected_renders != preview.get("renders")):
+                raise ContextPackError("store_invalid", "stored renders do not match the frozen manifest")
             candidates = _load(self.store, "candidates-" + preview["candidate_set_id"] + ".json")
             source_items = {item["item_id"]: item for item in candidates.get("items", [])}
             if any(source_items.get(item.get("item_id")) != item for item in manifest.get("items", [])):

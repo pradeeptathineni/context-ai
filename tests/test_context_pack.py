@@ -86,6 +86,24 @@ class ContextPackTests(unittest.TestCase):
             reopened.export(preview["preview_id"])
         self.assertEqual(error.exception.code, "source_drift")
 
+    def test_rehashed_render_tampering_is_rejected(self):
+        candidates = self.service.candidates("change total pricing")
+        preview = self.service.preview(candidates["candidate_set_id"], max_tokens=8192)
+        path = self.store / ("preview-" + preview["preview_id"] + ".json")
+        record = json.loads(path.read_text())
+        content = "UNBOUND SYNTHETIC TEXT\n"
+        raw = content.encode()
+        record["renders"]["text"] = {
+            "content": content,
+            "bytes": len(raw),
+            "sha256": __import__("hashlib").sha256(raw).hexdigest(),
+            "estimated_tokens": (len(raw) + 3) // 4,
+        }
+        path.write_text(json.dumps(record, sort_keys=True, separators=(",", ":")))
+        with self.assertRaises(context_pack.ContextPackError) as error:
+            self.service.export(preview["preview_id"])
+        self.assertEqual(error.exception.code, "store_invalid")
+
     def test_fence_adaptation_and_budget(self):
         body = "before\n````\n雪\n"
         fence = context_pack._fence(body)
@@ -112,6 +130,27 @@ class ContextPackTests(unittest.TestCase):
         exported = subprocess.check_output(base + ["export"] + common + [
             "--preview", preview["preview_id"], "--format", "json"])
         self.assertEqual(exported, raw_preview)
+
+    def test_default_exclusion_and_omission_budget_remain_within_both_caps(self):
+        candidates = self.service.candidates("change total pricing")
+        source_ids = [x["item_id"] for x in candidates["items"] if x["kind"] == "source"]
+        preview = self.service.preview(candidates["candidate_set_id"], exclude_ids=[source_ids[0]],
+                                       max_tokens=8192)
+        self.assertNotIn(source_ids[0], preview["included_ids"])
+
+        for number in range(32):
+            name = f"pricing_helper_{number:02}.py"
+            body = (f"def pricing_total_{number:02}(items):\n"
+                    f"    # supporting pricing behavior number {number}\n"
+                    "    return sum(items)\n")
+            (self.project / name).write_text(body + "# padding " + ("x" * 180) + "\n")
+        self._git("add", ".")
+        self._git("commit", "-qm", "add pricing helpers")
+        expanded = self.service.candidates("change total pricing")
+        bounded = self.service.preview(expanded["candidate_set_id"], max_tokens=1000)
+        self.assertGreater(len(bounded["omissions"][0]["item_ids"]), 0)
+        for render in bounded["renders"].values():
+            self.assertLessEqual(render["bytes"], 4000)
 
 
 if __name__ == "__main__":
