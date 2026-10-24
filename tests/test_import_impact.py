@@ -232,6 +232,7 @@ class ImportImpactTests(unittest.TestCase):
             with self.assertRaisesRegex(import_impact.ImpactError, "time limit"):
                 import_impact._git(self.root, "status")
         self.assertEqual(run.call_args.kwargs["timeout"], import_impact.GIT_TIMEOUT_SECONDS)
+        self.assertIn("--no-optional-locks", run.call_args.args[0])
 
     def test_source_byte_limits_are_enforced_by_the_shared_reader(self):
         self.put("seed.py", "x=1\n")

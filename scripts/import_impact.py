@@ -36,7 +36,8 @@ def _git(root, *args):
     try:
         result = subprocess.run(
             [
-                "git", "-c", "core.fsmonitor=false", "-c", "core.hooksPath=/dev/null",
+                "git", "--no-optional-locks", "-c", "core.fsmonitor=false",
+                "-c", "core.hooksPath=/dev/null",
                 "-C", str(root), *args,
             ],
             stdout=subprocess.PIPE,
