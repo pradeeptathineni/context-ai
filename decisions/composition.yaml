@@ -483,7 +483,7 @@ decisions:
 - id: D-030
   revision: 1
   supersedes: null
-  concept: context.session-handoff
+  concept: agents.handoff
   action: build
   selection: A local Context service freezes explicitly opened owner records, unchanged selected Context
     guidance and separate user-authored synthesis into a bounded fresh-session export.
