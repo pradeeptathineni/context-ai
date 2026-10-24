@@ -479,3 +479,41 @@ decisions:
     metadata if a representation cannot preserve source identity or safe export.
   revisit_when: A real Python task shows structure omits a necessary decision fact, or a maintained upstream
     adds a substantially better bounded interface without unacceptable runtime or provenance cost.
+
+- id: D-030
+  revision: 1
+  supersedes: null
+  concept: agents.handoff
+  action: build
+  selection: A local Context service freezes explicitly opened owner records, unchanged selected Context
+    guidance and separate user-authored synthesis into a bounded fresh-session export.
+  rationale: A resumed agent needs the exact original decisions and unresolved questions with their owner,
+    instance, epoch, digest, observation and export time, not a summary that can erase provenance. Signals'
+    `knowledge/record` envelope supplies frozen owner identities; Context owns only the local reconstruction
+    and uses its existing private source-bound store and guidance resolver. The export has no execution
+    history or acceptance state and never launches or delivers a session.
+  evidence:
+  - scripts/session_handoff.py
+  - tests/test_session_handoff.py
+  - docs/session-handoff.md
+  - docs/context-pack-provenance.md
+  - https://github.com/earendil-works/pi/tree/8a2ebd38549c3521a02db0e5d758a24320e97f94/packages/coding-agent/src/core/session-manager.ts
+  applicability: Operators explicitly selecting frozen Signals, Planning or Principles records for a new
+    native session. Remote owner freshness remains unverified and no Deep consumer is included here.
+  alternatives:
+  - Re-read owner records and authored handoff directly in the new session
+  - Export only references and reopen each record manually
+  - Resume a native session with its provider-specific history and compaction semantics
+  unknowns:
+  - No native consumer, provider delivery, model adherence or task-quality benefit has been established.
+    Owner snapshots are caller-supplied and not cryptographic attestations.
+  validation:
+  - Offline synthetic journey preserves duplicate IDs across distinct stores, exact content/qualification,
+    unanswered work, dated or unknown freshness, hostile historical text boundaries and selected guidance.
+  - Restart, source drift, altered project root, idempotency conflict, stale revision, digest mismatch,
+    forged owner, duplicate identity, symlink, capacity, output isolation and whole-record budget omission
+    checks pass.
+  rollback: Remove the standalone service and documentation; Context pack defaults and existing task packs
+    remain unchanged.
+  revisit_when: A real consumer needs signed owner attestations, a native session lifecycle or a different
+    source-authoritative way to reopen selected records.

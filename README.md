@@ -22,6 +22,8 @@ Use the optional [read-only repository map](docs/repo-map.md) to find relevant t
 
 For a frozen, selectable pack of exact source excerpts and explicitly chosen guidance, see [task context packs](docs/context-packs.md). Packs persist by ID and refuse export after bound source drift.
 
+For a user-curated handoff into a fresh native session, see [session reconstruction](docs/session-handoff.md). It preserves explicitly opened owner records and selected Context guidance, but does not start a session or carry prior execution acceptance.
+
 ## Keep a project selection
 
 The [catalog and project profiles](docs/library.md) preserve options, reasons, evidence and recurring selections. The [portal](examples/web/index.html) shows these public choices and installs nothing. Follow the source-environment setup in the library guide, then run from the Context checkout:
