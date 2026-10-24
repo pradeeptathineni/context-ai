@@ -1,0 +1,23 @@
+# Static Python import impact
+
+`scripts/import_impact.py` lists tracked Python files or traces static importers of one exact file in an explicitly selected Git checkout. It follows import syntax with the standard-library AST and reports direct importer-to-dependency edges, shortest reverse-import depth, and one deterministic `via` path. It does not execute project code, resolve runtime hooks or entry points, or prove that an import is exercised.
+
+```sh
+python -m scripts.import_impact --project /absolute/checkout --list
+python -m scripts.import_impact --project /absolute/checkout --seed src/package/module.py --format json
+python -m scripts.import_impact --project /absolute/checkout --seed src/package/module.py --max-depth 6 --max-nodes 150
+```
+
+The Python API is `list_files(project: Path) -> dict` and `inspect_impact(project: Path, seed: str, *, max_depth: int = 4, max_nodes: int = 100) -> dict`. Both return schema `context-ai/import-impact/v1`. `list_files` returns eligible tracked `.py` paths and the observed HEAD/dirty state. An impact response adds a SHA-256 over sorted relative paths and source-byte digests, nodes with `path`, `depth`, and `via`, direct edges with `from`, `to`, and source `line`, `complete`, diagnostics, and qualifications. A clean Git state does not imply the analysis is atomic or that imported code is active.
+
+The reader considers tracked regular `.py` files under the repository root and `src/`. It uses the descriptor-relative no-follow reader and the file exclusions in `scripts/repo_map.py`: symlinks, submodules, secret-style paths/names, generated/vendor/cache directories and non-regular files are omitted. Limits are 5,000 tracked files, 256,000 bytes per source file, 8,000,000 bytes total, depth 8, 200 nodes, 2,000 returned edges and 12 bounded diagnostic samples. A result is marked incomplete when it encounters a parse/encoding omission, unresolved or ambiguous imports, dynamic import syntax, policy-skipped Python paths, or a traversal/output cap. Diagnostic totals remain visible when samples are omitted.
+
+Resolution is deliberately conservative. The same module name found under both supported roots is ambiguous and does not select either file. A `from` member that could name both a package attribute and a local submodule is included as a candidate edge and reported as uncertain. Namespace packages without a file, non-package parent modules, external imports and invalid relative imports are diagnostics. Recognized `__import__` and `importlib.import_module` call forms are reported, not evaluated; other dynamic import mechanisms may not be recognized. Syntax inside conditional blocks is still a static candidate; imports can be optional, type-only, dead, generated later, or otherwise not loaded at runtime.
+
+The seed must be a normalized relative path to an eligible tracked Python file. Absolute paths, traversal, symlinks, untracked files and files outside the fixed source set are refused. Git metadata commands have a 10-second bound, ignore submodule worktrees, and disable fsmonitor/hooks per command; they do not change repository configuration. HEAD, tracked index entries and working-tree status are compared before and after scanning. A detected change aborts rather than combining observations from different source states. The source digest identifies the read bytes; it is not proof those bytes match HEAD.
+
+## Implementation choice and provenance
+
+The existing `scripts/repo_map.py` ranks filenames and symbol mentions but does not traverse import relationships. This optional view reuses its tracked-file policy, bounded read limits and no-follow descriptor reader, then applies Python's standard-library AST. It adds no persistent index, dependency, source checkout mutation, or model call.
+
+The deterministic level-synchronous reverse walk was informed by `DeusData/codebase-memory-mcp` at [`10ab613de30dfd573d0b251cd0ad648e1c7e5204`](https://github.com/DeusData/codebase-memory-mcp/tree/10ab613de30dfd573d0b251cd0ad648e1c7e5204), specifically `src/store/store_impact.c` and `tests/test_store_impact.c`. The inspected walk sorts each frontier and chooses a stable shortest path; its chain, cycle, diamond and hop-cap cases informed the synthetic conformance tests here. Context uses a different graph (Python import syntax), resolution policy and safe source reader. No upstream source or tests were copied; the implementation is an independent standard-library adaptation. The upstream MIT license text is retained in [`scripts/IMPORT_IMPACT_NOTICE.md`](../scripts/IMPORT_IMPACT_NOTICE.md). The donor’s broader indexer or runtime behavior is not part of this feature.

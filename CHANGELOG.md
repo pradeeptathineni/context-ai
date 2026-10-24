@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Add an optional bounded static Python import-impact view over tracked source, with deterministic reverse traversal, safe read limits, and explicit unresolved or capped diagnostics.
+
 - Add selectable task context packs with exact tracked-source excerpts, explicit Context guidance groups, immutable text/JSON previews, and source-verified export.
 
 - Extend task context packs with opt-in complete-source and syntax-aware Python structural views, exact original-span evidence, visible omission ranges, explicit safe fallback, and export-time source replay; the existing excerpt default remains unchanged.
