@@ -173,3 +173,4 @@ The premature v1.0.0 release/tag at `a0b6a3bbd2e1dc2c58629f6ea462e180bd12ce93` w
 - Default project setup can select zero task guidance; named loadouts remain opt-in and preserve their existing contents. Setup ownership is separate from task activation.
 - Optional `context-output` delivers a capture-once, bounded line-evidence operation with raw bytes and exit status preserved. No hook or service is installed.
 - Block comments crossing blank lines no longer count as effective Claude instruction imports. Existing instructions and lifecycle protections remain intact.
+- Add an opt-in fresh-session handoff producer that freezes explicit owner records, selected exact guidance, and user-authored synthesis into a bounded local export; no session starts and historical acceptance is not carried.

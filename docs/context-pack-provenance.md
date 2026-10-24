@@ -29,3 +29,7 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Fresh-session reconstruction
+
+The session reconstruction boundary was informed by Pi's `packages/coding-agent/src/core/session-manager.ts`: `buildContextEntries` follows the selected leaf branch and treats the latest compaction as a summary boundary, while `buildSessionProjection` retains source entries separately from projected messages. The cached source's actual `MANIFEST.json` identifies pin `8a2ebd38549c3521a02db0e5d758a24320e97f94` and its file URL; an earlier task packet named `8c03fef4d3b7ecf7a9e8cc5b1312ff60ec2be149`, so the packet pin is not represented as inspected. The selected snapshot was retrieved at `2026-10-23T12:39:48.193163+00:00`. Its MIT license and copyright were inspected. Context reproduces only the separation of exact historical records from user-authored synthesis and fresh-session context; no Pi code or runtime was copied, so no additional donor notice is required. This handoff does not implement Pi session resume, branch traversal, compaction, provider delivery, or model obedience.
