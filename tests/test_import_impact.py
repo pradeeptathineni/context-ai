@@ -111,6 +111,14 @@ class ImportImpactTests(unittest.TestCase):
         self.assertEqual(counts["dynamic_import"], 2)
         self.assertNotIn("consumer.py", {row["path"] for row in result["nodes"]})
 
+    def test_regular_calls_and_raise_syntax_are_not_mistaken_for_dynamic_imports(self):
+        self.put("seed.py", "")
+        self.put("consumer.py", "import seed\nraise RuntimeError('statically parsed')\nvalue = dict()\n")
+        self.commit()
+        result = import_impact.inspect_impact(self.root, "seed.py")
+        self.assertIn("consumer.py", {row["path"] for row in result["nodes"]})
+        self.assertNotIn("dynamic_import", result["diagnostics"]["counts"])
+
     def test_syntax_and_invalid_utf8_are_partial_not_silently_complete(self):
         self.put("seed.py", "")
         self.put("broken.py", "def nope(:\n")

@@ -288,12 +288,13 @@ def _dynamic_imports(tree):
                     function_aliases.add(alias.asname or alias.name)
 
     def importlib_call(function):
+        if not isinstance(function, ast.Attribute):
+            return False
         root = function.value
         while isinstance(root, ast.Attribute):
             root = root.value
         return (
-            isinstance(function, ast.Attribute)
-            and function.attr == "import_module"
+            function.attr == "import_module"
             and isinstance(root, ast.Name)
             and root.id in module_aliases
         )
