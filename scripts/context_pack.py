@@ -29,6 +29,12 @@ REPRESENTATIONS = {"excerpt", "full", "structure"}
 STRUCTURE_ALGORITHM = "python-ast-segments-v1"
 MAX_AST_DEPTH = 100
 MAX_AST_NODES = 30000
+REDUCTION_SCHEMA = "context-ai/reduction-preview/v1"
+REDUCTION_METHOD = "log-line-select-v1"
+REDUCTION_MIN_LINES = 50
+REDUCTION_MIN_MAX_LINES = 8
+REDUCTION_MAX_LINES = 100
+REDUCTION_MAX_SEGMENTS = 4096
 
 
 class ContextPackError(ValueError):
@@ -37,6 +43,157 @@ class ContextPackError(ValueError):
         self.code = code
         self.message = message[:240]
         super().__init__(self.message)
+
+
+def _physical_lines(text):
+    """Return exact CRLF/CR/LF lines with Unicode-codepoint offsets."""
+    if not text:
+        return []
+    lines = []
+    start = 0
+    for match in re.finditer(r"\r\n|\r|\n", text):
+        end = match.end()
+        lines.append((start, end, text[start:end]))
+        start = end
+    if start < len(text):
+        lines.append((start, len(text), text[start:]))
+    return lines
+
+
+def _exact_source_item(item):
+    """Accept only full representations whose bytes bind the source file."""
+    content = item.get("content")
+    source = item.get("source")
+    if not isinstance(content, str) or not isinstance(source, dict):
+        return None
+    raw = content.encode("utf-8")
+    digest = _sha(raw)
+    representation = item.get("representation")
+    if isinstance(representation, dict):
+        if (representation.get("requested") != "full"
+                or representation.get("selected") != "full"
+                or representation.get("original_sha256") != source.get("file_sha256")
+                or representation.get("original_sha256") != digest
+                or representation.get("selected_sha256") != digest
+                or representation.get("original_bytes") != len(raw)
+                or representation.get("selected_bytes") != len(raw)):
+            return None
+    elif (item.get("excerpt_sha256") != source.get("file_sha256")
+          or source.get("file_sha256") != digest):
+        return None
+    return raw, digest
+
+
+def preview_pack_reduction(service, preview_id, item_id, max_lines=12):
+    """Preview a bounded deterministic reduction of one exact frozen source.
+
+    The Context pack export is deliberately re-run first: it validates the saved
+    preview and verifies current source bytes before any reduction is returned.
+    This function never persists a reduced source or edits the pack.
+    """
+    if (not isinstance(item_id, str) or not item_id or len(item_id) > 160
+            or not isinstance(max_lines, int) or isinstance(max_lines, bool)
+            or not REDUCTION_MIN_MAX_LINES <= max_lines <= REDUCTION_MAX_LINES):
+        raise ContextPackError("invalid_request", "item ID or line cap is invalid")
+    raw_json = service.export(preview_id, format="json")
+    try:
+        pack = json.loads(raw_json.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise ContextPackError("store_invalid", "frozen pack JSON is invalid") from exc
+    if (not isinstance(pack, dict) or pack.get("preview_id") != preview_id
+            or not isinstance(pack.get("pack_id"), str)
+            or not re.fullmatch(r"[0-9a-f]{64}", pack["pack_id"])):
+        raise ContextPackError("store_invalid", "frozen pack identity is invalid")
+    matches = [row for row in pack.get("items", [])
+               if isinstance(row, dict) and row.get("item_id") == item_id]
+    if len(matches) != 1:
+        raise ContextPackError("unknown_selection", "source item is not in this frozen pack")
+    item = matches[0]
+    if item.get("kind") != "source":
+        raise ContextPackError("invalid_reduction_source", "only a full source item can be reduced")
+    exact = _exact_source_item(item)
+    if exact is None:
+        raise ContextPackError("invalid_reduction_source", "item is not an exact full source")
+    raw, raw_digest = exact
+    content = raw.decode("utf-8")
+    lines = _physical_lines(content)
+    selected = set()
+    rules = {}
+    warnings = []
+    if not lines:
+        warnings.append("empty_source_passthrough")
+        for index in range(len(lines)):
+            selected.add(index)
+            rules[index] = ("passthrough", "source_below_line_floor")
+    elif len(lines) < REDUCTION_MIN_LINES:
+        warnings.append("source_below_line_floor_passthrough")
+        selected.update(range(len(lines)))
+        rules.update({i: ("passthrough", "source_below_line_floor") for i in range(len(lines))})
+    else:
+        head = set(range(min(2, len(lines))))
+        tail = set(range(max(0, len(lines) - 2), len(lines)))
+        selected.update(head | tail)
+        rules.update({i: ("head", "preserve_first_lines") for i in head})
+        rules.update({i: ("tail", "preserve_last_lines") for i in tail - head})
+        error_indices, warning_indices = [], []
+        for index, (_, _, line) in enumerate(lines):
+            if index in selected:
+                continue
+            if re.search(r"(?<![A-Za-z0-9_])(?:ERROR|FATAL|FAIL(?:ED|URE)?)(?![A-Za-z0-9_])", line, re.I):
+                error_indices.append(index)
+            elif re.search(r"(?<![A-Za-z0-9_])WARN(?:ING)?(?![A-Za-z0-9_])", line, re.I):
+                warning_indices.append(index)
+        capacity = max_lines - len(selected)
+        chosen_errors = error_indices[:capacity]
+        selected.update(chosen_errors)
+        rules.update({i: ("error", "priority_error_line") for i in chosen_errors})
+        capacity -= len(chosen_errors)
+        chosen_warnings = warning_indices[:capacity]
+        selected.update(chosen_warnings)
+        rules.update({i: ("warning", "priority_warning_line") for i in chosen_warnings})
+        if len(chosen_errors) < len(error_indices):
+            warnings.append("error_lines_dropped_by_cap")
+        if len(chosen_warnings) < len(warning_indices):
+            warnings.append("warning_lines_dropped_by_cap")
+
+    segments = []
+    for index, (start, end, text) in enumerate(lines):
+        if index in selected:
+            rule, reason = rules[index]
+            disposition = "kept"
+        elif len(lines) >= REDUCTION_MIN_LINES and (
+                re.search(r"(?<![A-Za-z0-9_])(?:ERROR|FATAL|FAIL(?:ED|URE)?)(?![A-Za-z0-9_])", text, re.I)
+                or re.search(r"(?<![A-Za-z0-9_])WARN(?:ING)?(?![A-Za-z0-9_])", text, re.I)):
+            rule = "severity"
+            reason = "selection_cap"
+            disposition = "cap-dropped"
+        else:
+            rule = "line_selection"
+            reason = "not_selected"
+            disposition = "omitted"
+        key = (disposition, rule, reason)
+        if segments and (segments[-1]["disposition"], segments[-1]["rule"], segments[-1]["reason"]) == key:
+            segments[-1]["end"] = end
+        else:
+            segments.append({"start": start, "end": end, "disposition": disposition,
+                             "rule": rule, "reason": reason})
+            if len(segments) > REDUCTION_MAX_SEGMENTS:
+                raise ContextPackError("reduction_too_fragmented", "source requires too many exact segments")
+    for segment in segments:
+        segment["text"] = content[segment["start"]:segment["end"]]
+    projected = "".join(segment["text"] for segment in segments if segment["disposition"] == "kept")
+    source_meta = item.get("source")
+    source_ref = {"preview_id": preview_id, "item_id": item_id, "pack_id": pack["pack_id"],
+                  "source": source_meta, "raw_sha256": raw_digest}
+    before_bytes, after_bytes = len(raw), len(projected.encode("utf-8"))
+    body = {"schema": REDUCTION_SCHEMA, "source_ref": source_ref,
+            "method": REDUCTION_METHOD, "offset_unit": "unicode-codepoints",
+            "max_lines": max_lines, "segments": segments, "projected_text": projected,
+            "warnings": warnings, "size": {"before_bytes": before_bytes, "after_bytes": after_bytes},
+            "estimate": {"estimator": "utf8-bytes/4", "before": (before_bytes + 3) // 4,
+                         "after": (after_bytes + 3) // 4, "is_estimate": True}}
+    reduction_id = _sha(_json(body).encode("utf-8"))
+    return dict(body, preview_id=reduction_id)
 
 
 def _json(value):
@@ -869,7 +1026,7 @@ class ContextPackService:
 def _cli():
     parser = argparse.ArgumentParser(description="Create and export frozen, source-bound Context packs.")
     subs = parser.add_subparsers(dest="command", required=True)
-    for name in ("candidates", "preview", "export"):
+    for name in ("candidates", "preview", "export", "reduce"):
         p = subs.add_parser(name)
         p.add_argument("--project", required=True, type=Path)
         p.add_argument("--store", required=True, type=Path)
@@ -886,6 +1043,10 @@ def _cli():
             p.add_argument("--exclude", action="append", default=[])
             p.add_argument("--max-tokens", type=int, default=2000)
             p.add_argument("--format", choices=("text", "json"), default="text")
+        elif name == "reduce":
+            p.add_argument("--preview", required=True)
+            p.add_argument("--item", required=True)
+            p.add_argument("--max-lines", type=int, default=12)
         else:
             p.add_argument("--preview", required=True)
             p.add_argument("--format", choices=("text", "json"), default="text")
@@ -902,6 +1063,9 @@ def _cli():
             result = service.preview(args.candidates, include_ids=args.include,
                                      exclude_ids=args.exclude, max_tokens=args.max_tokens)
             raw = result["renders"][args.format]["content"].encode()
+        elif args.command == "reduce":
+            result = preview_pack_reduction(service, args.preview, args.item, args.max_lines)
+            raw = (_json(result) + "\n").encode("utf-8")
         else:
             raw = service.export(args.preview, format=args.format)
             if args.output:

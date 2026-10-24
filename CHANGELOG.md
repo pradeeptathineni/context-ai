@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Add a read-only, source-bound reduction preview for complete frozen pack sources, with deterministic line selection, exact Unicode spans, and explicit cap/passthrough qualifications.
+
 - Add an optional bounded static Python import-impact view over tracked source, with deterministic reverse traversal, safe read limits, and explicit unresolved or capped diagnostics.
 
 - Add selectable task context packs with exact tracked-source excerpts, explicit Context guidance groups, immutable text/JSON previews, and source-verified export.
