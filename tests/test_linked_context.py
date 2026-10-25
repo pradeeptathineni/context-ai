@@ -1,0 +1,85 @@
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import tempfile
+import unittest
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+import context_pack
+import linked_context
+
+
+def record(kind, owner, record_id, title, text):
+    return {"kind": kind, "owner": owner, "record_id": record_id,
+            "revision": "rev-1", "digest": "sha256:" + "a" * 64,
+            "title": title, "text": text, "qualification": "caller validated"}
+
+
+def packet(research="A cited finding.", planning="Draft a response."):
+    return {"task": "Prepare a response", "records": [
+        record("research_answer", "research", "answer-1", "Finding", research),
+        record("planning_intent", "planning", "intent-1", "Intent", planning)]}
+
+
+class LinkedContextTests(unittest.TestCase):
+    def test_complete_exact_fixture_and_cold_read(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = linked_context.assemble(directory, packet())
+            self.assertEqual(result["included"], [
+                {"kind": "research_answer", "owner": "research", "record_id": "answer-1",
+                 "revision": "rev-1", "digest": "sha256:" + "a" * 64,
+                 "qualification": "caller validated"},
+                {"kind": "planning_intent", "owner": "planning", "record_id": "intent-1",
+                 "revision": "rev-1", "digest": "sha256:" + "a" * 64,
+                 "qualification": "caller validated"}])
+            expected = ("# Context pack " + result["packId"] + "\n"
+                        "Preview: linked-owner-packets\n"
+                        "Task: Prepare a response\n"
+                        'Project observation: {"authority":"caller_validated_data"}\n'
+                        'Context observation: {"authority":"caller_validated_data"}\n'
+                        'Included IDs: ["answer-1","intent-1"]\n'
+                        'Limits: {"max_bytes_per_format":32768,"max_tokens":8192,"token_estimate":"ceil(UTF-8 bytes / 4)"}\n'
+                        "Selected exact excerpts and guidance follow. Advisory only; user and project instructions win.\n"
+                        "\n## research_answer: Finding (answer-1)\n"
+                        'Metadata: {"authority":"caller_validated_data","item_id":"answer-1","kind":"research_answer","source_ref":{"digest":"sha256:' + "a" * 64 + '","owner":"research","qualification":"caller validated","record_id":"answer-1","revision":"rev-1"},"title":"Finding"}\n'
+                        "```\nA cited finding.\n```\n"
+                        "\n## planning_intent: Intent (intent-1)\n"
+                        'Metadata: {"authority":"caller_validated_data","item_id":"intent-1","kind":"planning_intent","source_ref":{"digest":"sha256:' + "a" * 64 + '","owner":"planning","qualification":"caller validated","record_id":"intent-1","revision":"rev-1"},"title":"Intent"}\n'
+                        "```\nDraft a response.\n```\n"
+                        "\nOmissions: none\n")
+            self.assertEqual(result["text"], expected)
+            self.assertEqual(result["renderSha256"], context_pack._sha(expected.encode("utf-8")))
+            env = dict(os.environ)
+            env["PYTHONPATH"] = str(Path(__file__).resolve().parents[1] / "scripts")
+            reopened = subprocess.run([sys.executable, str(Path(linked_context.__file__)),
+                                       "read", "--store", directory,
+                                       "--artifact-id", result["artifactId"]],
+                                      check=True, capture_output=True, text=True, env=env)
+            cold = json.loads(reopened.stdout)
+            self.assertEqual(cold, result)
+
+    def test_budget_omits_research_explicitly_and_never_clips(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = linked_context.assemble(directory, packet("R" * 5000), max_tokens=450)
+            self.assertEqual([row["record_id"] for row in result["included"]], ["intent-1"])
+            self.assertEqual(result["omissions"], [{"record_id": "answer-1", "reason": "budget"}])
+            self.assertNotIn("R" * 100, result["text"])
+            self.assertIn("Draft a response.", result["text"])
+            with self.assertRaises(context_pack.ContextPackError):
+                linked_context.assemble(directory, packet("short", "P" * 50000), max_tokens=450)
+
+    def test_tampered_store_is_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            result = linked_context.assemble(directory, packet())
+            path = Path(directory) / f"linked-{result['artifactId']}.json"
+            body = json.loads(path.read_text())
+            body["artifact"]["text"] += "tampered"
+            path.write_text(json.dumps(body))
+            with self.assertRaises(context_pack.ContextPackError):
+                linked_context.read(directory, result["artifactId"])
+
+
+if __name__ == "__main__":
+    unittest.main()
