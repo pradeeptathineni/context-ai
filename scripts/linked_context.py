@@ -6,16 +6,20 @@ verify owner state or imply that the content is authoritative instructions.
 """
 
 import argparse
-import hashlib
 import json
+import os
 import re
+import stat
 import sys
 from pathlib import Path
 
 import context_pack
 
 SCHEMA_VERSION = 1
+RESULT_SCHEMA_VERSION = 2
 KINDS = ("research_answer", "planning_intent")
+RESULT_KIND = "maestro_result"
+MAX_RESULTS = 8
 MAX_PACKET_BYTES = 512 * 1024
 RECORD_FIELDS = {"kind", "owner", "record_id", "revision", "digest", "title", "text", "qualification"}
 
@@ -32,8 +36,8 @@ def _identity(value, label, limit=200):
 
 
 def _validate(packet):
-    if not isinstance(packet, dict) or set(packet) != {"task", "records"}:
-        _error("invalid_request", "packet must contain exactly task and records")
+    if not isinstance(packet, dict) or set(packet) not in ({"task", "records"}, {"task", "records", "maestro_results"}):
+        _error("invalid_request", "packet must contain task and records, with optional maestro_results")
     if len(context_pack._json(packet).encode("utf-8")) > MAX_PACKET_BYTES:
         _error("invalid_request", "input packet exceeds the size limit")
     task = packet["task"]
@@ -67,14 +71,46 @@ def _validate(packet):
                            "record_id": record_id, "revision": revision,
                            "digest": digest, "title": title, "text": text,
                            "qualification": qualification})
-    return task, normalized
+    results = packet.get("maestro_results", [])
+    if not isinstance(results, list) or len(results) > MAX_RESULTS:
+        _error("invalid_request", "maestro_results must contain at most eight records")
+    normalized_results = []
+    for record in results:
+        if not isinstance(record, dict) or set(record) != RECORD_FIELDS:
+            _error("invalid_request", "Maestro result record shape is invalid")
+        if record["kind"] != RESULT_KIND or record["owner"] != "maestro":
+            _error("invalid_request", "Maestro results must use kind maestro_result and owner maestro")
+        record_id = _identity(record["record_id"], "Maestro source ID")
+        if record_id in identifiers:
+            _error("invalid_request", "record IDs must be unique")
+        identifiers.add(record_id)
+        revision = _identity(record["revision"], "Maestro source revision")
+        title = _identity(record["title"], "title", 500)
+        digest = record["digest"]
+        text = record["text"]
+        qualification = record["qualification"]
+        if not isinstance(digest, str) or not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+            _error("invalid_request", "Maestro result digest must use sha256:<64 lowercase hex>")
+        if not isinstance(text, str) or not isinstance(qualification, str):
+            _error("invalid_request", "Maestro result text and qualification must be strings")
+        text_bytes = text.encode("utf-8")
+        if len(text_bytes) > MAX_PACKET_BYTES or len(qualification.encode("utf-8")) > 4096:
+            _error("invalid_request", "Maestro result text or qualification exceeds its size limit")
+        if digest != "sha256:" + context_pack._sha(text_bytes):
+            _error("invalid_request", "Maestro result digest does not match its exact UTF-8 text")
+        normalized_results.append({"kind": RESULT_KIND, "owner": "maestro",
+                                   "record_id": record_id, "revision": revision,
+                                   "digest": digest, "title": title, "text": text,
+                                   "qualification": qualification})
+    return task, normalized, normalized_results
 
 
-def _render(task, records, max_tokens):
+def _render(task, records, results, max_tokens):
     limits = {"max_tokens": max_tokens, "max_bytes_per_format": 4 * max_tokens,
               "token_estimate": "ceil(UTF-8 bytes / 4)"}
+    all_records = records + results
     refs = [{key: row[key] for key in ("kind", "owner", "record_id", "revision", "digest", "qualification")}
-            for row in records]
+            for row in all_records]
 
     def make(rows, omitted):
         items = [{"kind": row["kind"], "item_id": row["record_id"], "title": row["title"],
@@ -82,7 +118,7 @@ def _render(task, records, max_tokens):
                   "source_ref": {key: row[key] for key in
                                  ("owner", "record_id", "revision", "digest", "qualification")}}
                  for row in rows]
-        omissions = ([{"item_id": records[0]["record_id"], "reason": "budget"}] if omitted else [])
+        omissions = ([{"item_id": row["record_id"], "reason": "budget"} for row in omitted])
         base = {"schema_version": context_pack.SCHEMA_VERSION,
                 "preview_id": "linked-owner-packets", "task": task,
                 "project": {"authority": "caller_validated_data"},
@@ -91,18 +127,45 @@ def _render(task, records, max_tokens):
                 "omissions": omissions, "limits": limits}
         return context_pack._render_pack(base)
 
-    pack_id, wire, renders = make(records, False)
-    if max(render["bytes"] for render in renders.values()) <= limits["max_bytes_per_format"]:
-        included, omissions = records, []
+    if not results:
+        # Preserve the published v1 two-record artifact and rendering exactly.
+        pack_id, wire, renders = make(records, [])
+        if max(render["bytes"] for render in renders.values()) <= limits["max_bytes_per_format"]:
+            included, omissions = records, []
+        else:
+            pack_id, wire, renders = make(records[1:], [records[0]])
+            if max(render["bytes"] for render in renders.values()) > limits["max_bytes_per_format"]:
+                _error("budget_too_small", "Planning intent does not fit the requested Context budget")
+            included = records[1:]
+            omissions = [{"record_id": records[0]["record_id"], "reason": "budget"}]
+        version = SCHEMA_VERSION
     else:
-        # Planning is the required intent for this handoff; only Research may be omitted.
-        pack_id, wire, renders = make(records[1:], True)
+        version = RESULT_SCHEMA_VERSION
+        required = [records[1]]
+        optional = [records[0], *results]
+        included = list(required)
+        # Research and selected results are considered in caller order. A result
+        # that does not fit is recorded as omitted rather than silently clipped.
+        omissions = []
+        for row in optional:
+            tentative = included + [row]
+            tentative = [candidate for candidate in all_records if candidate in tentative]
+            omitted_rows = [candidate for candidate in optional if candidate not in tentative]
+            pack_id, wire, renders = make(tentative, omitted_rows)
+            if max(render["bytes"] for render in renders.values()) <= limits["max_bytes_per_format"]:
+                included = tentative
+            else:
+                omissions.append({"kind": row["kind"], "owner": row["owner"],
+                                  "record_id": row["record_id"], "reason": "budget"})
+        omitted_rows = [row for row in optional if row["record_id"] not in
+                        {item["record_id"] for item in included}]
+        included = [row for row in all_records if row in included]
+        pack_id, wire, renders = make(included, omitted_rows)
         if max(render["bytes"] for render in renders.values()) > limits["max_bytes_per_format"]:
             _error("budget_too_small", "Planning intent does not fit the requested Context budget")
-        included = records[1:]
-        omissions = [{"record_id": records[0]["record_id"], "reason": "budget"}]
+        # Keep only the v2 omission contract, including Research if budget-bound.
     text_render = renders["text"]
-    return {"schema_version": SCHEMA_VERSION, "pack_id": pack_id,
+    return {"schema_version": version, "pack_id": pack_id,
             "included": [{key: row[key] for key in
                           ("kind", "owner", "record_id", "revision", "digest", "qualification")}
                          for row in included],
@@ -117,25 +180,52 @@ def _artifact_id(body):
     return context_pack._sha(context_pack._json(unsigned).encode("utf-8"))
 
 
+def _load_artifact(store, name):
+    """Load a linked artifact using Context's private-store file protections."""
+    path = store / name
+    try:
+        fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0))
+        try:
+            info = os.fstat(fd)
+            if (not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o600
+                    or info.st_size > context_pack.MAX_STORE_OBJECT):
+                _error("store_invalid", "stored linked artifact is missing, unsafe or oversized")
+            chunks, left = [], info.st_size
+            while left:
+                block = os.read(fd, min(left, 64 * 1024))
+                if not block:
+                    _error("store_invalid", "stored linked artifact ended during read")
+                chunks.append(block)
+                left -= len(block)
+            value = json.loads(b"".join(chunks).decode("utf-8"))
+        finally:
+            os.close(fd)
+    except (OSError, ValueError, UnicodeError) as exc:
+        raise context_pack.ContextPackError("store_invalid", "stored linked artifact is invalid") from exc
+    if not isinstance(value, dict):
+        _error("store_invalid", "stored linked artifact is invalid")
+    return value
+
+
 def assemble(store, packet, *, max_tokens=8192):
-    """Freeze two owner packets. `packet` is data supplied by the caller."""
+    """Freeze caller-validated Research, Planning, and optional Maestro packets."""
     if isinstance(max_tokens, bool) or not isinstance(max_tokens, int) or not 100 <= max_tokens <= 8192:
         _error("invalid_request", "max_tokens must be an integer from 100 to 8192")
-    task, records = _validate(packet)
+    task, records, results = _validate(packet)
     store = Path(store).expanduser()
     if store.exists() and (store.is_symlink() or not store.is_dir()):
         _error("store_invalid", "store must be a directory")
     store.mkdir(mode=0o700, parents=True, exist_ok=True)
     store = store.resolve()
-    generated = _render(task, records, max_tokens)
-    body = {"schema_version": SCHEMA_VERSION, "render_sha256": generated["render_sha256"],
+    generated = _render(task, records, results, max_tokens)
+    body = {"schema_version": generated["schema_version"], "render_sha256": generated["render_sha256"],
             "artifact": generated}
     artifact_id = _artifact_id(body)
     body["artifact_id"] = artifact_id
     with context_pack._locked(store):
         name = f"linked-{artifact_id}.json"
         if (store / name).exists():
-            saved = context_pack._load(store, name)
+            saved = _load_artifact(store, name)
             if saved != body:
                 _error("store_invalid", "existing linked artifact differs from its identity")
         else:
@@ -144,7 +234,7 @@ def assemble(store, packet, *, max_tokens=8192):
 
 
 def _public(artifact_id, artifact):
-    return {"schemaVersion": SCHEMA_VERSION, "artifactId": artifact_id,
+    return {"schemaVersion": artifact["schema_version"], "artifactId": artifact_id,
             "packId": artifact["pack_id"], "included": artifact["included"],
             "omissions": artifact["omissions"], "renderSha256": artifact["render_sha256"],
             "estimatedTokens": artifact["estimated_tokens"],
@@ -152,16 +242,16 @@ def _public(artifact_id, artifact):
 
 
 def read(store, artifact_id):
-    """Read and validate an immutable artifact without consulting packet owners."""
+    """Read and validate immutable v1 or v2 artifacts without consulting owners."""
     if not isinstance(artifact_id, str) or not re.fullmatch(r"[0-9a-f]{64}", artifact_id):
         _error("unknown_selection", "artifact ID is invalid")
     store = Path(store).expanduser()
     if store.is_symlink() or not store.is_dir():
         _error("unknown_selection", "artifact store is unavailable")
     with context_pack._locked(store):
-        body = context_pack._load(store, f"linked-{artifact_id}.json")
+        body = _load_artifact(store, f"linked-{artifact_id}.json")
     if (set(body) != {"schema_version", "render_sha256", "artifact", "artifact_id"}
-            or body.get("schema_version") != SCHEMA_VERSION
+            or body.get("schema_version") not in (SCHEMA_VERSION, RESULT_SCHEMA_VERSION)
             or body.get("artifact_id") != artifact_id
             or _artifact_id(body) != artifact_id):
         _error("store_invalid", "linked artifact manifest integrity check failed")
@@ -170,6 +260,8 @@ def read(store, artifact_id):
             "schema_version", "pack_id", "included", "omissions", "source_refs",
             "render_sha256", "estimated_tokens", "text", "manifest"}:
         _error("store_invalid", "linked artifact shape is invalid")
+    if artifact.get("schema_version") != body["schema_version"]:
+        _error("store_invalid", "linked artifact schema version differs from its envelope")
     text = artifact.get("text")
     if (not isinstance(text, str) or context_pack._sha(text.encode("utf-8")) != artifact.get("render_sha256")
             or artifact.get("render_sha256") != body["render_sha256"]):
@@ -192,7 +284,7 @@ def read(store, artifact_id):
 
 
 def _cli():
-    parser = argparse.ArgumentParser(description="Freeze caller-validated Research and Planning Context packets.")
+    parser = argparse.ArgumentParser(description="Freeze caller-validated owner packets as Context artifacts.")
     subs = parser.add_subparsers(dest="command", required=True)
     create = subs.add_parser("assemble")
     create.add_argument("--store", required=True, type=Path)

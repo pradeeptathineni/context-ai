@@ -23,6 +23,12 @@ def packet(research="A cited finding.", planning="Draft a response."):
         record("planning_intent", "planning", "intent-1", "Intent", planning)]}
 
 
+def maestro_result(record_id="mission-1/task-2/event-9", text="Observed task result.", title="Task result"):
+    return {"kind": "maestro_result", "owner": "maestro", "record_id": record_id,
+            "revision": "event-9", "digest": "sha256:" + context_pack._sha(text.encode("utf-8")),
+            "title": title, "text": text, "qualification": "Observed assistant output"}
+
+
 class LinkedContextTests(unittest.TestCase):
     def test_complete_exact_fixture_and_cold_read(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -79,6 +85,51 @@ class LinkedContextTests(unittest.TestCase):
             path.write_text(json.dumps(body))
             with self.assertRaises(context_pack.ContextPackError):
                 linked_context.read(directory, result["artifactId"])
+
+    def test_maestro_result_is_frozen_as_v2_and_reopens_without_owner(self):
+        source = packet()
+        source["maestro_results"] = [maestro_result()]
+        with tempfile.TemporaryDirectory() as directory:
+            result = linked_context.assemble(directory, source)
+            self.assertEqual(result["schemaVersion"], 2)
+            self.assertEqual([row["record_id"] for row in result["included"]],
+                             ["answer-1", "intent-1", "mission-1/task-2/event-9"])
+            self.assertEqual(result["sourceRefs"][-1]["digest"], source["maestro_results"][0]["digest"])
+            self.assertIn("Observed task result.", result["text"])
+            reopened = linked_context.read(directory, result["artifactId"])
+            self.assertEqual(reopened, result)
+
+    def test_maestro_result_digest_must_bind_exact_utf8_text(self):
+        source = packet()
+        result = maestro_result(text="café")
+        result["digest"] = "sha256:" + "0" * 64
+        source["maestro_results"] = [result]
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(context_pack.ContextPackError, "digest does not match"):
+                linked_context.assemble(directory, source)
+
+    def test_result_budget_omissions_are_explicit_and_planning_stays_included(self):
+        source = packet()
+        source["maestro_results"] = [
+            maestro_result("mission-1/task-2/event-10", "L" * 5000, "Large output"),
+            maestro_result("mission-1/task-2/event-11", "Short observed output", "Short output")]
+        with tempfile.TemporaryDirectory() as directory:
+            result = linked_context.assemble(directory, source, max_tokens=450)
+            included_ids = [row["record_id"] for row in result["included"]]
+            self.assertIn("intent-1", included_ids)
+            self.assertIn("mission-1/task-2/event-11", included_ids)
+            self.assertEqual(result["omissions"], [{
+                "kind": "maestro_result", "owner": "maestro",
+                "record_id": "mission-1/task-2/event-10", "reason": "budget"}])
+            self.assertNotIn("L" * 100, result["text"])
+            self.assertIn("Short observed output", result["text"])
+
+    def test_more_than_eight_maestro_results_is_rejected(self):
+        source = packet()
+        source["maestro_results"] = [maestro_result(f"source-{index}") for index in range(9)]
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(context_pack.ContextPackError, "at most eight"):
+                linked_context.assemble(directory, source)
 
 
 if __name__ == "__main__":
