@@ -143,6 +143,10 @@ class LinkedContextTests(unittest.TestCase):
             receipt = resolved["publicReceipt"]
             self.assertEqual(receipt["callerQualificationUnverified"], ref["qualification"])
             self.assertIn("included=research_answer,planning_intent", receipt["ownerQualification"])
+            self.assertEqual(resolved["preparedInput"]["context"]["qualification"],
+                             receipt["ownerQualification"])
+            self.assertNotEqual(resolved["preparedInput"]["context"]["qualification"],
+                                ref["qualification"])
             self.assertEqual(receipt["sourceFreshness"], "not_verified_by_context_owner_api")
             self.assertIsNone(receipt["missionTaskBinding"])
             self.assertEqual(receipt["textSha256"], artifact["renderSha256"])

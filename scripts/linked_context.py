@@ -326,13 +326,14 @@ def resolve_for_mission(store, context_ref):
             or len(text.encode("utf-16-le")) // 2 > MAX_MISSION_TEXT_UTF16):
         _error("store_invalid", "Context artifact text exceeds the Mission input limit")
 
+    owner_qualification = _owner_qualification(artifact)
     identity = {"owner": "context-ai", "id": artifact_id,
                 "artifactSha256": render_sha, "qualification": qualification}
     return {
         "preparedInput": {
             "text": text,
             "context": {"artifactId": artifact_id, "renderDigest": render_sha,
-                        "qualification": qualification},
+                        "qualification": owner_qualification},
         },
         "contextRef": identity,
         "publicReceipt": {
@@ -342,7 +343,7 @@ def resolve_for_mission(store, context_ref):
             "artifactSha256": render_sha,
             "textSha256": context_pack._sha(encoded),
             "callerQualificationUnverified": qualification,
-            "ownerQualification": _owner_qualification(artifact),
+            "ownerQualification": owner_qualification,
             "sourceFreshness": "not_verified_by_context_owner_api",
             "missionTaskBinding": None,
         },
