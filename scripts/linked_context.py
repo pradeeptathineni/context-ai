@@ -21,6 +21,8 @@ KINDS = ("research_answer", "planning_intent")
 RESULT_KIND = "maestro_result"
 MAX_RESULTS = 8
 MAX_PACKET_BYTES = 512 * 1024
+MAX_MISSION_TEXT_BYTES = 128_000
+MAX_MISSION_TEXT_UTF16 = 32_000
 RECORD_FIELDS = {"kind", "owner", "record_id", "revision", "digest", "title", "text", "qualification"}
 
 
@@ -283,6 +285,70 @@ def read(store, artifact_id):
     return _public(artifact_id, artifact)
 
 
+def _owner_qualification(artifact):
+    """Describe only properties retained in the immutable Context artifact."""
+    kinds = ",".join(row["kind"] for row in artifact["included"])
+    reasons = ",".join(row["reason"] for row in artifact["omissions"]) or "none"
+    source_count = len(artifact["sourceRefs"])
+    return (f"Context immutable artifact; included={kinds}; omitted={reasons}; "
+            f"source_refs={source_count}")
+
+
+def resolve_for_mission(store, context_ref):
+    """Resolve exact Context text and identity; does not revalidate source owners."""
+    if not isinstance(context_ref, dict) or set(context_ref) != {
+            "owner", "id", "artifactSha256", "qualification"}:
+        _error("invalid_request", "context_ref must contain owner, id, artifactSha256 and qualification")
+    if context_ref["owner"] != "context-ai":
+        _error("unknown_selection", "Context owner does not match")
+    artifact_id = context_ref["id"]
+    render_sha = context_ref["artifactSha256"]
+    qualification = context_ref["qualification"]
+    if not isinstance(artifact_id, str) or not re.fullmatch(r"[0-9a-f]{64}", artifact_id):
+        _error("unknown_selection", "Context artifact ID is invalid")
+    if not isinstance(render_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", render_sha):
+        _error("unknown_selection", "Context artifact digest is invalid")
+    try:
+        qualification_bytes = qualification.encode("utf-8") if isinstance(qualification, str) else b""
+    except UnicodeEncodeError as exc:
+        raise context_pack.ContextPackError("invalid_request", "Context qualification must be valid UTF-8") from exc
+    if (not isinstance(qualification, str) or not qualification.strip()
+            or len(qualification_bytes) > 512
+            or any(ord(ch) < 32 or ord(ch) == 127 for ch in qualification)):
+        _error("invalid_request", "Context qualification must be bounded printable text")
+
+    artifact = read(store, artifact_id)
+    if artifact["renderSha256"] != render_sha:
+        _error("unknown_selection", "Context artifact digest does not match its exact render")
+    text = artifact["text"]
+    encoded = text.encode("utf-8")
+    if (len(encoded) > MAX_MISSION_TEXT_BYTES
+            or len(text.encode("utf-16-le")) // 2 > MAX_MISSION_TEXT_UTF16):
+        _error("store_invalid", "Context artifact text exceeds the Mission input limit")
+
+    identity = {"owner": "context-ai", "id": artifact_id,
+                "artifactSha256": render_sha, "qualification": qualification}
+    return {
+        "preparedInput": {
+            "text": text,
+            "context": {"artifactId": artifact_id, "renderDigest": render_sha,
+                        "qualification": qualification},
+        },
+        "contextRef": identity,
+        "publicReceipt": {
+            "schemaVersion": 1,
+            "owner": "context-ai",
+            "artifactId": artifact_id,
+            "artifactSha256": render_sha,
+            "textSha256": context_pack._sha(encoded),
+            "callerQualificationUnverified": qualification,
+            "ownerQualification": _owner_qualification(artifact),
+            "sourceFreshness": "not_verified_by_context_owner_api",
+            "missionTaskBinding": None,
+        },
+    }
+
+
 def _cli():
     parser = argparse.ArgumentParser(description="Freeze caller-validated owner packets as Context artifacts.")
     subs = parser.add_subparsers(dest="command", required=True)
@@ -292,6 +358,8 @@ def _cli():
     load = subs.add_parser("read")
     load.add_argument("--store", required=True, type=Path)
     load.add_argument("--artifact-id", required=True)
+    resolve = subs.add_parser("resolve-for-mission")
+    resolve.add_argument("--store", required=True, type=Path)
     args = parser.parse_args()
     try:
         if args.command == "assemble":
@@ -300,8 +368,16 @@ def _cli():
                 _error("invalid_request", "input packet exceeds the size limit")
             packet = json.loads(raw.decode("utf-8"))
             result = assemble(args.store, packet, max_tokens=args.max_tokens)
-        else:
+        elif args.command == "read":
             result = read(args.store, args.artifact_id)
+        else:
+            raw = sys.stdin.buffer.read(2049)
+            if len(raw) > 2048:
+                _error("invalid_request", "Context reference exceeds the size limit")
+            request = json.loads(raw.decode("utf-8"))
+            if not isinstance(request, dict) or set(request) != {"contextRef"}:
+                _error("invalid_request", "request must contain contextRef")
+            result = resolve_for_mission(args.store, request["contextRef"])
         sys.stdout.write(context_pack._json(result) + "\n")
     except (context_pack.ContextPackError, json.JSONDecodeError, UnicodeError) as exc:
         code = getattr(exc, "code", "invalid_request")

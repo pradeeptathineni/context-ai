@@ -131,6 +131,45 @@ class LinkedContextTests(unittest.TestCase):
             with self.assertRaisesRegex(context_pack.ContextPackError, "at most eight"):
                 linked_context.assemble(directory, source)
 
+    def test_resolve_for_mission_returns_exact_bounded_context_and_identity_receipt(self):
+        with tempfile.TemporaryDirectory() as directory:
+            artifact = linked_context.assemble(directory, packet())
+            ref = {"owner": "context-ai", "id": artifact["artifactId"],
+                   "artifactSha256": artifact["renderSha256"],
+                   "qualification": "Deep journal qualification is caller metadata"}
+            resolved = linked_context.resolve_for_mission(directory, ref)
+            self.assertEqual(resolved["preparedInput"]["text"], artifact["text"])
+            self.assertEqual(resolved["contextRef"], ref)
+            receipt = resolved["publicReceipt"]
+            self.assertEqual(receipt["callerQualificationUnverified"], ref["qualification"])
+            self.assertIn("included=research_answer,planning_intent", receipt["ownerQualification"])
+            self.assertEqual(receipt["sourceFreshness"], "not_verified_by_context_owner_api")
+            self.assertIsNone(receipt["missionTaskBinding"])
+            self.assertEqual(receipt["textSha256"], artifact["renderSha256"])
+
+    def test_resolve_for_mission_rejects_wrong_owner_or_render_digest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            artifact = linked_context.assemble(directory, packet())
+            ref = {"owner": "context-ai", "id": artifact["artifactId"],
+                   "artifactSha256": artifact["renderSha256"], "qualification": "checked"}
+            with self.assertRaisesRegex(context_pack.ContextPackError, "owner does not match"):
+                linked_context.resolve_for_mission(directory, {**ref, "owner": "research-ai"})
+            with self.assertRaisesRegex(context_pack.ContextPackError, "does not match"):
+                linked_context.resolve_for_mission(directory, {**ref, "artifactSha256": "0" * 64})
+
+    def test_resolve_for_mission_cli_uses_explicit_store_and_ref(self):
+        with tempfile.TemporaryDirectory() as directory:
+            artifact = linked_context.assemble(directory, packet())
+            ref = {"owner": "context-ai", "id": artifact["artifactId"],
+                   "artifactSha256": artifact["renderSha256"], "qualification": "caller note"}
+            env = dict(os.environ)
+            env["PYTHONPATH"] = str(Path(linked_context.__file__).resolve().parent)
+            result = subprocess.run(
+                [sys.executable, str(Path(linked_context.__file__)), "resolve-for-mission",
+                 "--store", directory], input=json.dumps({"contextRef": ref}),
+                check=True, capture_output=True, text=True, env=env)
+            self.assertEqual(json.loads(result.stdout), linked_context.resolve_for_mission(directory, ref))
+
 
 if __name__ == "__main__":
     unittest.main()
