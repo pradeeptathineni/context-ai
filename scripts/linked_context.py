@@ -23,6 +23,7 @@ MAX_RESULTS = 8
 MAX_PACKET_BYTES = 512 * 1024
 MAX_MISSION_TEXT_BYTES = 128_000
 MAX_MISSION_TEXT_UTF16 = 32_000
+_UNSET = object()
 RECORD_FIELDS = {"kind", "owner", "record_id", "revision", "digest", "title", "text", "qualification"}
 
 
@@ -294,7 +295,48 @@ def _owner_qualification(artifact):
             f"source_refs={source_count}")
 
 
-def resolve_for_mission(store, context_ref):
+def _validate_expected_planning(artifact, expected_planning):
+    if not isinstance(expected_planning, dict) or set(expected_planning) != {"planId", "planSha256"}:
+        _error("invalid_request", "expectedPlanning must contain planId and planSha256")
+    plan_id = _identity(expected_planning["planId"], "Planning plan ID")
+    plan_sha = expected_planning["planSha256"]
+    if not isinstance(plan_sha, str) or not re.fullmatch(r"[0-9a-f]{64}", plan_sha):
+        _error("invalid_request", "Planning planSha256 must use 64 lowercase hex characters")
+    expected_digest = "sha256:" + plan_sha
+
+    refs = artifact.get("sourceRefs")
+    included = artifact.get("included")
+    omissions = artifact.get("omissions")
+    if not isinstance(refs, list) or not isinstance(included, list) or not isinstance(omissions, list):
+        _error("store_invalid", "Context artifact source metadata is invalid")
+    planning_refs = [row for row in refs if isinstance(row, dict)
+                     and (row.get("kind") == "planning_intent" or row.get("owner") == "planning")]
+    if not planning_refs:
+        _error("planning_source_missing", "Context artifact has no Planning intent source reference")
+    if (len(planning_refs) != 1
+            or planning_refs[0].get("kind") != "planning_intent"
+            or planning_refs[0].get("owner") != "planning"
+            or planning_refs[0].get("record_id") != plan_id
+            or planning_refs[0].get("digest") != expected_digest):
+        _error("planning_source_mismatch", "Context artifact Planning source does not match expectedPlanning")
+
+    omitted_ids = {row.get("record_id", row.get("item_id")) for row in omissions
+                   if isinstance(row, dict)}
+    if plan_id in omitted_ids:
+        _error("planning_source_omitted", "Expected Planning source is omitted from the Context artifact")
+    planning_included = [row for row in included if isinstance(row, dict)
+                         and (row.get("kind") == "planning_intent" or row.get("owner") == "planning")]
+    if not planning_included:
+        _error("planning_source_missing", "Expected Planning source is not included in the Context artifact")
+    if (len(planning_included) != 1
+            or planning_included[0].get("kind") != "planning_intent"
+            or planning_included[0].get("owner") != "planning"
+            or planning_included[0].get("record_id") != plan_id
+            or planning_included[0].get("digest") != expected_digest):
+        _error("planning_source_mismatch", "Included Planning source does not match expectedPlanning")
+
+
+def resolve_for_mission(store, context_ref, *, expected_planning=_UNSET):
     """Resolve exact Context text and identity; does not revalidate source owners."""
     if not isinstance(context_ref, dict) or set(context_ref) != {
             "owner", "id", "artifactSha256", "qualification"}:
@@ -320,6 +362,8 @@ def resolve_for_mission(store, context_ref):
     artifact = read(store, artifact_id)
     if artifact["renderSha256"] != render_sha:
         _error("unknown_selection", "Context artifact digest does not match its exact render")
+    if expected_planning is not _UNSET:
+        _validate_expected_planning(artifact, expected_planning)
     text = artifact["text"]
     encoded = text.encode("utf-8")
     if (len(encoded) > MAX_MISSION_TEXT_BYTES
@@ -376,9 +420,14 @@ def _cli():
             if len(raw) > 2048:
                 _error("invalid_request", "Context reference exceeds the size limit")
             request = json.loads(raw.decode("utf-8"))
-            if not isinstance(request, dict) or set(request) != {"contextRef"}:
-                _error("invalid_request", "request must contain contextRef")
-            result = resolve_for_mission(args.store, request["contextRef"])
+            if (not isinstance(request, dict)
+                    or set(request) not in ({"contextRef"}, {"contextRef", "expectedPlanning"})):
+                _error("invalid_request", "request must contain contextRef and optional expectedPlanning")
+            if "expectedPlanning" in request:
+                result = resolve_for_mission(args.store, request["contextRef"],
+                                             expected_planning=request["expectedPlanning"])
+            else:
+                result = resolve_for_mission(args.store, request["contextRef"])
         sys.stdout.write(context_pack._json(result) + "\n")
     except (context_pack.ContextPackError, json.JSONDecodeError, UnicodeError) as exc:
         code = getattr(exc, "code", "invalid_request")

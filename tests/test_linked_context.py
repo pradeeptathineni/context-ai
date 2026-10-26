@@ -174,6 +174,53 @@ class LinkedContextTests(unittest.TestCase):
                 check=True, capture_output=True, text=True, env=env)
             self.assertEqual(json.loads(result.stdout), linked_context.resolve_for_mission(directory, ref))
 
+    def test_resolve_for_mission_validates_expected_planning_source(self):
+        with tempfile.TemporaryDirectory() as directory:
+            artifact = linked_context.assemble(directory, packet())
+            ref = {"owner": "context-ai", "id": artifact["artifactId"],
+                   "artifactSha256": artifact["renderSha256"], "qualification": "caller note"}
+            expected = {"planId": "intent-1", "planSha256": "a" * 64}
+            with_expected = linked_context.resolve_for_mission(
+                directory, ref, expected_planning=expected)
+            without_expected = linked_context.resolve_for_mission(directory, ref)
+            self.assertEqual(with_expected, without_expected)
+            for bad in ({"planId": "other-plan", "planSha256": "a" * 64},
+                        {"planId": "intent-1", "planSha256": "b" * 64}):
+                with self.subTest(expected=bad), self.assertRaisesRegex(
+                        context_pack.ContextPackError, "does not match expectedPlanning"):
+                    linked_context.resolve_for_mission(directory, ref, expected_planning=bad)
+
+    def test_expected_planning_rejects_missing_or_omitted_source(self):
+        expected = {"planId": "intent-1", "planSha256": "a" * 64}
+        with self.assertRaisesRegex(context_pack.ContextPackError, "no Planning intent"):
+            linked_context._validate_expected_planning(
+                {"sourceRefs": [], "included": [], "omissions": []}, expected)
+
+        source_ref = {"kind": "planning_intent", "owner": "planning",
+                      "record_id": "intent-1", "digest": "sha256:" + "a" * 64}
+        omitted = {"sourceRefs": [source_ref], "included": [],
+                   "omissions": [{"record_id": "intent-1", "reason": "budget"}]}
+        with self.assertRaisesRegex(context_pack.ContextPackError, "is omitted"):
+            linked_context._validate_expected_planning(omitted, expected)
+
+    def test_resolve_for_mission_cli_accepts_expected_planning_additively(self):
+        with tempfile.TemporaryDirectory() as directory:
+            artifact = linked_context.assemble(directory, packet())
+            request = {
+                "contextRef": {"owner": "context-ai", "id": artifact["artifactId"],
+                               "artifactSha256": artifact["renderSha256"],
+                               "qualification": "caller note"},
+                "expectedPlanning": {"planId": "intent-1", "planSha256": "a" * 64},
+            }
+            env = dict(os.environ)
+            env["PYTHONPATH"] = str(Path(linked_context.__file__).resolve().parent)
+            result = subprocess.run(
+                [sys.executable, str(Path(linked_context.__file__)), "resolve-for-mission",
+                 "--store", directory], input=json.dumps(request),
+                check=True, capture_output=True, text=True, env=env)
+            self.assertEqual(json.loads(result.stdout), linked_context.resolve_for_mission(
+                directory, request["contextRef"], expected_planning=request["expectedPlanning"]))
+
 
 if __name__ == "__main__":
     unittest.main()
