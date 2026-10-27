@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Context task loadout v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "task", "contextPreviewId", "maxTokens", "ownerPacket"],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "task": {"type": "string", "minLength": 1, "maxLength": 2048},
+    "contextPreviewId": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+    "maxTokens": {"type": "integer", "minimum": 100, "maximum": 8192},
+    "reductionRequests": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["itemId", "maxLines"],
+        "properties": {
+          "itemId": {"type": "string", "minLength": 1, "maxLength": 160},
+          "maxLines": {"type": "integer", "minimum": 8, "maximum": 100}
+        }
+      }
+    },
+    "ownerPacket": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["task", "records"],
+      "properties": {
+        "task": {"type": "string", "minLength": 1, "maxLength": 2048},
+        "records": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {"$ref": "#/$defs/researchAnswer"},
+            {"$ref": "#/$defs/planningIntent"}
+          ],
+          "items": false
+        }
+      }
+    }
+  },
+  "$defs": {
+    "researchAnswer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "owner", "record_id", "revision", "digest", "title", "text", "qualification"],
+      "properties": {
+        "kind": {"const": "research_answer"},
+        "owner": {"const": "research"},
+        "record_id": {"type": "string", "minLength": 1, "maxLength": 200},
+        "revision": {"type": "string", "minLength": 1, "maxLength": 200},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 500},
+        "text": {"type": "string"},
+        "qualification": {"type": "string", "maxLength": 4096}
+      }
+    },
+    "planningIntent": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "owner", "record_id", "revision", "digest", "title", "text", "qualification"],
+      "properties": {
+        "kind": {"const": "planning_intent"},
+        "owner": {"const": "planning"},
+        "record_id": {"type": "string", "minLength": 1, "maxLength": 200},
+        "revision": {"type": "string", "minLength": 1, "maxLength": 200},
+        "digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+        "title": {"type": "string", "minLength": 1, "maxLength": 500},
+        "text": {"type": "string"},
+        "qualification": {"type": "string", "maxLength": 4096}
+      }
+    }
+  }
+}

@@ -22,6 +22,8 @@ Use the optional [read-only repository map](docs/repo-map.md) to find relevant t
 
 For a frozen, selectable pack of exact source excerpts and explicitly chosen guidance, see [task context packs](docs/context-packs.md). Packs persist by ID and refuse export after bound source drift.
 
+For reusable, versioned compositions of a frozen Context preview and caller-supplied Research/Planning records, see [task context loadouts](docs/context-loadouts.md). Inspect exact content and omissions, compare revisions, then freeze and cold-read the immutable combined artifact; delivery remains with the native host.
+
 For a user-curated handoff into a fresh native session, see [session reconstruction](docs/session-handoff.md). It preserves explicitly opened owner records and selected Context guidance, but does not start a session or carry prior execution acceptance.
 
 ## Keep a project selection
@@ -51,7 +53,7 @@ Selection, installation, actual use and benefit are separate observations. `veri
 | `domains/`, `procedures/`, `skills/` | Concern-specific modules and on-demand methods, with concern owners in `ownership.yaml`. |
 | `library/` | Catalog options, pinned example project profiles and scoped AI-engineering interests. A custom consumer owns its current selection and private state. |
 | `loadouts/`, `capabilities.yaml`, `resources.yaml` | Composition declarations, trusted definitions and explicit resource dependencies. |
-| `scripts/context_ai.py`, `schemas/` | Declaration validation, destination discovery, pinned delivery, verification, refresh, recovery and undo. |
+| `scripts/context_ai.py`, `scripts/context_pack.py`, `scripts/context_loadout.py`, `schemas/` | Declaration validation, source-bound task packs and loadouts, pinned delivery, verification, refresh, recovery and undo. |
 | `concepts.yaml`, `signals/`, `sources.yaml`, `decisions/` | Decision vocabulary, sourced candidates, original sources and current contextual choices. |
 | `sourced/`, `sources.lock.json`, `docs/references.md` | Exact upstream snapshots, integrity/license pins and material influences. |
 | `models/`, `providers/` | Structured model advice and host-specific consumption boundaries. |
