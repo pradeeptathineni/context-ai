@@ -1,4 +1,5 @@
 from pathlib import Path
+import hashlib
 import json
 import shlex
 import subprocess
@@ -56,6 +57,10 @@ class ImportImpactTests(unittest.TestCase):
         self.assertEqual(by_path["src/pkg/relative.py"]["depth"], 1)
         self.assertEqual(by_path["src/middle.py"]["depth"], 1)
         self.assertEqual(by_path["src/top.py"]["depth"], 2)
+        self.assertEqual(
+            by_path["src/pkg/leaf.py"]["sha256"],
+            hashlib.sha256(leaf.read_bytes()).hexdigest(),
+        )
         self.assertIn(
             {"from": "src/pkg/relative.py", "to": "src/pkg/leaf.py", "line": 1},
             result["edges"],

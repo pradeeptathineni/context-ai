@@ -489,11 +489,17 @@ def inspect_impact(
         _note(diagnostics, "max_depth_reached", f"traversal reached depth {max_depth}")
     if truncated_nodes:
         _note(diagnostics, "max_nodes_reached", f"traversal reached {max_nodes} nodes")
+    public_nodes = []
+    for node in sorted(nodes.values(), key=lambda item: (item["depth"], item["path"])):
+        public_nodes.append({
+            **node,
+            "sha256": sources[node["path"]]["digest"],
+        })
     return {
         "schema": SCHEMA,
         "seed": seed,
         "snapshot": {**_snapshot_public(before), "source_digest": source_digest},
-        "nodes": sorted(nodes.values(), key=lambda item: (item["depth"], item["path"])),
+        "nodes": public_nodes,
         "edges": output_edges,
         "complete": complete,
         "diagnostics": diagnostics,
