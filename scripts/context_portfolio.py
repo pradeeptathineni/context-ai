@@ -15,6 +15,8 @@ import time
 
 import context_ai as ai
 
+MAX_BEFORE_IMAGE_BYTES = 8_000_000
+
 
 class Invalid(ai.Invalid):
     pass
@@ -165,6 +167,7 @@ def _before_image(project, state):
     if not state:
         return None
     data = {}
+    size = 0
     for name in state['resolution']['resources']:
         path = ai.inside(project, '.context-ai/resources/' + name)
         if not path.is_file():
@@ -172,6 +175,9 @@ def _before_image(project, state):
         content = path.read_bytes()
         if _hash(content) != state['resolution']['resources'][name]:
             raise Invalid('previous project selection has resource drift; resolve native drift before preview')
+        size += len(content)
+        if size > MAX_BEFORE_IMAGE_BYTES:
+            raise Invalid('previous selection exceeds the bounded rollback receipt size')
         data[name] = base64.b64encode(content).decode('ascii')
     return {'resolution': state['resolution'], 'files': data}
 
@@ -235,7 +241,7 @@ def apply(store, projects, preview_id, project_ids):
     op_id = 'operation-' + _hash(_json({'preview': preview_id, 'projects': sorted(project_ids)}))[:24]
     prior = _read(store, op_id + '.json')
     if prior:
-        return {'operation_id': op_id, 'replayed': True, 'projects': prior['projects']}
+        return {'operation_id': op_id, 'replayed': True, 'projects': _public_outcomes(prior['projects'])}
     operation = {'operation_id': op_id, 'preview_id': preview_id, 'created_at': int(time.time()), 'projects': {}}
     for project_id in project_ids:
         item = preview_record['items'][project_id]
@@ -262,7 +268,13 @@ def apply(store, projects, preview_id, project_ids):
         except Exception as error:
             receipt.update({'status': 'unknown', 'detail': str(error)[:400]})
         _save(store, op_id + '.json', operation)
-    return {'operation_id': op_id, 'replayed': False, 'projects': operation['projects']}
+    return {'operation_id': op_id, 'replayed': False, 'projects': _public_outcomes(operation['projects'])}
+
+
+def _public_outcomes(projects):
+    private = {'before_image', 'selection', 'after_owned', 'rollback_state'}
+    return {key: {name: value for name, value in receipt.items() if name not in private}
+            for key, receipt in projects.items()}
 
 
 def status(store, projects, operation_id):
@@ -274,6 +286,8 @@ def status(store, projects, operation_id):
     for project_id, receipt in operation['projects'].items():
         if project_id not in projects:
             result[project_id] = {'status': 'unknown', 'detail': 'project is no longer configured'}
+        elif receipt['status'] == 'pending':
+            result[project_id] = {'status': 'unknown', 'detail': 'operation has an incomplete pending receipt; inspect native project state'}
         elif receipt.get('rollback_state') is not None:
             project = projects[project_id]['path']
             state = receipt['rollback_state']
@@ -290,6 +304,8 @@ def status(store, projects, operation_id):
                                       'label': projects[project_id]['label']}
             except Exception as error:
                 result[project_id] = {'status': 'unknown', 'detail': str(error)[:300]}
+        elif receipt.get('rollback_outcome') in ('partial', 'partial_or_unknown'):
+            result[project_id] = {'status': 'partial_or_unknown', 'detail': 'rollback has a retained partial outcome; inspect native project state'}
         elif receipt['status'] == 'applied':
             try:
                 current = _current_matches(projects[project_id]['path'], receipt)
@@ -334,8 +350,11 @@ def rollback(store, projects, operation_id, project_ids):
                                                  'owned': restored['owned']}
                 else:
                     receipt['rollback_state'] = {'installed': False}
+            else:
+                receipt['rollback_outcome'] = results[project_id]['status']
         except Exception as error:
             results[project_id] = {'status': 'partial_or_unknown', 'detail': str(error)[:400]}
+            receipt['rollback_outcome'] = 'partial_or_unknown'
     operation.setdefault('rollback', []).append({'at': int(time.time()), 'projects': results})
     _save(store, operation_id + '.json', operation)
     return {'operation_id': operation_id, 'projects': results}
