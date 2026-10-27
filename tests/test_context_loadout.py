@@ -17,6 +17,27 @@ def owner_record(kind, owner, record_id, title, text, revision):
             "title": title, "text": text, "qualification": "caller supplied; not independently verified"}
 
 
+def preference_profile(text):
+    return {"schema": "custom.preference-profile-export.v1", "ownerId": "custom-ai",
+            "ownerRevision": "a" * 40, "kitId": "synthetic-kit", "kitVersion": 2,
+            "kitDigest": "b" * 64, "profileId": "personal-default", "profileRevision": 3,
+            "scope": "personal", "projectId": None, "sessionId": None,
+            "lineage": [{"id": "personal-default", "label": "Personal defaults", "scope": "personal",
+                         "project_id": None, "session_id": None, "revision": 3,
+                         "expires_at": None, "state": "active"}],
+            "expiresAt": None, "preferences": [{"id": "brevity", "text": "Keep prose concise.",
+                "swap": {}, "exceptions": [], "source": {"profile_id": "personal-default", "scope": "personal",
+                "label": "Personal defaults", "revision": 3, "expires_at": None},
+                "provenance": {"kind": "saved-profile-edit"}, "override_of": None}],
+            "conflicts": [], "previewDigest": "c" * 64,
+            "textSha256": hashlib.sha256(text.encode()).hexdigest(), "text": text,
+            "exportReceipt": {"schema": "custom.preference-profile-export-receipt.v1",
+                "requestId": "11111111-1111-4111-8111-111111111111", "inputDigest": "d" * 64,
+                "exported": "exports/profile-personal-default-r3-cccccccccccc.md",
+                "previewDigest": "c" * 64, "textSha256": hashlib.sha256(text.encode()).hexdigest()},
+            "qualification": context_loadout.PREFERENCE_PROFILE_QUALIFICATION}
+
+
 class ContextLoadoutTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -148,6 +169,48 @@ class ContextLoadoutTests(unittest.TestCase):
             context_loadout.create(self.loadout_store, "billing-task", spec)
         self.assertEqual(refused.exception.code, "invalid_request")
         self.assertFalse(list(self.loadout_store.glob("loadout-*.json")))
+
+    def test_typed_custom_preference_profile_loadout_is_frozen_and_reopened_without_fake_owner_rows(self):
+        text = "# Profile preview\n\nKeep prose concise.\n"
+        spec = {"schemaVersion": 1, "task": "change billing total",
+                "contextPreviewId": self.preview_id, "maxTokens": 8192,
+                "preferenceProfile": preference_profile(text)}
+        created = context_loadout.create(self.loadout_store, "profile-billing", spec)
+        inspected = context_loadout.inspect(self.loadout_store, "profile-billing", version=1,
+                                            digest=created["digest"], service=self.service)
+        profile_artifact = inspected["ownerArtifact"]["artifact"]
+        self.assertEqual(profile_artifact["schema"], "context.preference-profile-artifact.v1")
+        self.assertEqual(profile_artifact["profile"], spec["preferenceProfile"])
+        self.assertEqual(profile_artifact["included"][0]["kind"], "preference_profile")
+        self.assertEqual(profile_artifact["included"][0]["owner"], "custom-ai")
+        self.assertNotIn("ownerPacket", inspected["loadout"]["spec"])
+        self.assertIn("system, developer, user and project instructions", inspected["text"])
+        self.assertIn(text, inspected["text"])
+        frozen = context_loadout.freeze(self.loadout_store, "profile-billing", version=1,
+                                        digest=created["digest"], service=self.service)
+        reopened = context_loadout.read(self.loadout_store, frozen["artifactId"])
+        self.assertEqual(reopened, frozen)
+        self.assertEqual(reopened["ownerArtifact"]["artifact"]["profile"], spec["preferenceProfile"])
+
+    def test_preference_profile_loadout_refuses_bad_source_digest_and_expired_source(self):
+        text = "# Profile preview\n"
+        bad = preference_profile(text)
+        bad["textSha256"] = "0" * 64
+        spec = {"schemaVersion": 1, "task": "change billing total", "contextPreviewId": self.preview_id,
+                "maxTokens": 8192, "preferenceProfile": bad}
+        with self.assertRaises(context_pack.ContextPackError) as mismatch:
+            context_loadout.create(self.loadout_store, "bad-profile-digest", spec)
+        self.assertEqual(mismatch.exception.code, "invalid_request")
+        expired = preference_profile(text)
+        expired["scope"] = "session"
+        expired["sessionId"] = "temporary-review"
+        expired["expiresAt"] = "2000-01-01T00:00:00Z"
+        row = expired["lineage"][0]
+        row.update(scope="session", session_id="temporary-review", expires_at=expired["expiresAt"])
+        spec["preferenceProfile"] = expired
+        with self.assertRaises(context_pack.ContextPackError) as inactive:
+            context_loadout.create(self.loadout_store, "expired-profile", spec)
+        self.assertEqual(inactive.exception.code, "profile_expired")
 
 
 if __name__ == "__main__":

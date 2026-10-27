@@ -2,6 +2,7 @@
 """Versioned, source-bound task loadouts built from frozen Context and owner inputs."""
 
 import argparse
+import datetime as dt
 import hashlib
 import json
 import os
@@ -17,6 +18,11 @@ SCHEMA_VERSION = 1
 MAX_SPEC_BYTES = 512 * 1024
 MAX_REDUCTION_PREVIEWS = 8
 MAX_REDUCTION_BYTES = 512 * 1024
+PREFERENCE_PROFILE_SCHEMA = "custom.preference-profile-export.v1"
+PREFERENCE_PROFILE_QUALIFICATION = (
+    "Custom preference data only. Current system, developer, user and project instructions, "
+    "and access policy, remain higher priority; this is not a native setting."
+)
 _ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,63}$")
 
 
@@ -73,10 +79,101 @@ def _identity(value):
     return value
 
 
-def _spec(value):
-    if (not isinstance(value, dict) or set(value) not in ({
-            "schemaVersion", "task", "contextPreviewId", "maxTokens", "ownerPacket"}, {
-            "schemaVersion", "task", "contextPreviewId", "maxTokens", "ownerPacket", "reductionRequests"})
+def _preference_profile(value, *, require_active=True):
+    fields = {"schema", "ownerId", "ownerRevision", "kitId", "kitVersion", "kitDigest",
+              "profileId", "profileRevision", "scope", "projectId", "sessionId", "lineage",
+              "expiresAt", "preferences", "conflicts", "previewDigest", "textSha256", "text", "qualification", "exportReceipt"}
+    if not isinstance(value, dict) or set(value) != fields or value.get("schema") != PREFERENCE_PROFILE_SCHEMA:
+        _fail("invalid_request", "preference profile record must match custom.preference-profile-export.v1")
+    if (value["ownerId"] != "custom-ai" or not isinstance(value["ownerRevision"], str)
+            or not re.fullmatch(r"[0-9a-f]{40,64}", value["ownerRevision"])
+            or not isinstance(value["kitId"], str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,62}", value["kitId"])
+            or type(value["kitVersion"]) is not int or value["kitVersion"] < 1
+            or not isinstance(value["kitDigest"], str) or not re.fullmatch(r"[0-9a-f]{64}", value["kitDigest"])
+            or not isinstance(value["profileId"], str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,62}", value["profileId"])
+            or type(value["profileRevision"]) is not int or value["profileRevision"] < 1
+            or value["scope"] not in {"personal", "project", "session"}
+            or not isinstance(value["previewDigest"], str) or not re.fullmatch(r"[0-9a-f]{64}", value["previewDigest"])
+            or not isinstance(value["textSha256"], str) or not re.fullmatch(r"[0-9a-f]{64}", value["textSha256"])
+            or not isinstance(value["text"], str) or len(value["text"].encode("utf-8")) > 200_000
+            or _sha(value["text"].encode("utf-8")) != value["textSha256"]
+            or value["qualification"] != PREFERENCE_PROFILE_QUALIFICATION):
+        _fail("invalid_request", "preference profile identity, text digest or qualification is invalid")
+    receipt = value["exportReceipt"]
+    if (not isinstance(receipt, dict) or set(receipt) != {"schema", "requestId", "inputDigest", "exported", "previewDigest", "textSha256"}
+            or receipt.get("schema") != "custom.preference-profile-export-receipt.v1"
+            or not isinstance(receipt.get("requestId"), str)
+            or not re.fullmatch(r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}", receipt["requestId"])
+            or not isinstance(receipt.get("inputDigest"), str) or not re.fullmatch(r"[0-9a-f]{64}", receipt["inputDigest"])
+            or not isinstance(receipt.get("exported"), str)
+            or not re.fullmatch(r"exports/profile-[a-z0-9][a-z0-9-]{0,62}-r[1-9][0-9]*-[a-f0-9]{12}\.md", receipt["exported"])
+            or receipt.get("previewDigest") != value["previewDigest"] or receipt.get("textSha256") != value["textSha256"]):
+        _fail("invalid_request", "preference profile export receipt is invalid")
+    if (value["projectId"] is not None and not isinstance(value["projectId"], str)
+            or value["sessionId"] is not None and not isinstance(value["sessionId"], str)):
+        _fail("invalid_request", "preference profile scope details are invalid")
+    expiry = value["expiresAt"]
+    if expiry is not None:
+        if not isinstance(expiry, str):
+            _fail("invalid_request", "preference profile expiry is invalid")
+        try:
+            parsed = dt.datetime.fromisoformat(expiry.replace("Z", "+00:00"))
+        except ValueError:
+            _fail("invalid_request", "preference profile expiry is invalid")
+        if parsed.tzinfo is None or parsed.utcoffset() is None:
+            _fail("invalid_request", "preference profile expiry has no timezone")
+        if require_active and parsed.astimezone(dt.timezone.utc) <= dt.datetime.now(dt.timezone.utc):
+            _fail("profile_expired", "preference profile is expired")
+    lineage = value["lineage"]
+    if not isinstance(lineage, list) or not 1 <= len(lineage) <= 8:
+        _fail("invalid_request", "preference profile lineage is invalid")
+    lineage_fields = {"id", "label", "scope", "project_id", "session_id", "revision", "expires_at", "state"}
+    for row in lineage:
+        if (not isinstance(row, dict) or set(row) != lineage_fields
+                or not isinstance(row.get("id"), str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,62}", row["id"])
+                or not isinstance(row.get("label"), str) or not row["label"].strip() or len(row["label"]) > 80
+                or row.get("scope") not in {"personal", "project", "session"}
+                or type(row.get("revision")) is not int or row["revision"] < 1
+                or row.get("state") != "active"):
+            _fail("invalid_request", "preference profile lineage record is invalid")
+    last = lineage[-1]
+    if (last["id"] != value["profileId"] or last["scope"] != value["scope"]
+            or last["revision"] != value["profileRevision"] or last["expires_at"] != value["expiresAt"]):
+        _fail("invalid_request", "preference profile lineage does not match its selected revision")
+    preferences = value["preferences"]
+    if not isinstance(preferences, list) or len(preferences) > 64:
+        _fail("invalid_request", "preference profile values are invalid")
+    preference_fields = {"id", "text", "swap", "exceptions", "source", "provenance", "override_of"}
+    for row in preferences:
+        if (not isinstance(row, dict) or set(row) != preference_fields
+                or not isinstance(row.get("id"), str) or not row["id"] or len(row["id"]) > 63
+                or not isinstance(row.get("text"), str) or len(row["text"]) > 2000
+                or not isinstance(row.get("swap"), dict) or len(row["swap"]) > 100
+                or not isinstance(row.get("exceptions"), list) or len(row["exceptions"]) > 100
+                or not isinstance(row.get("source"), dict) or not isinstance(row.get("provenance"), dict)):
+            _fail("invalid_request", "preference profile value is invalid")
+    conflicts = value["conflicts"]
+    conflict_fields = {"preference", "overridden_by", "winner", "reason"}
+    if not isinstance(conflicts, list) or len(conflicts) > 64:
+        _fail("invalid_request", "preference profile conflict list is invalid")
+    for conflict in conflicts:
+        if (not isinstance(conflict, dict) or set(conflict) != conflict_fields
+                or not isinstance(conflict.get("preference"), str)
+                or not isinstance(conflict.get("reason"), str)
+                or not isinstance(conflict.get("overridden_by"), dict)
+                or not isinstance(conflict.get("winner"), dict)):
+            _fail("invalid_request", "preference profile conflict record is invalid")
+    if value["scope"] == "session" and (not value["sessionId"] or not expiry):
+        _fail("invalid_request", "session preference profiles require a session and expiry")
+    if value["scope"] == "project" and not value["projectId"]:
+        _fail("invalid_request", "project preference profiles require a project identity")
+    return value
+
+
+def _spec(value, *, require_active=True):
+    legacy_keys = {"schemaVersion", "task", "contextPreviewId", "maxTokens", "ownerPacket"}
+    profile_keys = {"schemaVersion", "task", "contextPreviewId", "maxTokens", "preferenceProfile"}
+    if (not isinstance(value, dict) or (set(value) - {"reductionRequests"}) not in (legacy_keys, profile_keys)
             or type(value.get("schemaVersion")) is not int or value["schemaVersion"] != SCHEMA_VERSION):
         _fail("invalid_request", "loadout spec must match context-loadout/v1")
     task = value["task"]
@@ -87,12 +184,16 @@ def _spec(value):
     budget = value["maxTokens"]
     if type(budget) is not int or not 100 <= budget <= 8192:
         _fail("invalid_request", "maxTokens must be an integer from 100 to 8192")
-    packet = value["ownerPacket"]
-    owner_task, records, maestro_results = linked_context._validate(packet)
-    if maestro_results:
-        _fail("invalid_request", "Context loadouts accept only Research and Planning owner records")
-    if owner_task != task:
-        _fail("invalid_request", "owner packet task must match the loadout task")
+    if "ownerPacket" in value:
+        packet = value["ownerPacket"]
+        owner_task, records, maestro_results = linked_context._validate(packet)
+        if maestro_results:
+            _fail("invalid_request", "Context loadouts accept only Research and Planning owner records")
+        if owner_task != task:
+            _fail("invalid_request", "owner packet task must match the loadout task")
+        normalized_owner = {"ownerPacket": {"task": owner_task, "records": records}}
+    else:
+        normalized_owner = {"preferenceProfile": _preference_profile(value["preferenceProfile"], require_active=require_active)}
     requests = value.get("reductionRequests", [])
     if not isinstance(requests, list) or len(requests) > MAX_REDUCTION_PREVIEWS:
         _fail("invalid_request", "reductionRequests must contain at most eight entries")
@@ -109,8 +210,7 @@ def _spec(value):
         reductions.append({"itemId": request["itemId"], "maxLines": request["maxLines"]})
     normalized = {"schemaVersion": SCHEMA_VERSION, "task": task,
                   "contextPreviewId": value["contextPreviewId"], "maxTokens": budget,
-                  "ownerPacket": {"task": owner_task, "records": records},
-                  "reductionRequests": reductions}
+                  **normalized_owner, "reductionRequests": reductions}
     if len(context_pack._json(normalized).encode("utf-8")) > MAX_SPEC_BYTES:
         _fail("invalid_request", "loadout spec exceeds its size limit")
     return normalized
@@ -120,6 +220,11 @@ def _revision_digest(loadout_id, version, spec):
     body = {"schemaVersion": SCHEMA_VERSION, "loadoutId": loadout_id,
             "version": version, "spec": spec}
     return _sha(context_pack._json(body).encode("utf-8"))
+
+
+def _preference_profile_text(profile):
+    return ("## Custom preference profile · caller-provided, lower-priority data\n\n"
+            + PREFERENCE_PROFILE_QUALIFICATION + "\n\n" + profile["text"])
 
 
 def _revision_name(loadout_id, version):
@@ -202,10 +307,31 @@ def _assemble(store, revision, service):
     except (UnicodeError, json.JSONDecodeError) as exc:
         raise context_pack.ContextPackError("store_invalid", "Context pack JSON is invalid") from exc
     linked_store = store / "owner-artifacts"
-    linked = linked_context.assemble(linked_store, spec["ownerPacket"], max_tokens=spec["maxTokens"])
-    linked_body = context_pack._load(linked_store, f"linked-{linked['artifactId']}.json")
+    if "preferenceProfile" in spec:
+        profile = spec["preferenceProfile"]
+        if project_manifest.get("task") != spec["task"]:
+            _fail("task_mismatch", "preference loadout task must match the selected Context preview")
+        profile_text = _preference_profile_text(profile)
+        included = [{"kind": "preference_profile", "owner": "custom-ai",
+                     "record_id": profile["profileId"],
+                     "revision": f"kit-v{profile['kitVersion']}-profile-r{profile['profileRevision']}",
+                     "digest": "sha256:" + profile["previewDigest"],
+                     "qualification": PREFERENCE_PROFILE_QUALIFICATION}]
+        owner_artifact = {"schema": "context.preference-profile-artifact.v1",
+                          "profile": profile, "included": included, "omissions": [],
+                          "text": profile_text, "render_sha256": _sha(profile_text.encode("utf-8"))}
+        owner_body = {"schema_version": SCHEMA_VERSION, "render_sha256": owner_artifact["render_sha256"],
+                      "artifact": owner_artifact}
+        owner_body["artifact_id"] = _sha(context_pack._json(owner_body).encode("utf-8"))
+        linked = {"included": included, "omissions": []}
+        linked_body = owner_body
+        owner_text = profile_text
+    else:
+        linked = linked_context.assemble(linked_store, spec["ownerPacket"], max_tokens=spec["maxTokens"])
+        linked_body = context_pack._load(linked_store, f"linked-{linked['artifactId']}.json")
+        owner_text = linked["text"]
     combined = (f"# Context loadout {revision['loadoutId']} v{revision['version']}\n\n"
-                + project_text.decode("utf-8") + "\n\n" + linked["text"])
+                + project_text.decode("utf-8") + "\n\n" + owner_text)
     raw = combined.encode("utf-8")
     if len(raw) > 4 * spec["maxTokens"]:
         _fail("budget_too_small", "combined Context and owner content exceeds the loadout budget")
@@ -292,7 +418,7 @@ def read(store, artifact_id):
                 or loadout.get("schemaVersion") != SCHEMA_VERSION
                 or loadout.get("loadoutId") != _identity(loadout.get("loadoutId"))
                 or type(loadout.get("version")) is not int or loadout["version"] < 1
-                or loadout.get("spec") != _spec(loadout.get("spec"))
+                or loadout.get("spec") != _spec(loadout.get("spec"), require_active=False)
                 or loadout.get("digest") != _revision_digest(
                     loadout.get("loadoutId"), loadout.get("version"), loadout["spec"])):
             _fail("store_invalid", "frozen loadout revision is invalid")
@@ -306,23 +432,45 @@ def read(store, artifact_id):
             _fail("store_invalid", "frozen owner artifact envelope is invalid")
         owner_artifact = owner_body["artifact"]
         owner_id = linked_context._artifact_id({k: v for k, v in owner_body.items() if k != "artifact_id"})
-        owner_pack, owner_wire, owner_renders = context_pack._render_pack(
-            {k: v for k, v in owner_artifact["manifest"].items() if k != "pack_id"})
+        if owner_artifact.get("schema") == "context.preference-profile-artifact.v1":
+            if set(owner_artifact) != {"schema", "profile", "included", "omissions", "text", "render_sha256"}:
+                _fail("store_invalid", "frozen preference owner artifact is invalid")
+            profile = _preference_profile(owner_artifact["profile"], require_active=False)
+            owner_text = _preference_profile_text(profile)
+            expected_included = [{"kind": "preference_profile", "owner": "custom-ai",
+                                  "record_id": profile["profileId"],
+                                  "revision": f"kit-v{profile['kitVersion']}-profile-r{profile['profileRevision']}",
+                                  "digest": "sha256:" + profile["previewDigest"],
+                                  "qualification": PREFERENCE_PROFILE_QUALIFICATION}]
+            if (owner_artifact["included"] != expected_included or owner_artifact["omissions"] != []
+                    or owner_artifact["text"] != owner_text
+                    or owner_artifact["render_sha256"] != _sha(owner_text.encode("utf-8"))):
+                _fail("store_invalid", "frozen preference source record does not match its rendered content")
+            owner_pack = owner_wire = owner_renders = None
+        else:
+            owner_pack, owner_wire, owner_renders = context_pack._render_pack(
+                {k: v for k, v in owner_artifact["manifest"].items() if k != "pack_id"})
+            owner_text = owner_artifact["text"]
         combined = body["text"].encode("utf-8")
     except (KeyError, TypeError, ValueError, UnicodeError) as exc:
         raise context_pack.ContextPackError("store_invalid", "loadout artifact contents are invalid") from exc
     inspection = body["inspection"]
     expected_context_ids = [row.get("item_id") for row in manifest.get("items", []) if isinstance(row, dict)]
+    is_profile_artifact = owner_artifact.get("schema") == "context.preference-profile-artifact.v1"
+    owner_valid = (
+        owner_body.get("render_sha256") == owner_artifact.get("render_sha256")
+        and _sha(owner_text.encode("utf-8")) == owner_body.get("render_sha256")
+        and (is_profile_artifact or (
+            owner_pack == owner_artifact.get("pack_id") and owner_wire == owner_artifact.get("manifest")
+            and owner_renders["text"]["content"] == owner_text
+            and owner_renders["text"]["sha256"] == owner_body.get("render_sha256")))
+    )
     if (pack_id != project.get("packId") or wire != manifest or renders["text"]["content"].encode() != project_text
             or _sha(project_text) != project.get("textSha256") or owner_id != owner_body.get("artifact_id")
-            or owner_pack != owner_artifact.get("pack_id") or owner_wire != owner_artifact.get("manifest")
-            or owner_renders["text"]["content"] != owner_artifact.get("text")
-            or owner_body.get("render_sha256") != owner_artifact.get("render_sha256")
-            or _sha(owner_artifact["text"].encode("utf-8")) != owner_body.get("render_sha256")
-            or owner_renders["text"]["sha256"] != owner_artifact.get("render_sha256")
+            or not owner_valid
             or combined.decode("utf-8") != (
                 f"# Context loadout {loadout['loadoutId']} v{loadout['version']}\n\n"
-                + project_text.decode("utf-8") + "\n\n" + owner_artifact["text"])
+                + project_text.decode("utf-8") + "\n\n" + owner_text)
             or _sha(combined) != body.get("textSha256")):
         _fail("store_invalid", "nested loadout content does not match its frozen identities")
     if (not isinstance(inspection, dict) or inspection.get("includedContextItems") != expected_context_ids

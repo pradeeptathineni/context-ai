@@ -1,9 +1,10 @@
 # Versioned task context loadouts
 
 `scripts/context_loadout.py` composes an existing source-verified Context pack
-preview with caller-supplied Research and Planning records. It owns reusable
-selection revisions and immutable composed snapshots. It never reads Research
-or Planning owner stores, validates their claims, sends content to a host, or
+preview with either caller-supplied Research and Planning records or one typed
+Custom preference-profile export. It owns reusable selection revisions and
+immutable composed snapshots. It never reads Research, Planning, or Custom
+owner stores, sends content to a host, or
 records provider acknowledgement. Owner records remain explicitly
 `caller_validated_data`; callers must preserve their real owner identity and
 qualification instead of inventing verification.
@@ -42,12 +43,21 @@ caller-supplied Research and Planning records:
 ```
 
 `spec` has `schemaVersion: 1`, `task`, `contextPreviewId`, `maxTokens`
-(100–8192), `ownerPacket`, and optional `reductionRequests` (up to eight
+(100–8192), exactly one of `ownerPacket` or `preferenceProfile`, and optional `reductionRequests` (up to eight
 `{itemId, maxLines}` entries with an 8–100 line cap). The owner packet is the existing linked-context
 v1 shape with one Research answer and one Planning intent; its task must match.
 The linked-context producer also accepts schema v2 Mission-result packets, but
 loadout v1 deliberately accepts only the Research/Planning pair. Any non-empty
 `maestro_results` list is rejected as `invalid_request`, never silently dropped.
+The alternative `preferenceProfile` is the closed
+`custom.preference-profile-export.v1` record, including its owner revision,
+profile lineage, expiry, preferences, conflict notes, exact rendered text hash,
+and export receipt. It is not a native setting. Its text is labeled as lower
+priority than current system, developer, user, project instructions and access
+policy. The loadout owner validates and preserves the typed record but does not
+reopen the Custom store; the integrating host must reverify that source before
+load and again before send. Frozen historical artifacts remain readable after
+the profile expires, but they cannot be newly assembled or verified for send.
 The closed input schema is [context-loadout-v1.schema.json](../schemas/context-loadout-v1.schema.json).
 Research and Planning IDs, revisions, digests, and qualifications are retained
 as caller claims. Project files and selected Context guidance are bound by the
