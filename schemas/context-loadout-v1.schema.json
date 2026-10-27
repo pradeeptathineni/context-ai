@@ -18,7 +18,9 @@
         "required": ["itemId", "maxLines"],
         "properties": {
           "itemId": {"type": "string", "minLength": 1, "maxLength": 160},
-          "maxLines": {"type": "integer", "minimum": 8, "maximum": 100}
+          "maxLines": {"type": "integer", "minimum": 8, "maximum": 100},
+          "protectedLines": {"type": "array", "maxItems": 100, "uniqueItems": true,
+            "items": {"type": "integer", "minimum": 1}}
         }
       }
     },

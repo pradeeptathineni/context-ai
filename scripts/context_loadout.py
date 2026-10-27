@@ -190,14 +190,21 @@ def _spec(value, *, require_active=True):
             _fail("invalid_request", "reductionRequests must contain at most eight entries")
         reductions, seen = [], set()
         for request in requests:
-            if (not isinstance(request, dict) or set(request) != {"itemId", "maxLines"}
+            if (not isinstance(request, dict) or set(request) - {"itemId", "maxLines", "protectedLines"}
+                    or not {"itemId", "maxLines"} <= set(request)
                     or not isinstance(request.get("itemId"), str) or not request["itemId"]
                     or len(request["itemId"]) > 160 or request["itemId"] in seen
                     or type(request.get("maxLines")) is not int
                     or not context_pack.REDUCTION_MIN_MAX_LINES <= request["maxLines"] <= context_pack.REDUCTION_MAX_LINES):
                 _fail("invalid_request", "reduction request identity or line cap is invalid")
+            protected = request.get("protectedLines", [])
+            if (not isinstance(protected, list) or len(protected) > 100
+                    or any(type(line) is not int or line < 1 for line in protected)
+                    or len(set(protected)) != len(protected)):
+                _fail("invalid_request", "protectedLines must contain unique positive line numbers")
             seen.add(request["itemId"])
-            reductions.append({"itemId": request["itemId"], "maxLines": request["maxLines"]})
+            reductions.append({"itemId": request["itemId"], "maxLines": request["maxLines"],
+                               "protectedLines": protected})
         normalized = {"schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "variant": "source-pack-only",
                       "task": task, "contextPreviewId": value["contextPreviewId"],
                       "maxTokens": budget, "reductionRequests": reductions}
@@ -232,15 +239,22 @@ def _spec(value, *, require_active=True):
         _fail("invalid_request", "reductionRequests must contain at most eight entries")
     reductions, seen = [], set()
     for request in requests:
-        if (not isinstance(request, dict) or set(request) != {"itemId", "maxLines"}
+        if (not isinstance(request, dict) or set(request) - {"itemId", "maxLines", "protectedLines"}
+                or not {"itemId", "maxLines"} <= set(request)
                 or not isinstance(request.get("itemId"), str) or not request["itemId"]
                 or len(request["itemId"]) > 160 or request["itemId"] in seen
                 or type(request.get("maxLines")) is not int
                 or not context_pack.REDUCTION_MIN_MAX_LINES <= request["maxLines"]
                 <= context_pack.REDUCTION_MAX_LINES):
             _fail("invalid_request", "reduction request identity or line cap is invalid")
+        protected = request.get("protectedLines", [])
+        if (not isinstance(protected, list) or len(protected) > 100
+                or any(type(line) is not int or line < 1 for line in protected)
+                or len(set(protected)) != len(protected)):
+            _fail("invalid_request", "protectedLines must contain unique positive line numbers")
         seen.add(request["itemId"])
-        reductions.append({"itemId": request["itemId"], "maxLines": request["maxLines"]})
+        reductions.append({"itemId": request["itemId"], "maxLines": request["maxLines"],
+                           "protectedLines": protected})
     normalized = {"schemaVersion": SCHEMA_VERSION, "task": task,
                   "contextPreviewId": value["contextPreviewId"], "maxTokens": budget,
                   **normalized_owner, "reductionRequests": reductions}
@@ -390,7 +404,8 @@ def _assemble_source_only(revision, service):
                   "combinedBytes": len(raw_combined), "estimatedTokens": (len(raw_combined) + 3) // 4,
                   "budgetTokens": spec["maxTokens"]}
     reductions = [context_pack.preview_pack_reduction(
-        service, spec["contextPreviewId"], request["itemId"], max_lines=request["maxLines"])
+        service, spec["contextPreviewId"], request["itemId"], max_lines=request["maxLines"],
+        protected_lines=request.get("protectedLines", []))
         for request in spec["reductionRequests"]]
     if len(context_pack._json(reductions).encode("utf-8")) > MAX_REDUCTION_BYTES:
         _fail("reduction_too_large", "combined reduction previews exceed their size limit")
@@ -448,7 +463,8 @@ def _assemble(store, revision, service):
     manifest = project_manifest.get("items", [])
     omissions = project_manifest.get("omissions", [])
     reduction_previews = [context_pack.preview_pack_reduction(
-        service, spec["contextPreviewId"], request["itemId"], max_lines=request["maxLines"])
+        service, spec["contextPreviewId"], request["itemId"], max_lines=request["maxLines"],
+        protected_lines=request.get("protectedLines", []))
         for request in spec["reductionRequests"]]
     if len(context_pack._json(reduction_previews).encode("utf-8")) > MAX_REDUCTION_BYTES:
         _fail("reduction_too_large", "combined reduction previews exceed their size limit")
@@ -520,6 +536,7 @@ def _validate_reductions(reductions, requests, manifest, preview_id, pack_id):
                 or source_ref.get("preview_id") != preview_id or source_ref.get("pack_id") != pack_id
                 or source_ref.get("item_id") != request["itemId"]
                 or request["maxLines"] != reduction.get("max_lines")
+                or request.get("protectedLines", []) != reduction.get("protected_lines", [])
                 or source is None or source.get("kind") != "source"
                 or source_ref.get("source") != source.get("source") or not valid_segments
                 or _sha("".join(rebuilt).encode("utf-8")) != source_ref.get("raw_sha256")

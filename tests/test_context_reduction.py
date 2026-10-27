@@ -34,7 +34,7 @@ class ReductionTests(unittest.TestCase):
     def _git(self, *args):
         subprocess.run(["git", "-C", str(self.project), *args], check=True)
 
-    def _reduce(self, content, *, max_lines=12, guidance=False):
+    def _reduce(self, content, *, max_lines=12, guidance=False, protected_lines=()):
         self.path.write_bytes(content.encode("utf-8"))
         candidates = self.service.candidates(
             "inspect synthetic events", focus=["events.py"],
@@ -44,7 +44,8 @@ class ReductionTests(unittest.TestCase):
         preview = self.service.preview(candidates["candidate_set_id"],
                                        include_ids=[source["item_id"]], max_tokens=8192)
         result = context_pack.preview_pack_reduction(
-            self.service, preview["preview_id"], source["item_id"], max_lines)
+            self.service, preview["preview_id"], source["item_id"], max_lines,
+            protected_lines=protected_lines)
         return candidates, source, preview, result
 
     def test_exact_unicode_crlf_partition_determinism_and_priority(self):
@@ -92,6 +93,23 @@ class ReductionTests(unittest.TestCase):
         self.assertTrue(any(s["disposition"] == "cap-dropped" for s in result["segments"]))
         self.assertLessEqual(result["size"]["after_bytes"], result["size"]["before_bytes"])
 
+    def test_explicit_protected_lines_are_exact_or_block_the_reduction(self):
+        lines = [f"ordinary {index}\n" for index in range(60)]
+        lines[28] = "Required qualification: this result is preliminary.\n"
+        _, _, _, result = self._reduce("".join(lines), max_lines=8, protected_lines=[29])
+        self.assertIn(lines[28], result["projected_text"])
+        self.assertEqual(result["protected_lines"], [29])
+        self.assertTrue(any(row["rule"] == "protected" for row in result["segments"]))
+        with self.assertRaises(context_pack.ContextPackError) as error:
+            self._reduce("".join(lines), max_lines=8, protected_lines=list(range(3, 12)))
+        self.assertEqual(error.exception.code, "protected_content_exceeds_budget")
+
+    def test_protected_line_selection_rejects_invalid_source_ranges(self):
+        lines = "".join(f"line {index}\n" for index in range(60))
+        with self.assertRaises(context_pack.ContextPackError) as error:
+            self._reduce(lines, protected_lines=[61])
+        self.assertEqual(error.exception.code, "invalid_request")
+
     def test_short_input_passthrough_and_empty_input(self):
         _, _, _, short = self._reduce("one\r\ntwo\nthree")
         self.assertEqual(short["projected_text"], "one\r\ntwo\nthree")
@@ -132,18 +150,22 @@ class ReductionTests(unittest.TestCase):
         self.assertEqual(error.exception.code, "source_drift")
 
     def test_cli_reduce_emits_preview_without_persisting_reduced_content(self):
-        content = "".join(f"entry {i}\n" for i in range(55))
+        lines = [f"entry {i}\n" for i in range(55)]
+        lines[28] = "retain this exact qualification\n"
+        content = "".join(lines)
         candidates, source, pack, _ = self._reduce(content)
         cli = Path(__file__).resolve().parents[1] / "scripts" / "context_pack.py"
         raw = subprocess.check_output([
             sys.executable, "-B", str(cli), "reduce", "--project", str(self.project),
             "--store", str(self.store), "--context-root", str(Path(__file__).resolve().parents[1]),
             "--project-id", "synthetic", "--preview", pack["preview_id"],
-            "--item", source["item_id"], "--max-lines", "8"])
+            "--item", source["item_id"], "--max-lines", "8", "--protect-line", "29"])
         receipt = json.loads(raw)
         self.assertEqual(receipt["schema"], "context-ai/reduction-preview/v1")
         self.assertEqual(receipt["source_ref"]["preview_id"], pack["preview_id"])
         self.assertEqual(receipt["max_lines"], 8)
+        self.assertEqual(receipt["protected_lines"], [29])
+        self.assertIn("retain this exact qualification", receipt["projected_text"])
         self.assertIn("preview-" + pack["preview_id"] + ".json", [p.name for p in self.store.glob("preview-*.json")])
         self.assertEqual(len(list(self.store.glob("preview-*.json"))), 1)
 

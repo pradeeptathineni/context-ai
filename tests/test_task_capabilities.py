@@ -25,6 +25,16 @@ class TaskCapabilities(unittest.TestCase):
         (p/'cli.js').write_text("require('node:fs').writeFileSync('EXECUTED', 'unsafe');\n")
         return p
     def browser(self):return c.discover_command(c.capability_registry()['capabilities']['browser'],self.project)
+    def test_prerequisite_plan_separates_candidates_from_compatibility(self):
+        command = c.prerequisite_status({'definition': {'kind': 'command'}, 'available': True})
+        missing = c.prerequisite_status({'definition': {'kind': 'command'}, 'available': False})
+        resource = c.prerequisite_status({'definition': {'kind': 'resource'}, 'available': True})
+        self.assertEqual(command, {'state': 'candidate_unverified',
+                                   'environment_compatibility': 'not_exercised'})
+        self.assertEqual(missing, {'state': 'missing',
+                                   'environment_compatibility': 'not_exercised'})
+        self.assertEqual(resource, {'state': 'resource_present',
+                                    'environment_compatibility': 'not_applicable'})
     def test_new_option_is_data_and_selected_closure_agrees(self):
         document=c.capability_registry();loads=c.catalogue()
         document['options']['investigation']={'description':'Meaningful failure diagnosis choice','default':'focused','alternatives':{'focused':{'description':'Use diagnosis','aliases':{'context-review':'context-diagnose'}}}}

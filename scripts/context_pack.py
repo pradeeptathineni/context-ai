@@ -84,7 +84,7 @@ def _exact_source_item(item):
     return raw, digest
 
 
-def preview_pack_reduction(service, preview_id, item_id, max_lines=12):
+def preview_pack_reduction(service, preview_id, item_id, max_lines=12, protected_lines=()):
     """Preview a bounded deterministic reduction of one exact frozen source.
 
     The Context pack export is deliberately re-run first: it validates the saved
@@ -95,6 +95,10 @@ def preview_pack_reduction(service, preview_id, item_id, max_lines=12):
             or not isinstance(max_lines, int) or isinstance(max_lines, bool)
             or not REDUCTION_MIN_MAX_LINES <= max_lines <= REDUCTION_MAX_LINES):
         raise ContextPackError("invalid_request", "item ID or line cap is invalid")
+    if (not isinstance(protected_lines, (list, tuple)) or len(protected_lines) > 100
+            or any(type(line) is not int or line < 1 for line in protected_lines)
+            or len(set(protected_lines)) != len(protected_lines)):
+        raise ContextPackError("invalid_request", "protected lines must be unique positive line numbers")
     raw_json = service.export(preview_id, format="json")
     try:
         pack = json.loads(raw_json.decode("utf-8"))
@@ -117,6 +121,8 @@ def preview_pack_reduction(service, preview_id, item_id, max_lines=12):
     raw, raw_digest = exact
     content = raw.decode("utf-8")
     lines = _physical_lines(content)
+    if any(line > len(lines) for line in protected_lines):
+        raise ContextPackError("invalid_request", "protected line is outside the exact source")
     selected = set()
     rules = {}
     warnings = []
@@ -135,6 +141,13 @@ def preview_pack_reduction(service, preview_id, item_id, max_lines=12):
         selected.update(head | tail)
         rules.update({i: ("head", "preserve_first_lines") for i in head})
         rules.update({i: ("tail", "preserve_last_lines") for i in tail - head})
+        protected_indices = {line - 1 for line in protected_lines}
+        new_protected = protected_indices - selected
+        if len(selected) + len(new_protected) > max_lines:
+            raise ContextPackError("protected_content_exceeds_budget",
+                                   "explicitly protected source lines exceed the reduction line budget")
+        selected.update(new_protected)
+        rules.update({i: ("protected", "explicit_source_line") for i in new_protected})
         error_indices, warning_indices = [], []
         for index, (_, _, line) in enumerate(lines):
             if index in selected:
@@ -188,7 +201,8 @@ def preview_pack_reduction(service, preview_id, item_id, max_lines=12):
     before_bytes, after_bytes = len(raw), len(projected.encode("utf-8"))
     body = {"schema": REDUCTION_SCHEMA, "source_ref": source_ref,
             "method": REDUCTION_METHOD, "offset_unit": "unicode-codepoints",
-            "max_lines": max_lines, "segments": segments, "projected_text": projected,
+            "max_lines": max_lines, "protected_lines": list(protected_lines),
+            "segments": segments, "projected_text": projected,
             "warnings": warnings, "size": {"before_bytes": before_bytes, "after_bytes": after_bytes},
             "estimate": {"estimator": "utf8-bytes/4", "before": (before_bytes + 3) // 4,
                          "after": (after_bytes + 3) // 4, "is_estimate": True}}
@@ -1358,6 +1372,7 @@ def _cli():
             p.add_argument("--preview", required=True)
             p.add_argument("--item", required=True)
             p.add_argument("--max-lines", type=int, default=12)
+            p.add_argument("--protect-line", action="append", type=int, default=[])
         else:
             p.add_argument("--preview", required=True)
             p.add_argument("--format", choices=("text", "json"), default="text")
@@ -1397,7 +1412,8 @@ def _cli():
                                      exclude_ids=args.exclude, max_tokens=args.max_tokens)
             raw = result["renders"][args.format]["content"].encode()
         elif args.command == "reduce":
-            result = preview_pack_reduction(service, args.preview, args.item, args.max_lines)
+            result = preview_pack_reduction(service, args.preview, args.item, args.max_lines,
+                                            protected_lines=args.protect_line)
             raw = (_json(result) + "\n").encode("utf-8")
         else:
             raw = service.export(args.preview, format=args.format)

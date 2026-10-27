@@ -45,7 +45,8 @@ caller-supplied Research and Planning records:
   "task": "change billing total",
   "contextPreviewId": "<32-hex Context preview ID>",
   "maxTokens": 3000,
-  "reductionRequests": [{"itemId": "<selected full-source item ID>", "maxLines": 12}],
+  "reductionRequests": [{"itemId": "<selected full-source item ID>", "maxLines": 12,
+                         "protectedLines": [17, 18]}],
   "ownerPacket": {
     "task": "change billing total",
     "records": [
@@ -58,7 +59,10 @@ caller-supplied Research and Planning records:
 
 `spec` has `schemaVersion: 1`, `task`, `contextPreviewId`, `maxTokens`
 (100–8192), exactly one of `ownerPacket` or `preferenceProfile`, and optional `reductionRequests` (up to eight
-`{itemId, maxLines}` entries with an 8–100 line cap). The owner packet is the existing linked-context
+`{itemId, maxLines, protectedLines?}` entries with an 8–100 line cap. `protectedLines` is an explicit list
+of 1-based physical source line numbers, bounded to 100; out-of-range lines fail and a protected selection
+that exceeds the cap blocks reduction. Exact full-source bytes and the complete kept/omitted segment map
+remain bound to the frozen source identity and digest. The owner packet is the existing linked-context
 v1 shape with one Research answer and one Planning intent; its task must match.
 The linked-context producer also accepts schema v2 Mission-result packets, but
 loadout v1 deliberately accepts only the Research/Planning pair. Any non-empty
@@ -85,8 +89,13 @@ the current revision. Inspect returns the exact Context JSON/text render, its
 included item IDs and omission reasons, the linked Research/Planning render,
 any requested deterministic reduction previews, and the combined byte/token
 estimate. Reduction previews retain exact source spans and their kept, omitted,
-and cap-dropped reasons. They remain separate inspection aids; the reducer does
-not replace or silently edit the frozen Context pack. The token count uses the existing
+and cap-dropped reasons. A caller may explicitly protect up to 100 1-based
+physical source lines for each selected full-source item. Their exact contents
+must fit the line cap or reduction is blocked; selected line numbers and source
+identity are retained in the frozen preview. This is caller-directed scope,
+not automatic task relevance scoring or evidence-quality assessment. Reduction
+previews remain separate inspection aids; the reducer does not replace or
+silently edit the frozen Context pack. The token count uses the existing
 `ceil(UTF-8 bytes / 4)` estimate, not a provider tokenizer. The combined
 render must fit the declared budget; nothing is silently clipped. Adjust the
 Context preview or loadout explicitly if it does not fit.

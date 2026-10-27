@@ -1097,6 +1097,14 @@ def upstream_pins(files):
                          'license':source['license'],'files':selected,'update_owner':'context (sources.lock.json)'})
     return pins
 
+def prerequisite_status(entry):
+    """Describe local readiness without implying that discovery proves compatibility."""
+    kind = entry['definition']['kind']
+    available = bool(entry['available'])
+    return {'state': ('candidate_unverified' if available and kind == 'command'
+                      else 'resource_present' if available else 'missing'),
+            'environment_compatibility': 'not_exercised' if kind == 'command' else 'not_applicable'}
+
 @lifecycle()
 def plan(project, lock, files):
     check=preflight(project,lock,files)
@@ -1113,6 +1121,7 @@ def plan(project, lock, files):
             'changes':sorted(p for p in set(old)|set(lock['resources']) if old.get(p)!=lock['resources'].get(p)),
             'conflicts':check['conflicts'],'duplicate_concern_owners':check['duplicates'],
             'prerequisites':{key:{'requirement':entry['requirement'],'kind':entry['definition']['kind'],'available':entry['available'],
+                                  **prerequisite_status(entry),
                                   'boundary':entry['definition']['boundary']} for key,entry in registry.items()},
             'capability_discovery':{key:discover_command(entry['definition'],project) for key,entry in lock['capabilities'].items() if entry['definition']['kind']=='command'},
             'runs_code':{'apply':False,'verify':'bounded version probes for required python3/git/node only'},

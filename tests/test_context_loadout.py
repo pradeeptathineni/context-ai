@@ -74,7 +74,8 @@ class ContextLoadoutTests(unittest.TestCase):
     def _spec(self, research_text):
         return {"schemaVersion": 1, "task": "change billing total",
                 "contextPreviewId": self.preview_id, "maxTokens": 8192,
-                "reductionRequests": [{"itemId": self.source_id, "maxLines": 8}],
+                "reductionRequests": [{"itemId": self.source_id, "maxLines": 8,
+                                       "protectedLines": [1]}],
                 "ownerPacket": {"task": "change billing total", "records": [
                     owner_record("research_answer", "research", "answer-1", "Finding", research_text, "r1"),
                     owner_record("planning_intent", "planning", "intent-1", "Plan",
@@ -95,6 +96,7 @@ class ContextLoadoutTests(unittest.TestCase):
         self.assertIn("excluded", [row["reason"] for row in manifest["omissions"]])
         self.assertEqual(len(inspected["reductionPreviews"]), 1)
         self.assertEqual(inspected["reductionPreviews"][0]["source_ref"]["item_id"], self.source_id)
+        self.assertEqual(inspected["reductionPreviews"][0]["protected_lines"], [1])
         self.assertEqual(inspected["reductionPreviews"][0]["projected_text"], manifest["items"][0]["content"])
         self.assertNotIn("reductionPreviews", inspected["text"])
 
@@ -156,7 +158,8 @@ class ContextLoadoutTests(unittest.TestCase):
         spec = {"schemaVersion": 2, "variant": "source-pack-only",
                 "task": "change billing total", "contextPreviewId": self.preview_id,
                 "maxTokens": 8192,
-                "reductionRequests": [{"itemId": self.source_id, "maxLines": 8}]}
+                "reductionRequests": [{"itemId": self.source_id, "maxLines": 8,
+                                       "protectedLines": [1]}]}
         first = context_loadout.create(self.loadout_store, "source-task", spec)
         self.assertEqual(first["schemaVersion"], 2)
         second = context_loadout.revise(self.loadout_store, "source-task", expected_version=1,
@@ -179,6 +182,7 @@ class ContextLoadoutTests(unittest.TestCase):
         self.assertEqual(inspected["inspection"]["includedOwnerRefs"], [])
         self.assertEqual(inspected["inspection"]["estimatedTokens"], (inspected["inspection"]["combinedBytes"] + 3) // 4)
         self.assertEqual(len(inspected["reductionPreviews"]), 1)
+        self.assertEqual(inspected["reductionPreviews"][0]["protected_lines"], [1])
         frozen = context_loadout.freeze(self.loadout_store, "source-task", version=2,
                                         digest=second["digest"], service=self.service)
         comparison = context_loadout.compare(self.loadout_store, "source-task", frozen["artifactId"],
@@ -231,6 +235,48 @@ class ContextLoadoutTests(unittest.TestCase):
             context_loadout.create(self.loadout_store, "billing-task", spec)
         self.assertEqual(refused.exception.code, "invalid_request")
         self.assertFalse(list(self.loadout_store.glob("loadout-*.json")))
+
+    def test_protected_reduction_freezes_exact_source_and_blocks_budget_or_drift(self):
+        source_path = self.project / "billing.py"
+        original = "".join(f"line {index} 雪\n" for index in range(60))
+        source_path.write_text(original, encoding="utf-8")
+        candidates = self.service.candidates("change billing total", focus=["billing.py"],
+                                             representation="full")
+        source = next(row for row in candidates["items"] if row["kind"] == "source")
+        preview = self.service.preview(candidates["candidate_set_id"],
+                                      include_ids=[source["item_id"]], max_tokens=8192)
+        spec = {"schemaVersion": 2, "variant": "source-pack-only",
+                "task": "change billing total", "contextPreviewId": preview["preview_id"],
+                "maxTokens": 8192,
+                "reductionRequests": [{"itemId": source["item_id"], "maxLines": 8,
+                                       "protectedLines": [30]}]}
+        first = context_loadout.create(self.loadout_store, "protected-task", spec)
+        assembled = context_loadout.inspect(self.loadout_store, "protected-task", version=1,
+                                            digest=first["digest"], service=self.service)
+        reduction = assembled["reductionPreviews"][0]
+        self.assertIn("line 29 雪\n", reduction["projected_text"])
+        self.assertEqual(reduction["protected_lines"], [30])
+        frozen = context_loadout.freeze(self.loadout_store, "protected-task", version=1,
+                                        digest=first["digest"], service=self.service)
+        self.assertEqual(context_loadout.read(self.loadout_store, frozen["artifactId"]), frozen)
+        protected_segment = next(row for row in reduction["segments"] if row["rule"] == "protected")
+        self.assertEqual(original[protected_segment["start"]:protected_segment["end"]], "line 29 雪\n")
+
+        over_budget = {**spec, "reductionRequests": [{"itemId": source["item_id"],
+                                                     "maxLines": 8,
+                                                     "protectedLines": list(range(3, 12))}]}
+        second = context_loadout.revise(self.loadout_store, "protected-task", expected_version=1,
+                                        expected_digest=first["digest"], spec=over_budget)
+        with self.assertRaises(context_pack.ContextPackError) as overflow:
+            context_loadout.inspect(self.loadout_store, "protected-task", version=2,
+                                    digest=second["digest"], service=self.service)
+        self.assertEqual(overflow.exception.code, "protected_content_exceeds_budget")
+
+        source_path.write_text(original + "changed\n", encoding="utf-8")
+        with self.assertRaises(context_pack.ContextPackError) as drift:
+            context_loadout.inspect(self.loadout_store, "protected-task", version=1,
+                                    digest=first["digest"], service=self.service)
+        self.assertEqual(drift.exception.code, "source_drift")
 
     def test_typed_custom_preference_profile_loadout_is_frozen_and_reopened_without_fake_owner_rows(self):
         text = "# Profile preview\n\nKeep prose concise.\n"
