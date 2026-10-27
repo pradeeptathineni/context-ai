@@ -690,16 +690,20 @@ def preview_store_upgrade(project, *, store, project_id, old_context_root, new_c
                              "new_binding": new}).encode("utf-8"))
         return {"schema_version": 1, "old_binding": old, "new_binding": new,
                 "preview_digest": digest, "store_schema": SCHEMA_VERSION,
+                "requires_quiescence": True,
                 "qualifiers": ["same project path and project ID", "existing immutable records retained",
-                               "legacy records remain historical; new source verification requires a fresh scan"]}
+                               "legacy records remain historical; new source verification requires a fresh scan",
+                               "pause older Context processes that can write this store; this owner cannot detect them"]}
 
 
 def apply_store_upgrade(project, *, store, project_id, old_context_root, new_context_root,
-                        expected_preview_digest, request_id):
+                        expected_preview_digest, request_id, operator_quiescent=False):
     """Apply a previously reviewed binding-only upgrade with CAS and UUID replay safety."""
     if not isinstance(request_id, str) or not re.fullmatch(
             r"[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", request_id):
         raise ContextPackError("invalid_request", "request_id must be a UUID")
+    if operator_quiescent is not True:
+        raise ContextPackError("quiescence_required", "confirm that older Context processes cannot write this store")
     # UUID replay must remain readable after the binding has moved, so resolve an
     # existing matching receipt before requiring the original old binding again.
     store_path = Path(store).expanduser().resolve()
@@ -709,6 +713,7 @@ def apply_store_upgrade(project, *, store, project_id, old_context_root, new_con
         new_root = _safe_root(new_context_root, "invalid_request")
         project_root = _safe_root(project, "invalid_project")
         intent = {"preview_digest": expected_preview_digest,
+                  "operator_quiescent": True,
                   "old_binding": {"project": str(project_root), "context_root": str(old_root),
                                   "project_id": project_id},
                   "new_binding": {"project": str(project_root), "context_root": str(new_root),
@@ -726,7 +731,8 @@ def apply_store_upgrade(project, *, store, project_id, old_context_root, new_con
                         raise ContextPackError("store_invalid", "upgrade result intent differs")
                     return completed["result"]
                 result = {"request_id": request_id, "binding": intent["new_binding"],
-                          "status": "applied", "retained_old_binding": True}
+                          "status": "applied", "retained_old_binding": True,
+                          "operator_quiescent": True}
                 _write(store_path, result_name, {"schema_version": SCHEMA_VERSION,
                                                  "intent": intent, "result": result})
                 _sync_store_directory(store_path)
@@ -738,7 +744,8 @@ def apply_store_upgrade(project, *, store, project_id, old_context_root, new_con
     if expected_preview_digest != preview["preview_digest"]:
         raise ContextPackError("stale_preview", "preview digest does not match current binding")
     store = Path(store).expanduser().resolve()
-    intent = {"preview_digest": expected_preview_digest, "old_binding": preview["old_binding"],
+    intent = {"preview_digest": expected_preview_digest, "operator_quiescent": True,
+              "old_binding": preview["old_binding"],
               "new_binding": preview["new_binding"], "request_id": request_id}
     receipt_name = "upgrade-" + request_id + ".json"
     with _locked(store):
@@ -756,7 +763,8 @@ def apply_store_upgrade(project, *, store, project_id, old_context_root, new_con
                     raise ContextPackError("store_invalid", "upgrade result intent differs")
                 return completed["result"]
             result = {"request_id": request_id, "binding": preview["new_binding"],
-                      "status": "applied", "retained_old_binding": True}
+                      "status": "applied", "retained_old_binding": True,
+                      "operator_quiescent": True}
             _write(store, result_name, {"schema_version": SCHEMA_VERSION,
                                         "intent": intent, "result": result})
             _sync_store_directory(store)
@@ -771,7 +779,8 @@ def apply_store_upgrade(project, *, store, project_id, old_context_root, new_con
             _sync_store_directory(store)
         _replace_binding(store, {"schema_version": SCHEMA_VERSION, "binding": preview["new_binding"]})
         result = {"request_id": request_id, "binding": preview["new_binding"],
-                  "status": "applied", "retained_old_binding": True}
+                  "status": "applied", "retained_old_binding": True,
+                  "operator_quiescent": True}
         # Receipt filenames are immutable; update completion is represented by a second immutable object.
         _write(store, "upgrade-result-" + request_id + ".json",
                {"schema_version": SCHEMA_VERSION, "intent": intent, "result": result})
@@ -1256,6 +1265,7 @@ def _cli():
             if name.endswith("apply"):
                 p.add_argument("--expected-preview-digest", required=True)
                 p.add_argument("--request-id", required=True)
+                p.add_argument("--operator-quiescent", action="store_true")
             continue
         p.add_argument("--project", required=True, type=Path)
         p.add_argument("--store", required=True, type=Path)
@@ -1293,7 +1303,8 @@ def _cli():
                                          old_context_root=args.old_context_root,
                                          new_context_root=args.new_context_root,
                                          expected_preview_digest=args.expected_preview_digest,
-                                         request_id=args.request_id)
+                                         request_id=args.request_id,
+                                         operator_quiescent=args.operator_quiescent)
             sys.stdout.write(_json(result) + "\n")
             return 0
         service = ContextPackService(args.project, store=args.store, context_root=args.context_root,

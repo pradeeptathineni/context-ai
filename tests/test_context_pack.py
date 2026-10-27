@@ -468,22 +468,32 @@ class ContextPackTests(unittest.TestCase):
             "--project", str(self.project), "--store", str(store), "--project-id", "synthetic",
             "--old-context-root", str(old_root), "--new-context-root", str(new_root)], text=True))
         self.assertEqual((store / "binding.json").read_bytes(), old_binding)
+        self.assertTrue(upgrade["requires_quiescence"])
         request_id = "e7d7b087-0a89-46e5-a20b-4c595bec4af1"
+        with self.assertRaises(context_pack.ContextPackError) as not_quiescent:
+            context_pack.apply_store_upgrade(
+                self.project, store=store, project_id="synthetic",
+                old_context_root=old_root, new_context_root=new_root,
+                expected_preview_digest=upgrade["preview_digest"], request_id=request_id)
+        self.assertEqual(not_quiescent.exception.code, "quiescence_required")
         applied = json.loads(subprocess.check_output([
             sys.executable, "-B", str(cli), "store-upgrade-apply",
             "--project", str(self.project), "--store", str(store), "--project-id", "synthetic",
             "--old-context-root", str(old_root), "--new-context-root", str(new_root),
-            "--expected-preview-digest", upgrade["preview_digest"], "--request-id", request_id], text=True))
+            "--expected-preview-digest", upgrade["preview_digest"], "--request-id", request_id,
+            "--operator-quiescent"], text=True))
         self.assertEqual(applied["status"], "applied")
         self.assertEqual(context_pack.apply_store_upgrade(
             self.project, store=store, project_id="synthetic",
             old_context_root=old_root, new_context_root=new_root,
-            expected_preview_digest=upgrade["preview_digest"], request_id=request_id), applied)
+            expected_preview_digest=upgrade["preview_digest"], request_id=request_id,
+            operator_quiescent=True), applied)
         with self.assertRaises(context_pack.ContextPackError) as reused:
             context_pack.apply_store_upgrade(
                 self.project, store=store, project_id="synthetic",
                 old_context_root=old_root, new_context_root=new_root,
-                expected_preview_digest="0" * 64, request_id=request_id)
+                expected_preview_digest="0" * 64, request_id=request_id,
+                operator_quiescent=True)
         self.assertEqual(reused.exception.code, "request_id_conflict")
         self.assertEqual((store / f"preview-{preview['preview_id']}.json").read_bytes(), old_render)
         with self.assertRaises(context_pack.ContextPackError) as stale:
@@ -504,7 +514,8 @@ class ContextPackTests(unittest.TestCase):
                 self.project, store=store, project_id="synthetic",
                 old_context_root=old_root, new_context_root=new_root,
                 expected_preview_digest=upgrade["preview_digest"],
-                request_id="e7d7b087-0a89-46e5-a20b-4c595bec4af2")
+                request_id="e7d7b087-0a89-46e5-a20b-4c595bec4af2",
+                operator_quiescent=True)
         self.assertEqual(conflict.exception.code, "binding_mismatch")
         wrong_project_root = self.root / "project-other"
         subprocess.run(["git", "clone", "--local", "--no-hardlinks", "-q",
@@ -531,11 +542,13 @@ class ContextPackTests(unittest.TestCase):
                 context_pack.apply_store_upgrade(
                     self.project, store=retry_store, project_id="synthetic",
                     old_context_root=old_root, new_context_root=new_root,
-                    expected_preview_digest=retry_preview["preview_digest"], request_id=retry_id)
+                    expected_preview_digest=retry_preview["preview_digest"], request_id=retry_id,
+                    operator_quiescent=True)
         recovered = context_pack.apply_store_upgrade(
             self.project, store=retry_store, project_id="synthetic",
             old_context_root=old_root, new_context_root=new_root,
-            expected_preview_digest=retry_preview["preview_digest"], request_id=retry_id)
+            expected_preview_digest=retry_preview["preview_digest"], request_id=retry_id,
+            operator_quiescent=True)
         self.assertEqual(recovered["status"], "applied")
 
 
