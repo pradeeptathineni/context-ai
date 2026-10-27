@@ -152,6 +152,68 @@ class ContextLoadoutTests(unittest.TestCase):
             context_loadout.read(self.loadout_store, frozen["artifactId"])
         self.assertEqual(invalid.exception.code, "store_invalid")
 
+    def test_source_pack_only_v2_freezes_exact_context_source_and_cold_reads(self):
+        spec = {"schemaVersion": 2, "variant": "source-pack-only",
+                "task": "change billing total", "contextPreviewId": self.preview_id,
+                "maxTokens": 8192,
+                "reductionRequests": [{"itemId": self.source_id, "maxLines": 8}]}
+        first = context_loadout.create(self.loadout_store, "source-task", spec)
+        self.assertEqual(first["schemaVersion"], 2)
+        second = context_loadout.revise(self.loadout_store, "source-task", expected_version=1,
+                                        expected_digest=first["digest"], spec=spec)
+        inspected = context_loadout.inspect(self.loadout_store, "source-task", version=2,
+                                            digest=second["digest"], service=self.service)
+        self.assertEqual(inspected["deliveryState"], "not_sent")
+        source = inspected["sourceArtifact"]
+        self.assertEqual(source["kind"], "context_source_pack")
+        self.assertEqual(source["owner"], "context-ai")
+        self.assertEqual(source["contextProjectId"], "fixture-project")
+        self.assertEqual(source["previewId"], self.preview_id)
+        self.assertEqual(source["packId"], inspected["contextPack"]["packId"])
+        self.assertEqual(source["artifactId"], context_loadout._sha(
+            context_pack._json({key: value for key, value in source.items() if key != "artifactId"}).encode()))
+        self.assertEqual(source["manifestSha256"], hashlib.sha256(source["jsonRender"].encode()).hexdigest())
+        self.assertEqual(source["textSha256"], hashlib.sha256(source["textRender"].encode()).hexdigest())
+        first_source = source["fileHashes"][0]
+        self.assertEqual(first_source["fileSha256"], hashlib.sha256((self.project / first_source["path"]).read_bytes()).hexdigest())
+        self.assertEqual(inspected["inspection"]["includedOwnerRefs"], [])
+        self.assertEqual(inspected["inspection"]["estimatedTokens"], (inspected["inspection"]["combinedBytes"] + 3) // 4)
+        self.assertEqual(len(inspected["reductionPreviews"]), 1)
+        frozen = context_loadout.freeze(self.loadout_store, "source-task", version=2,
+                                        digest=second["digest"], service=self.service)
+        comparison = context_loadout.compare(self.loadout_store, "source-task", frozen["artifactId"],
+                                             version=2, digest=second["digest"], service=self.service)
+        self.assertFalse(comparison["changed"])
+        self.assertEqual(comparison["state"], "comparison_only")
+        self.assertEqual(context_loadout.read(self.loadout_store, frozen["artifactId"]), frozen)
+        bound_file = self.project / first_source["path"]
+        bound_file.write_text(bound_file.read_text() + "\n# changed after freeze\n")
+        with self.assertRaises(context_pack.ContextPackError) as drift:
+            context_loadout.inspect(self.loadout_store, "source-task", version=2,
+                                    digest=second["digest"], service=self.service)
+        self.assertEqual(drift.exception.code, "source_drift")
+        self.assertEqual(context_loadout.read(self.loadout_store, frozen["artifactId"]), frozen)
+
+    def test_source_pack_only_v2_runs_through_standalone_cli(self):
+        spec = {"schemaVersion": 2, "variant": "source-pack-only",
+                "task": "change billing total", "contextPreviewId": self.preview_id, "maxTokens": 8192}
+        spec_path = self.root / "source-spec.json"
+        spec_path.write_text(json.dumps(spec))
+        script = Path(__file__).resolve().parents[1] / "scripts" / "context_loadout.py"
+        base = [sys.executable, str(script)]
+        def run(*args):
+            return subprocess.run([*base, *map(str, args)], check=True, capture_output=True, text=True)
+        created = json.loads(run("create", "--store", self.loadout_store,
+                                 "--loadout-id", "cli-source", "--spec", spec_path).stdout)
+        frozen = json.loads(run("freeze", "--store", self.loadout_store,
+                                "--loadout-id", "cli-source", "--version", 1, "--digest", created["digest"],
+                                "--project", self.project, "--project-id", "fixture-project",
+                                "--context-store", self.context_store).stdout)
+        reopened = json.loads(run("read", "--store", self.loadout_store,
+                                  "--artifact-id", frozen["artifactId"]).stdout)
+        self.assertEqual(reopened["sourceArtifact"]["kind"], "context_source_pack")
+        self.assertEqual(reopened["artifactId"], frozen["artifactId"])
+
     def test_loadout_rejects_mission_results_instead_of_dropping_them(self):
         spec = self._spec("A cited research finding.")
         result_text = "The task completed."

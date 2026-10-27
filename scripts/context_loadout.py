@@ -15,6 +15,7 @@ import context_pack
 import linked_context
 
 SCHEMA_VERSION = 1
+SOURCE_ONLY_SCHEMA_VERSION = 2
 MAX_SPEC_BYTES = 512 * 1024
 MAX_REDUCTION_PREVIEWS = 8
 MAX_REDUCTION_BYTES = 512 * 1024
@@ -171,6 +172,38 @@ def _preference_profile(value, *, require_active=True):
 
 
 def _spec(value, *, require_active=True):
+    if (isinstance(value, dict) and type(value.get("schemaVersion")) is int
+            and value.get("schemaVersion") == SOURCE_ONLY_SCHEMA_VERSION):
+        allowed = {"schemaVersion", "variant", "task", "contextPreviewId", "maxTokens", "reductionRequests"}
+        if (set(value) - allowed or value.get("variant") != "source-pack-only"):
+            _fail("invalid_request", "loadout spec must match context-loadout/v2 source-pack-only")
+        task = value.get("task")
+        if not isinstance(task, str) or not task.strip() or len(task) > context_pack.MAX_TASK_CHARS:
+            _fail("invalid_request", "task must contain 1 to 2048 characters")
+        if not isinstance(value.get("contextPreviewId"), str) or not re.fullmatch(r"[0-9a-f]{32}", value["contextPreviewId"]):
+            _fail("invalid_request", "context preview ID is invalid")
+        budget = value.get("maxTokens")
+        if type(budget) is not int or not 100 <= budget <= 8192:
+            _fail("invalid_request", "maxTokens must be an integer from 100 to 8192")
+        requests = value.get("reductionRequests", [])
+        if not isinstance(requests, list) or len(requests) > MAX_REDUCTION_PREVIEWS:
+            _fail("invalid_request", "reductionRequests must contain at most eight entries")
+        reductions, seen = [], set()
+        for request in requests:
+            if (not isinstance(request, dict) or set(request) != {"itemId", "maxLines"}
+                    or not isinstance(request.get("itemId"), str) or not request["itemId"]
+                    or len(request["itemId"]) > 160 or request["itemId"] in seen
+                    or type(request.get("maxLines")) is not int
+                    or not context_pack.REDUCTION_MIN_MAX_LINES <= request["maxLines"] <= context_pack.REDUCTION_MAX_LINES):
+                _fail("invalid_request", "reduction request identity or line cap is invalid")
+            seen.add(request["itemId"])
+            reductions.append({"itemId": request["itemId"], "maxLines": request["maxLines"]})
+        normalized = {"schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "variant": "source-pack-only",
+                      "task": task, "contextPreviewId": value["contextPreviewId"],
+                      "maxTokens": budget, "reductionRequests": reductions}
+        if len(context_pack._json(normalized).encode("utf-8")) > MAX_SPEC_BYTES:
+            _fail("invalid_request", "loadout spec exceeds its size limit")
+        return normalized
     legacy_keys = {"schemaVersion", "task", "contextPreviewId", "maxTokens", "ownerPacket"}
     profile_keys = {"schemaVersion", "task", "contextPreviewId", "maxTokens", "preferenceProfile"}
     if (not isinstance(value, dict) or (set(value) - {"reductionRequests"}) not in (legacy_keys, profile_keys)
@@ -217,7 +250,7 @@ def _spec(value, *, require_active=True):
 
 
 def _revision_digest(loadout_id, version, spec):
-    body = {"schemaVersion": SCHEMA_VERSION, "loadoutId": loadout_id,
+    body = {"schemaVersion": spec["schemaVersion"], "loadoutId": loadout_id,
             "version": version, "spec": spec}
     return _sha(context_pack._json(body).encode("utf-8"))
 
@@ -236,7 +269,7 @@ def _read_revision(store, loadout_id, version):
     if (not isinstance(body, dict) or set(body) != {
             "schema_version", "schemaVersion", "loadoutId", "version", "spec", "digest"}
             or body["schema_version"] != SCHEMA_VERSION
-            or body["schemaVersion"] != SCHEMA_VERSION or body["loadoutId"] != loadout_id
+            or body["schemaVersion"] != body["spec"].get("schemaVersion") or body["loadoutId"] != loadout_id
             or body["version"] != version or body["spec"] != _spec(body["spec"])
             or body["digest"] != _revision_digest(loadout_id, version, body["spec"])):
         _fail("store_invalid", "loadout revision integrity check failed")
@@ -253,7 +286,7 @@ def create(store, loadout_id, spec):
     """Create immutable revision 1 of a reusable task selection."""
     loadout_id, spec = _identity(loadout_id), _spec(spec)
     store = _store(store)
-    body = {"schema_version": SCHEMA_VERSION, "schemaVersion": SCHEMA_VERSION, "loadoutId": loadout_id,
+    body = {"schema_version": SCHEMA_VERSION, "schemaVersion": spec["schemaVersion"], "loadoutId": loadout_id,
             "version": 1, "spec": spec,
             "digest": _revision_digest(loadout_id, 1, spec)}
     with context_pack._locked(store):
@@ -280,7 +313,7 @@ def revise(store, loadout_id, *, expected_version, expected_digest, spec):
                 or expected_digest != current["digest"]):
             _fail("revision_conflict", "loadout changed; inspect its current revision before revising")
         version = current["version"] + 1
-        body = {"schema_version": SCHEMA_VERSION, "schemaVersion": SCHEMA_VERSION, "loadoutId": loadout_id,
+        body = {"schema_version": SCHEMA_VERSION, "schemaVersion": spec["schemaVersion"], "loadoutId": loadout_id,
                 "version": version, "spec": spec,
                 "digest": _revision_digest(loadout_id, version, spec)}
         context_pack._write(store, _revision_name(loadout_id, version), body)
@@ -297,9 +330,83 @@ def _assert_disjoint(store, service):
         _fail("binding_mismatch", "loadout store and Context pack store must be separate")
 
 
+def _source_file_hashes(manifest):
+    rows = []
+    for item in manifest.get("items", []):
+        source = item.get("source", {}) if isinstance(item, dict) else {}
+        if not isinstance(source, dict) or source.get("owner") not in {"project", "context"}:
+            _fail("store_invalid", "Context source item identity is invalid")
+        digest, path = source.get("file_sha256"), source.get("path")
+        if not isinstance(path, str) or not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
+            _fail("store_invalid", "Context source file hash is invalid")
+        rows.append({"itemId": item.get("item_id"), "sourceOwner": source["owner"], "path": path,
+                     "fileSha256": digest})
+    return rows
+
+
+def _assemble_source_only(revision, service):
+    spec = revision["spec"]
+    raw_json = service.export(spec["contextPreviewId"], format="json")
+    raw_text = service.export(spec["contextPreviewId"], format="text")
+    try:
+        manifest = json.loads(raw_json.decode("utf-8"))
+        rendered_text = raw_text.decode("utf-8")
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        raise context_pack.ContextPackError("store_invalid", "Context pack render is invalid") from exc
+    if manifest.get("preview_id") != spec["contextPreviewId"] or manifest.get("task") != spec["task"]:
+        _fail("task_mismatch", "source-only loadout task must match its selected Context preview")
+    if manifest.get("project", {}).get("project_id") != service.project_id:
+        _fail("binding_mismatch", "Context preview belongs to another configured project identity")
+    pack_id = manifest.get("pack_id")
+    if not isinstance(pack_id, str) or not re.fullmatch(r"[0-9a-f]{64}", pack_id):
+        _fail("store_invalid", "Context pack identity is invalid")
+    files = _source_file_hashes(manifest)
+    text_sha = _sha(raw_text)
+    source_artifact = {
+        "schema": "context.source-pack-artifact.v1",
+        "kind": "context_source_pack",
+        "owner": "context-ai",
+        "contextProjectId": service.project_id,
+        "previewId": spec["contextPreviewId"],
+        "revision": manifest.get("project", {}).get("head"),
+        "packId": pack_id,
+        "manifest": manifest,
+        "manifestSha256": _sha(raw_json),
+        "jsonRender": raw_json.decode("utf-8"),
+        "jsonSha256": _sha(raw_json),
+        "textRender": rendered_text,
+        "textSha256": text_sha,
+        "fileHashes": files,
+    }
+    source_artifact["artifactId"] = _sha(context_pack._json(source_artifact).encode("utf-8"))
+    combined = f"# Context loadout {revision['loadoutId']} v{revision['version']}\n\n{rendered_text}"
+    raw_combined = combined.encode("utf-8")
+    if len(raw_combined) > 4 * spec["maxTokens"]:
+        _fail("budget_too_small", "combined Context content exceeds the loadout budget")
+    item_rows = manifest.get("items", [])
+    inspection = {"includedContextItems": [x.get("item_id") for x in item_rows if isinstance(x, dict)],
+                  "omittedContextItems": manifest.get("omissions", []),
+                  "includedOwnerRefs": [], "omittedOwnerRefs": [],
+                  "combinedBytes": len(raw_combined), "estimatedTokens": (len(raw_combined) + 3) // 4,
+                  "budgetTokens": spec["maxTokens"]}
+    reductions = [context_pack.preview_pack_reduction(
+        service, spec["contextPreviewId"], request["itemId"], max_lines=request["maxLines"])
+        for request in spec["reductionRequests"]]
+    if len(context_pack._json(reductions).encode("utf-8")) > MAX_REDUCTION_BYTES:
+        _fail("reduction_too_large", "combined reduction previews exceed their size limit")
+    return {"schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "loadout": _public_revision(revision),
+            "assemblyState": "assembled", "deliveryState": "not_sent",
+            "contextPack": {"previewId": spec["contextPreviewId"], "packId": pack_id,
+                            "manifest": manifest, "text": rendered_text, "textSha256": text_sha},
+            "sourceArtifact": source_artifact, "reductionPreviews": reductions,
+            "inspection": inspection, "text": combined, "textSha256": _sha(raw_combined)}
+
+
 def _assemble(store, revision, service):
     _assert_disjoint(store, service)
     spec = revision["spec"]
+    if spec["schemaVersion"] == SOURCE_ONLY_SCHEMA_VERSION:
+        return _assemble_source_only(revision, service)
     project_json = service.export(spec["contextPreviewId"], format="json")
     project_text = service.export(spec["contextPreviewId"], format="text")
     try:
@@ -378,6 +485,120 @@ def _snapshot_id(body):
     return _sha(context_pack._json({k: v for k, v in body.items() if k != "artifactId"}).encode("utf-8"))
 
 
+def _validate_reductions(reductions, requests, manifest, preview_id, pack_id):
+    if (not isinstance(reductions, list) or len(reductions) != len(requests)
+            or len(context_pack._json(reductions).encode("utf-8")) > MAX_REDUCTION_BYTES):
+        _fail("store_invalid", "frozen reduction previews are invalid or oversized")
+    manifest_items = manifest.get("items")
+    if not isinstance(manifest_items, list):
+        _fail("store_invalid", "frozen Context manifest item list is invalid")
+    included_items = {item.get("item_id"): item for item in manifest_items if isinstance(item, dict)}
+    for reduction, request in zip(reductions, requests):
+        if not isinstance(reduction, dict):
+            _fail("store_invalid", "frozen reduction preview is invalid")
+        source_ref, size = reduction.get("source_ref"), reduction.get("size")
+        if not isinstance(source_ref, dict) or not isinstance(size, dict):
+            _fail("store_invalid", "frozen reduction source binding is invalid")
+        source = included_items.get(request["itemId"])
+        segments = reduction.get("segments")
+        rebuilt, projected, offset, valid_segments = [], [], 0, isinstance(segments, list)
+        for row in segments if isinstance(segments, list) else []:
+            text = row.get("text") if isinstance(row, dict) else None
+            if (not isinstance(row, dict) or type(row.get("start")) is not int
+                    or type(row.get("end")) is not int or row["start"] != offset
+                    or not isinstance(text, str) or row["end"] != offset + len(text)
+                    or row.get("disposition") not in {"kept", "omitted", "cap-dropped"}):
+                valid_segments = False
+                break
+            rebuilt.append(text)
+            if row["disposition"] == "kept":
+                projected.append(text)
+            offset = row["end"]
+        if (reduction.get("schema") != context_pack.REDUCTION_SCHEMA
+                or reduction.get("preview_id") != _sha(context_pack._json(
+                    {k: v for k, v in reduction.items() if k != "preview_id"}).encode("utf-8"))
+                or source_ref.get("preview_id") != preview_id or source_ref.get("pack_id") != pack_id
+                or source_ref.get("item_id") != request["itemId"]
+                or request["maxLines"] != reduction.get("max_lines")
+                or source is None or source.get("kind") != "source"
+                or source_ref.get("source") != source.get("source") or not valid_segments
+                or _sha("".join(rebuilt).encode("utf-8")) != source_ref.get("raw_sha256")
+                or size.get("before_bytes") != len("".join(rebuilt).encode("utf-8"))
+                or size.get("after_bytes") != len("".join(projected).encode("utf-8"))
+                or "".join(projected) != reduction.get("projected_text")):
+            _fail("store_invalid", "reduction preview is not bound to its frozen Context source")
+
+
+def _read_source_only(artifact_id, body):
+    expected_fields = {"schema_version", "schemaVersion", "loadout", "assemblyState", "deliveryState",
+                       "contextPack", "sourceArtifact", "reductionPreviews", "inspection", "text",
+                       "textSha256", "artifactState", "artifactId"}
+    if (set(body) != expected_fields or body.get("artifactId") != artifact_id
+            or body.get("schema_version") != SCHEMA_VERSION
+            or body.get("schemaVersion") != SOURCE_ONLY_SCHEMA_VERSION
+            or body.get("assemblyState") != "assembled" or body.get("deliveryState") != "not_sent"
+            or body.get("artifactState") != "frozen" or _snapshot_id(body) != artifact_id):
+        _fail("store_invalid", "source-only Context loadout artifact integrity check failed")
+    try:
+        loadout = body["loadout"]
+        if (not isinstance(loadout, dict) or loadout.get("state") != "referenced"
+                or loadout.get("schemaVersion") != SOURCE_ONLY_SCHEMA_VERSION
+                or loadout.get("loadoutId") != _identity(loadout.get("loadoutId"))
+                or type(loadout.get("version")) is not int or loadout["version"] < 1
+                or loadout.get("spec") != _spec(loadout.get("spec"), require_active=False)
+                or loadout.get("digest") != _revision_digest(loadout["loadoutId"], loadout["version"], loadout["spec"])):
+            _fail("store_invalid", "frozen source-only loadout revision is invalid")
+        source = body["sourceArtifact"]
+        source_fields = {"schema", "kind", "owner", "artifactId", "contextProjectId", "previewId", "revision", "packId",
+                         "manifest", "manifestSha256", "jsonRender", "jsonSha256", "textRender", "textSha256", "fileHashes"}
+        if (not isinstance(source, dict) or set(source) != source_fields
+                or source.get("schema") != "context.source-pack-artifact.v1"
+                or source.get("kind") != "context_source_pack" or source.get("owner") != "context-ai"
+                or not isinstance(source.get("contextProjectId"), str) or not source["contextProjectId"]
+                or source.get("previewId") != loadout["spec"]["contextPreviewId"]
+                or not isinstance(source.get("manifest"), dict)
+                or not isinstance(source["manifest"].get("project"), dict)
+                or source.get("contextProjectId") != source.get("manifest", {}).get("project", {}).get("project_id")
+                or source.get("revision") != source.get("manifest", {}).get("project", {}).get("head")):
+            _fail("store_invalid", "frozen Context source identity is invalid")
+        source_identity = {k: v for k, v in source.items() if k != "artifactId"}
+        manifest = source["manifest"]
+        raw_json = source["jsonRender"].encode("utf-8")
+        if json.loads(raw_json.decode("utf-8")) != manifest:
+            _fail("store_invalid", "frozen Context manifest differs from its exact JSON render")
+        pack_id, wire, renders = context_pack._render_pack({k: v for k, v in manifest.items() if k != "pack_id"})
+        rendered_text = source["textRender"].encode("utf-8")
+        expected_files = _source_file_hashes(manifest)
+        combined = body["text"].encode("utf-8")
+    except (AttributeError, KeyError, TypeError, ValueError, UnicodeError) as exc:
+        raise context_pack.ContextPackError("store_invalid", "source-only Context loadout contents are invalid") from exc
+    context = body["contextPack"]
+    expected_context_ids = [x.get("item_id") for x in manifest.get("items", []) if isinstance(x, dict)]
+    expected_combined = f"# Context loadout {loadout['loadoutId']} v{loadout['version']}\n\n{renders['text']['content']}"
+    if (source.get("artifactId") != _sha(context_pack._json(source_identity).encode("utf-8"))
+            or source.get("packId") != pack_id or wire != manifest
+            or renders["json"]["content"].encode("utf-8") != raw_json
+            or renders["text"]["content"].encode("utf-8") != rendered_text
+            or source.get("manifestSha256") != _sha(raw_json) or source.get("jsonSha256") != _sha(raw_json)
+            or source.get("textSha256") != _sha(rendered_text) or source.get("fileHashes") != expected_files
+            or context != {"previewId": source["previewId"], "packId": pack_id, "manifest": manifest,
+                           "text": renders["text"]["content"], "textSha256": _sha(rendered_text)}
+            or body["text"] != expected_combined or _sha(combined) != body.get("textSha256")):
+        _fail("store_invalid", "frozen Context source render or hashes do not match its identity")
+    inspection = body["inspection"]
+    if (not isinstance(inspection, dict) or inspection.get("includedContextItems") != expected_context_ids
+            or inspection.get("omittedContextItems") != manifest.get("omissions")
+            or inspection.get("includedOwnerRefs") != [] or inspection.get("omittedOwnerRefs") != []
+            or inspection.get("combinedBytes") != len(combined)
+            or inspection.get("estimatedTokens") != (len(combined) + 3) // 4
+            or inspection.get("budgetTokens") != loadout["spec"]["maxTokens"]
+            or len(combined) > 4 * loadout["spec"]["maxTokens"]):
+        _fail("store_invalid", "frozen source-only loadout inspection does not match its content")
+    _validate_reductions(body["reductionPreviews"], loadout["spec"]["reductionRequests"],
+                         manifest, source["previewId"], pack_id)
+    return body
+
+
 def freeze(store, loadout_id, *, version, digest, service):
     """Freeze an exact inspected assembly as an immutable portable artifact."""
     assembled = inspect(store, loadout_id, version=version, digest=digest, service=service)
@@ -402,6 +623,8 @@ def read(store, artifact_id):
         _fail("unknown_selection", "artifact ID is invalid")
     store = _store(store)
     body = context_pack._load(store, f"snapshot-{artifact_id}.json")
+    if isinstance(body, dict) and body.get("schemaVersion") == SOURCE_ONLY_SCHEMA_VERSION:
+        return _read_source_only(artifact_id, body)
     if (set(body) != {"schema_version", "schemaVersion", "loadout", "assemblyState", "deliveryState",
                       "contextPack", "ownerArtifact", "reductionPreviews", "inspection", "text", "textSha256",
                       "artifactState", "artifactId"}
@@ -539,6 +762,24 @@ def compare(store, loadout_id, artifact_id, *, version, digest, service):
     old_loadout = old["loadout"]
     same_spec = old_loadout["spec"] == current["loadout"]["spec"]
     project_changed = old["contextPack"]["packId"] != current["contextPack"]["packId"]
+    if old.get("schemaVersion") == SOURCE_ONLY_SCHEMA_VERSION or current.get("schemaVersion") == SOURCE_ONLY_SCHEMA_VERSION:
+        old_source_id = old.get("sourceArtifact", {}).get("packId", old["contextPack"]["packId"])
+        current_source_id = current.get("sourceArtifact", {}).get("packId", current["contextPack"]["packId"])
+        owners_changed = (old.get("sourceArtifact") is None) != (current.get("sourceArtifact") is None)
+        owners_changed = owners_changed or old_source_id != current_source_id
+        return {"schemaVersion": max(old.get("schemaVersion", SCHEMA_VERSION), current.get("schemaVersion", SCHEMA_VERSION)),
+                "artifactId": artifact_id,
+                "comparedTo": {"loadoutId": current["loadout"]["loadoutId"],
+                               "version": current["loadout"]["version"], "digest": current["loadout"]["digest"]},
+                "changed": not same_spec or project_changed or owners_changed,
+                "changes": {"spec": not same_spec, "projectPack": project_changed,
+                            "ownerPacket": owners_changed,
+                            "revision": old_loadout["version"] != current["loadout"]["version"]},
+                "before": {"version": old_loadout["version"], "digest": old_loadout["digest"],
+                           "packId": old["contextPack"]["packId"], "textSha256": old["textSha256"], **before},
+                "after": {"version": current["loadout"]["version"], "digest": current["loadout"]["digest"],
+                          "packId": current["contextPack"]["packId"], "textSha256": current["textSha256"], **after},
+                "state": "comparison_only"}
     owners_changed = old["ownerArtifact"]["artifact_id"] != current["ownerArtifact"]["artifact_id"]
     return {"schemaVersion": SCHEMA_VERSION, "artifactId": artifact_id,
             "comparedTo": {"loadoutId": current["loadout"]["loadoutId"],

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Context source-pack-only task loadout v2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "variant", "task", "contextPreviewId", "maxTokens"],
+  "properties": {
+    "schemaVersion": {"const": 2},
+    "variant": {"const": "source-pack-only"},
+    "task": {"type": "string", "minLength": 1, "maxLength": 2048},
+    "contextPreviewId": {"type": "string", "pattern": "^[0-9a-f]{32}$"},
+    "maxTokens": {"type": "integer", "minimum": 100, "maximum": 8192},
+    "reductionRequests": {
+      "type": "array",
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["itemId", "maxLines"],
+        "properties": {
+          "itemId": {"type": "string", "minLength": 1, "maxLength": 160},
+          "maxLines": {"type": "integer", "minimum": 8, "maximum": 100}
+        }
+      }
+    }
+  }
+}

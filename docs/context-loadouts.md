@@ -22,6 +22,20 @@ freeze(store, loadout_id, version=2, digest=NEW_DIGEST,
 read(store, artifact_id)
 ```
 
+The additive `context-loadout/v2` spec with `variant: "source-pack-only"` freezes an exact Context preview without Research, Planning or Custom input. V1 schemas, digest bytes, artifacts and cold-reader behavior remain unchanged. The source-only artifact records the Context project ID, preview ID, project revision, exact Context manifest and text/JSON renders, and each selected source file hash. `inspect`, `compare` and `freeze` re-export through the canonical Context pack service and refuse source drift; `read` verifies retained bytes and hashes without reopening project files. Both variants use the same UTF-8 bytes divided by four estimate and explicit budget. See [context-loadout-v2.schema.json](../schemas/context-loadout-v2.schema.json).
+
+```json
+{
+  "schemaVersion": 2,
+  "variant": "source-pack-only",
+  "task": "fix billing total",
+  "contextPreviewId": "<32-hex Context preview ID>",
+  "maxTokens": 3000
+}
+```
+
+The CLI operations are identical to v1: `create`, `revise`, `inspect`, `compare`, `freeze`, and `read`. The source-only branch carries an explicit Context-owned source artifact; it does not synthesize linked Research/Planning or preference records. Freezing reports `not_sent`; only the integrating host can verify and send it.
+
 The input names an already frozen Context preview and preserves the exact
 caller-supplied Research and Planning records:
 
