@@ -1,0 +1,11 @@
+# Named-project Context portfolios
+
+A portfolio is a private, versioned selection of existing Context loadouts for a bounded set of named projects. Its project map is trusted owner configuration: requests contain project IDs and never filesystem paths. Each revision keeps its complete selection history and exact digest.
+
+Preview resolves each project's selected loadouts from this Context source and delegates to the existing native `plan` and `delivery_plan_id` functions. It reports each project's old and proposed loadouts, stages, capabilities, file additions, replacements and removals, conflicts, and required prerequisites. A preview is advisory until an operator explicitly applies it to a nonempty subset of the projects shown in that preview.
+
+Apply delegates each project independently to the existing native `apply` lifecycle with the exact preview plan identity. Every project has its own retained outcome; a blocked, partial, or unknown project does not imply success for another project. Reopening an operation reads its existing receipt and never repeats the mutation. GET status checks whether the installed lock and owned files still match the retained result.
+
+Rollback requires the current installed lock and every Context-owned file to match the operation receipt. If the project has since drifted, rollback is refused. For an existing prior selection, the portfolio retains its exact lock and resource bytes and restores that selection through native `apply`; for a previously unconfigured project, it uses native `undo`. Unowned files are not part of the rollback write set.
+
+The coordinator is a local convenience over existing project lifecycle operations. It does not claim a cross-project transaction, configure host settings, install tools, or manage provider credentials.

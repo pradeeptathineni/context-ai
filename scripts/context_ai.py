@@ -1075,7 +1075,9 @@ def publish(project, desired, before):
 
 @lifecycle(write=True)
 def apply(project,lock,files,expected_plan=None):
-    if 'principles' in lock and expected_plan!=delivery_plan_id(project,lock,files):
+    if expected_plan is not None and expected_plan!=delivery_plan_id(project,lock,files):
+        raise Invalid('delivery plan changed or unreviewed; re-preview before apply')
+    if 'principles' in lock and expected_plan is None:
         raise Invalid('Principles requires current-source preview and exact expected plan; re-preview')
     check=preflight(project,lock,files)
     if check['conflicts']:
@@ -1355,7 +1357,7 @@ def main():
     parser.add_argument('--principles-intent',choices=['operational','inspect'],default='operational')
     parser.add_argument('--principles-full',type=Path,help='Matching full export for a reference-only minimal selection')
     parser.add_argument('--principles-full-sha256')
-    parser.add_argument('--expected-plan',help='Exact current Principles preview identity, required for apply')
+    parser.add_argument('--expected-plan',help='Exact current plan identity from preview; required for Principles apply')
     args=parser.parse_args()
     if (args.command=='validate-skill') != (args.package is not None):
         raise Invalid('--package is required only for validate-skill')
@@ -1373,8 +1375,10 @@ def main():
             raise Invalid('Principles input applies only to explicit plan/apply/refresh selections')
         if not all((args.principles_sha256,args.principles_revision,args.principles_source)):
             raise Invalid('Principles requires exact export digest, source revision and native input directory')
-    elif any((args.principles_sha256,args.principles_revision,args.principles_source,args.principles_full,args.principles_full_sha256,args.expected_plan)) or args.principles_intent!='operational':
+    elif any((args.principles_sha256,args.principles_revision,args.principles_source,args.principles_full,args.principles_full_sha256)) or args.principles_intent!='operational':
         raise Invalid('Principles arguments require --principles-export')
+    if args.expected_plan and args.command!='apply':
+        raise Invalid('--expected-plan applies only to apply')
     if args.command=='handoff':
         if not all((args.input,args.project,args.allow_root,args.project_id,args.profile,args.source_ref)):
             raise Invalid('handoff requires request input and an explicit trusted local project/profile binding')
@@ -1392,6 +1396,8 @@ def main():
     if args.library_profile is not None:
         if args.command not in ('select','plan','apply','refresh'):
             raise Invalid('--library-profile applies only to select, plan, apply and refresh')
+        if args.expected_plan:
+            raise Invalid('--expected-plan uses the loadout delivery preview, not external library-profile delivery')
         if any((args.profile is not None,args.loadouts,args.state is not None,args.lock,args.extras,args.option,
                 args.brand is not None,args.design_procedure is not None,args.input is not None,args.sha256 is not None,
                 args.producer is not None,args.commit is not None,args.interest is not None,args.fixture,
@@ -1416,7 +1422,7 @@ def main():
             sys.exit(2)
         return
     if args.profile is not None and args.command in ('plan','apply','refresh'):
-        if args.loadouts or args.lock or args.extras or args.option or args.brand or args.design_procedure:
+        if args.loadouts or args.lock or args.extras or args.option or args.brand or args.design_procedure or args.expected_plan:
             raise Invalid('profile selections cannot be mixed with delivery overrides')
         from context_library import delivery
         if not args.project:
@@ -1513,9 +1519,10 @@ def main():
                 retained=state['resolution'].get('principles') if state and args.command=='refresh' else None
                 lock,files=resolve(ids,project,provider,options,extras,principles=retained)
             if args.command=='apply':
-                result=apply(project,lock,files)
+                result=apply(project,lock,files,expected_plan=args.expected_plan)
             else:
                 result=plan(project,lock,files)
+                result['plan_id']=delivery_plan_id(project,lock,files)
     print(encoded(result).decode(),end='')
 
 if __name__=='__main__':
