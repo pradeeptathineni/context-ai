@@ -180,7 +180,7 @@ def _before_image(project, state):
         if size > MAX_BEFORE_IMAGE_BYTES:
             raise Invalid('previous selection exceeds the bounded rollback receipt size')
         data[name] = base64.b64encode(content).decode('ascii')
-    return {'resolution': state['resolution'], 'files': data}
+    return {'resolution': state['resolution'], 'owned': state['owned'], 'files': data}
 
 
 def preview(store, projects, portfolio_id, version, digest, project_ids):
@@ -230,6 +230,57 @@ def _current_matches(project, receipt):
         if not path.is_file() or _hash(path.read_bytes()) != expected:
             return False
     return True
+
+
+def _rollback_target_matches(project, before, receipt=None):
+    """Check whether the exact managed state captured before apply is restored."""
+    installed = _installed_state(project)
+    if before is None:
+        if installed is not None:
+            return False
+        return all(not ai.inside(project, name).exists()
+                   for name in (receipt or {}).get('after_owned', {}))
+    if not installed or _json(installed['resolution']) != _json(before['resolution']):
+        return False
+    if 'owned' in before:
+        if installed.get('owned') != before['owned']:
+            return False
+        for name, expected in before['owned'].items():
+            path = ai.inside(project, name)
+            if not path.is_file() or _hash(path.read_bytes()) != expected:
+                return False
+        return True
+    # Older portfolio receipts did not retain the complete owned-file index.
+    # Keep them readable and require exact selected resources as a conservative fallback.
+    for name, encoded in before.get('files', {}).items():
+        path = ai.inside(project, '.context-ai/resources/' + name)
+        if not path.is_file() or path.read_bytes() != base64.b64decode(encoded, validate=True):
+            return False
+    return True
+
+
+def _rollback_state(project, before, receipt=None):
+    if before is None:
+        return {'installed': False} if _rollback_target_matches(project, before, receipt) else None
+    installed = _installed_state(project)
+    if not installed or not _rollback_target_matches(project, before, receipt):
+        return None
+    lock_path = ai.inside(project, '.context-ai/lock.json')
+    return {'installed': True, 'lock_sha256': _hash(lock_path.read_bytes()),
+            'resolution_sha256': _hash(_json(installed['resolution'])),
+            'owned': installed['owned']}
+
+
+def _rollback_recovery_status(project, receipt):
+    intent = receipt.get('rollback_intent')
+    if not isinstance(intent, dict) or intent.get('state') == 'confirmed':
+        return None
+    before = receipt.get('before_image')
+    if _rollback_target_matches(project, before, receipt):
+        return 'rollback_applied_unconfirmed'
+    if _current_matches(project, receipt):
+        return 'rollback_not_applied'
+    return 'partial_or_unknown'
 
 
 def apply(store, projects, preview_id, project_ids):
@@ -293,16 +344,29 @@ def status(store, projects, operation_id):
             project = projects[project_id]['path']
             state = receipt['rollback_state']
             try:
+                matches = _rollback_target_matches(project, receipt.get('before_image'), receipt)
                 if not state['installed']:
-                    matches = _installed_state(project) is None
+                    matches = matches and _installed_state(project) is None
                 else:
                     installed = _installed_state(project)
                     lock_path = ai.inside(project, '.context-ai/lock.json')
-                    matches = bool(installed and lock_path.is_file() and
+                    matches = bool(matches and installed and lock_path.is_file() and
                                    _hash(lock_path.read_bytes()) == state['lock_sha256'] and
-                                   installed['owned'] == state['owned'])
+                                   installed['owned'] == state['owned'] and
+                                   (state.get('resolution_sha256') is None or
+                                    _hash(_json(installed['resolution'])) == state['resolution_sha256']))
                 result[project_id] = {'status': 'rolled_back' if matches else 'drifted_after_rollback',
                                       'label': projects[project_id]['label']}
+            except Exception as error:
+                result[project_id] = {'status': 'unknown', 'detail': str(error)[:300]}
+        elif isinstance(receipt.get('rollback_intent'), dict) and receipt['rollback_intent'].get('state') != 'confirmed':
+            try:
+                recovered = _rollback_recovery_status(projects[project_id]['path'], receipt)
+                result[project_id] = {'status': recovered or 'partial_or_unknown',
+                                      'label': projects[project_id]['label'],
+                                      'detail': 'rollback effect needs explicit receipt reconciliation' if recovered == 'rollback_applied_unconfirmed'
+                                      else 'rollback may be retried only after an explicit request' if recovered == 'rollback_not_applied'
+                                      else 'current project matches neither exact rollback target nor recorded after-image'}
             except Exception as error:
                 result[project_id] = {'status': 'unknown', 'detail': str(error)[:300]}
         elif receipt.get('rollback_outcome') in ('partial', 'partial_or_unknown'):
@@ -326,38 +390,105 @@ def rollback(store, projects, operation_id, project_ids):
         raise Invalid('unknown operation')
     if not isinstance(project_ids, list) or not project_ids or len(set(project_ids)) != len(project_ids) or set(project_ids) - set(operation['projects']):
         raise Invalid('rollback requires an explicit unique subset of operation projects')
+    attempt = {'at': int(time.time()), 'projects': {}}
+    operation.setdefault('rollback', []).append(attempt)
+    _save(store, operation_id + '.json', operation)
     results = {}
     for project_id in project_ids:
         receipt = operation['projects'][project_id]
-        project = projects[project_id]['path']
-        if receipt['status'] != 'applied' or not _current_matches(project, receipt):
-            results[project_id] = {'status': 'refused', 'detail': 'project drifted or operation was not confirmed; inspect before rollback'}
+        if project_id not in projects:
+            results[project_id] = {'status': 'unknown', 'detail': 'project is no longer configured'}
+            attempt['projects'][project_id] = results[project_id]
+            _save(store, operation_id + '.json', operation)
             continue
-        before = receipt['before_image']
+        project = projects[project_id]['path']
+        before = receipt.get('before_image')
+        if receipt.get('rollback_state') is not None:
+            if _rollback_target_matches(project, before, receipt):
+                results[project_id] = {'status': 'rolled_back', 'reconciled': True}
+            else:
+                results[project_id] = {'status': 'refused', 'detail': 'project drifted after its confirmed rollback'}
+            attempt['projects'][project_id] = results[project_id]
+            _save(store, operation_id + '.json', operation)
+            continue
+        if receipt['status'] != 'applied':
+            results[project_id] = {'status': 'refused', 'detail': 'operation was not confirmed as applied'}
+            attempt['projects'][project_id] = results[project_id]
+            _save(store, operation_id + '.json', operation)
+            continue
+        intent = receipt.get('rollback_intent')
+        recovery = _rollback_recovery_status(project, receipt) if isinstance(intent, dict) and intent.get('state') != 'confirmed' else None
+        if recovery == 'rollback_applied_unconfirmed':
+            receipt['rollback_state'] = _rollback_state(project, before, receipt)
+            receipt['rollback_intent']['state'] = 'confirmed'
+            receipt['rollback_intent']['confirmed_at'] = int(time.time())
+            results[project_id] = {'status': 'rolled_back', 'reconciled': True}
+            attempt['projects'][project_id] = results[project_id]
+            _save(store, operation_id + '.json', operation)
+            continue
+        if recovery == 'partial_or_unknown':
+            results[project_id] = {'status': 'partial_or_unknown',
+                                   'detail': 'project matches neither exact rollback target nor recorded after-image; writer was not called'}
+            attempt['projects'][project_id] = results[project_id]
+            _save(store, operation_id + '.json', operation)
+            continue
+        if not _current_matches(project, receipt):
+            results[project_id] = {'status': 'refused', 'detail': 'project drifted or operation was not confirmed; inspect before rollback'}
+            attempt['projects'][project_id] = results[project_id]
+            _save(store, operation_id + '.json', operation)
+            continue
+        attempt_number = int(receipt.get('rollback_attempt_count', 0)) + 1
+        target = ({'installed': False} if before is None else {
+            'installed': True,
+            'resolution_sha256': _hash(_json(before['resolution'])),
+            'owned': before.get('owned'),
+            'resource_sha256': {name: _hash(base64.b64decode(data, validate=True))
+                                for name, data in before.get('files', {}).items()},
+        })
+        receipt['rollback_attempt_count'] = attempt_number
+        receipt['rollback_intent'] = {
+            'attempt': attempt_number,
+            'state': 'pending',
+            'target': target,
+            'after_lock_sha256': receipt.get('after_lock_sha256'),
+            'after_owned': receipt.get('after_owned'),
+            'started_at': int(time.time()),
+        }
+        attempt['projects'][project_id] = {'status': 'pending', 'attempt': attempt_number}
+        _save(store, operation_id + '.json', operation)
         try:
             if before is None:
-                undone = ai.undo(project)
-                results[project_id] = {'status': 'rolled_back' if undone.get('undone') else 'partial', 'result': undone}
+                native_result = ai.undo(project)
             else:
                 previous_lock = before['resolution']
                 files = {name: base64.b64decode(value, validate=True) for name, value in before['files'].items()}
-                undone = ai.apply(project, previous_lock, files, expected_plan=ai.delivery_plan_id(project, previous_lock, files))
-                results[project_id] = {'status': 'rolled_back', 'result': undone}
-            if results[project_id]['status'] == 'rolled_back':
-                restored = _installed_state(project)
-                if restored:
-                    restored_lock = ai.inside(project, '.context-ai/lock.json')
-                    receipt['rollback_state'] = {'installed': True, 'lock_sha256': _hash(restored_lock.read_bytes()),
-                                                 'owned': restored['owned']}
-                else:
-                    receipt['rollback_state'] = {'installed': False}
-            else:
-                receipt['rollback_outcome'] = results[project_id]['status']
+                native_result = ai.apply(project, previous_lock, files,
+                                         expected_plan=ai.delivery_plan_id(project, previous_lock, files))
         except Exception as error:
-            results[project_id] = {'status': 'partial_or_unknown', 'detail': str(error)[:400]}
+            native_result = None
+            native_error = str(error)[:400]
+        else:
+            native_error = None
+        if _rollback_target_matches(project, before, receipt):
+            receipt['rollback_state'] = _rollback_state(project, before, receipt)
+            receipt['rollback_intent']['state'] = 'confirmed'
+            receipt['rollback_intent']['confirmed_at'] = int(time.time())
+            results[project_id] = {'status': 'rolled_back', 'result': native_result,
+                                   **({'reconciled': True} if native_error else {})}
+        elif _current_matches(project, receipt):
+            receipt['rollback_intent']['state'] = 'not_applied'
+            receipt['rollback_intent']['detail'] = native_error or 'native rollback did not reach its exact target'
+            receipt['rollback_outcome'] = 'not_applied'
+            results[project_id] = {'status': 'rollback_not_applied',
+                                   'detail': receipt['rollback_intent']['detail']}
+        else:
+            receipt['rollback_intent']['state'] = 'partial_or_unknown'
+            receipt['rollback_intent']['detail'] = native_error or 'native rollback did not reach its exact target'
             receipt['rollback_outcome'] = 'partial_or_unknown'
-    operation.setdefault('rollback', []).append({'at': int(time.time()), 'projects': results})
-    _save(store, operation_id + '.json', operation)
+            results[project_id] = {'status': 'partial_or_unknown',
+                                   'detail': receipt['rollback_intent']['detail']}
+        attempt['projects'][project_id] = results[project_id]
+        _save(store, operation_id + '.json', operation)
     return {'operation_id': operation_id, 'projects': results}
 
 

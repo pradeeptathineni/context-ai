@@ -4,6 +4,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import context_ai as ai
@@ -74,6 +75,76 @@ class PortfolioWorkflow(unittest.TestCase):
             self.assertEqual(unrelated.read_text(), 'keep this independent user file')
             self.assertEqual(ai.installed(project_a)['resolution']['loadouts'], ['release-review'])
             self.assertEqual(ai.installed(project_b)['resolution']['loadouts'], ['release-review'])
+
+    def test_lost_rollback_reply_reconciles_exact_target_without_replay(self):
+        with tempfile.TemporaryDirectory(prefix='context-portfolio-recovery-') as temporary:
+            root = Path(temporary)
+            project = (root / 'project').resolve()
+            project.mkdir()
+            store = root / 'private-store'
+            store.mkdir(mode=0o700)
+            projects = {'alpha': {'label': 'Synthetic alpha', 'path': str(project)}}
+            prior_lock, prior_files = ai.resolve(['release-review'], project, 'codex')
+            ai.apply(project, prior_lock, prior_files)
+            created = portfolio.create(store, projects, {'projects': {
+                'alpha': {'loadouts': ['service-api'], 'provider': 'codex'}}})
+            preview = portfolio.preview(store, projects, created['portfolio_id'],
+                                         created['version'], created['digest'], ['alpha'])
+            applied = portfolio.apply(store, projects, preview['preview_id'], ['alpha'])
+            original_apply = ai.apply
+
+            def apply_then_lose_reply(*args, **kwargs):
+                original_apply(*args, **kwargs)
+                raise KeyboardInterrupt('simulated process loss after native restore')
+
+            with patch.object(portfolio.ai, 'apply', side_effect=apply_then_lose_reply):
+                with self.assertRaises(KeyboardInterrupt):
+                    portfolio.rollback(store, projects, applied['operation_id'], ['alpha'])
+
+            recovered_status = portfolio.status(store, projects, applied['operation_id'])
+            self.assertEqual(recovered_status['projects']['alpha']['status'], 'rollback_applied_unconfirmed')
+            with patch.object(portfolio.ai, 'apply', wraps=original_apply) as writer:
+                recovered = portfolio.rollback(store, projects, applied['operation_id'], ['alpha'])
+            self.assertEqual(recovered['projects']['alpha']['status'], 'rolled_back')
+            self.assertTrue(recovered['projects']['alpha']['reconciled'])
+            self.assertEqual(writer.call_count, 0)
+            self.assertEqual(portfolio.status(store, projects, applied['operation_id'])['projects']['alpha']['status'], 'rolled_back')
+
+    def test_ambiguous_partial_rollback_stays_unknown_and_never_replays_writer(self):
+        with tempfile.TemporaryDirectory(prefix='context-portfolio-partial-') as temporary:
+            root = Path(temporary)
+            project = (root / 'project').resolve()
+            project.mkdir()
+            store = root / 'private-store'
+            store.mkdir(mode=0o700)
+            projects = {'alpha': {'label': 'Synthetic alpha', 'path': str(project)}}
+            prior_lock, prior_files = ai.resolve(['release-review'], project, 'codex')
+            ai.apply(project, prior_lock, prior_files)
+            created = portfolio.create(store, projects, {'projects': {
+                'alpha': {'loadouts': ['service-api'], 'provider': 'codex'}}})
+            preview = portfolio.preview(store, projects, created['portfolio_id'],
+                                         created['version'], created['digest'], ['alpha'])
+            applied = portfolio.apply(store, projects, preview['preview_id'], ['alpha'])
+            original_apply = ai.apply
+            changed = []
+
+            def apply_then_leave_ambiguous_state(*args, **kwargs):
+                original_apply(*args, **kwargs)
+                owned = ai.installed(project)['owned']
+                path = ai.inside(project, next(iter(owned)))
+                path.write_bytes(path.read_bytes() + b'\nsynthetic foreign edit')
+                changed.append(path)
+                raise KeyboardInterrupt('simulated interruption after a mixed write')
+
+            with patch.object(portfolio.ai, 'apply', side_effect=apply_then_leave_ambiguous_state):
+                with self.assertRaises(KeyboardInterrupt):
+                    portfolio.rollback(store, projects, applied['operation_id'], ['alpha'])
+            self.assertEqual(portfolio.status(store, projects, applied['operation_id'])['projects']['alpha']['status'], 'partial_or_unknown')
+            with patch.object(portfolio.ai, 'apply', wraps=original_apply) as writer:
+                refused = portfolio.rollback(store, projects, applied['operation_id'], ['alpha'])
+            self.assertEqual(refused['projects']['alpha']['status'], 'partial_or_unknown')
+            self.assertEqual(writer.call_count, 0)
+            self.assertIn(b'synthetic foreign edit', changed[0].read_bytes())
 
 
 if __name__ == '__main__':
