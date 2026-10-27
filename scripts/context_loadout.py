@@ -88,7 +88,9 @@ def _spec(value):
     if type(budget) is not int or not 100 <= budget <= 8192:
         _fail("invalid_request", "maxTokens must be an integer from 100 to 8192")
     packet = value["ownerPacket"]
-    owner_task, records = linked_context._validate(packet)
+    owner_task, records, maestro_results = linked_context._validate(packet)
+    if maestro_results:
+        _fail("invalid_request", "Context loadouts accept only Research and Planning owner records")
     if owner_task != task:
         _fail("invalid_request", "owner packet task must match the loadout task")
     requests = value.get("reductionRequests", [])

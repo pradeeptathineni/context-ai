@@ -10,6 +10,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 - Add source-bound, versioned Context task loadouts that inspect and freeze exact Context previews with caller-supplied Research/Planning records, expose separate reduction previews, and detect drift without retargeting artifacts.
 
+- Combine the accepted linked Context, task loadout, and TS/JS navigation sources. Loadout v1 rejects non-empty Mission-result packets instead of dropping them while retaining linked-context schema v2 support for its Mission consumer.
+
 - Add a read-only, source-bound reduction preview for complete frozen pack sources, with deterministic line selection, exact Unicode spans, and explicit cap/passthrough qualifications.
 
 - Add an optional bounded static Python import-impact view over tracked source, with deterministic reverse traversal, safe read limits, and explicit unresolved or capped diagnostics.

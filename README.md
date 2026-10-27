@@ -22,6 +22,10 @@ Use the optional [read-only repository map](docs/repo-map.md) to find relevant t
 
 For a frozen, selectable pack of exact source excerpts and explicitly chosen guidance, see [task context packs](docs/context-packs.md). Packs persist by ID and refuse export after bound source drift.
 
+For compiler-backed TypeScript and JavaScript symbol definitions, references,
+and one-hop calls, see [code navigation](docs/code-navigation.md). It uses a
+host-supplied TypeScript LanguageService and a bounded in-memory source snapshot.
+
 `scripts/linked_context.py` also freezes caller-validated Research and Planning records for the Mission consumer. Its optional `maestro_results` input accepts up to eight `{kind: "maestro_result", owner: "maestro", record_id, revision, digest, title, text, qualification}` records. `record_id` is the caller's exact source ID; the result digest must match the UTF-8 text. Result packets produce immutable schema v2 artifacts with explicit budget omissions, while two-record packets and schema v1 reads retain their existing contract. Planning remains required in every packet.
 
 For reusable, versioned compositions of a frozen Context preview and caller-supplied Research/Planning records, see [task context loadouts](docs/context-loadouts.md). Inspect exact content and omissions, compare revisions, then freeze and cold-read the immutable combined artifact; delivery remains with the native host.

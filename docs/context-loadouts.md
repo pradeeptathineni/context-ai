@@ -45,6 +45,9 @@ caller-supplied Research and Planning records:
 (100–8192), `ownerPacket`, and optional `reductionRequests` (up to eight
 `{itemId, maxLines}` entries with an 8–100 line cap). The owner packet is the existing linked-context
 v1 shape with one Research answer and one Planning intent; its task must match.
+The linked-context producer also accepts schema v2 Mission-result packets, but
+loadout v1 deliberately accepts only the Research/Planning pair. Any non-empty
+`maestro_results` list is rejected as `invalid_request`, never silently dropped.
 The closed input schema is [context-loadout-v1.schema.json](../schemas/context-loadout-v1.schema.json).
 Research and Planning IDs, revisions, digests, and qualifications are retained
 as caller claims. Project files and selected Context guidance are bound by the

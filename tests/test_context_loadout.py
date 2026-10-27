@@ -131,6 +131,24 @@ class ContextLoadoutTests(unittest.TestCase):
             context_loadout.read(self.loadout_store, frozen["artifactId"])
         self.assertEqual(invalid.exception.code, "store_invalid")
 
+    def test_loadout_rejects_mission_results_instead_of_dropping_them(self):
+        spec = self._spec("A cited research finding.")
+        result_text = "The task completed."
+        spec["ownerPacket"]["maestro_results"] = [
+            owner_record(
+                "maestro_result",
+                "maestro",
+                "result-1",
+                "Task result",
+                result_text,
+                "turn-1",
+            )
+        ]
+        with self.assertRaises(context_pack.ContextPackError) as refused:
+            context_loadout.create(self.loadout_store, "billing-task", spec)
+        self.assertEqual(refused.exception.code, "invalid_request")
+        self.assertFalse(list(self.loadout_store.glob("loadout-*.json")))
+
 
 if __name__ == "__main__":
     unittest.main()
