@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from unittest import mock
 
 import yaml
 
@@ -443,6 +444,99 @@ class ContextPackTests(unittest.TestCase):
         preview = service_b.preview(candidates["candidate_set_id"], max_tokens=8192)
         exported = service_b.export(preview["preview_id"], format="text").decode("utf-8")
         self.assertIn(required, exported)
+
+    def test_explicit_store_upgrade_preserves_history_and_fences_stale_instances(self):
+        current_root = Path(__file__).resolve().parents[1]
+        store = self.root / "upgrade-store"
+        old_root = self.root / "context-old"
+        subprocess.run(["git", "clone", "--local", "--no-hardlinks", "-q", str(current_root), str(old_root)],
+                       check=True)
+        subprocess.run(["git", "-C", str(old_root), "checkout", "-q", "3db958db5e1d10332ef85bc8d4fdb329b3fb5e18"],
+                       check=True)
+        new_root = self.root / "context-new"
+        subprocess.run(["git", "clone", "--local", "--no-hardlinks", "-q", str(current_root), str(new_root)],
+                       check=True)
+        old_service = context_pack.ContextPackService(
+            self.project, store=store, context_root=old_root, project_id="synthetic")
+        candidates = old_service.candidates("change total pricing")
+        preview = old_service.preview(candidates["candidate_set_id"], max_tokens=8192)
+        old_render = (store / f"preview-{preview['preview_id']}.json").read_bytes()
+        old_binding = (store / "binding.json").read_bytes()
+        cli = Path(__file__).resolve().parents[1] / "scripts" / "context_pack.py"
+        upgrade = json.loads(subprocess.check_output([
+            sys.executable, "-B", str(cli), "store-upgrade-preview",
+            "--project", str(self.project), "--store", str(store), "--project-id", "synthetic",
+            "--old-context-root", str(old_root), "--new-context-root", str(new_root)], text=True))
+        self.assertEqual((store / "binding.json").read_bytes(), old_binding)
+        request_id = "e7d7b087-0a89-46e5-a20b-4c595bec4af1"
+        applied = json.loads(subprocess.check_output([
+            sys.executable, "-B", str(cli), "store-upgrade-apply",
+            "--project", str(self.project), "--store", str(store), "--project-id", "synthetic",
+            "--old-context-root", str(old_root), "--new-context-root", str(new_root),
+            "--expected-preview-digest", upgrade["preview_digest"], "--request-id", request_id], text=True))
+        self.assertEqual(applied["status"], "applied")
+        self.assertEqual(context_pack.apply_store_upgrade(
+            self.project, store=store, project_id="synthetic",
+            old_context_root=old_root, new_context_root=new_root,
+            expected_preview_digest=upgrade["preview_digest"], request_id=request_id), applied)
+        with self.assertRaises(context_pack.ContextPackError) as reused:
+            context_pack.apply_store_upgrade(
+                self.project, store=store, project_id="synthetic",
+                old_context_root=old_root, new_context_root=new_root,
+                expected_preview_digest="0" * 64, request_id=request_id)
+        self.assertEqual(reused.exception.code, "request_id_conflict")
+        self.assertEqual((store / f"preview-{preview['preview_id']}.json").read_bytes(), old_render)
+        with self.assertRaises(context_pack.ContextPackError) as stale:
+            old_service.candidates("stale old process")
+        self.assertEqual(stale.exception.code, "binding_mismatch")
+        current = context_pack.ContextPackService(self.project, store=store,
+                                                 context_root=new_root, project_id="synthetic")
+        with self.assertRaises(context_pack.ContextPackError) as historical:
+            current.export(preview["preview_id"])
+        self.assertEqual(historical.exception.code, "source_drift")
+        self.assertEqual((store / f"preview-{preview['preview_id']}.json").read_bytes(), old_render)
+        fresh = current.candidates("change total pricing")
+        fresh_preview = current.preview(fresh["candidate_set_id"], max_tokens=8192)
+        self.assertEqual(fresh_preview["context"]["head"],
+                         subprocess.check_output(["git", "-C", str(new_root), "rev-parse", "HEAD"], text=True).strip())
+        with self.assertRaises(context_pack.ContextPackError) as conflict:
+            context_pack.apply_store_upgrade(
+                self.project, store=store, project_id="synthetic",
+                old_context_root=old_root, new_context_root=new_root,
+                expected_preview_digest=upgrade["preview_digest"],
+                request_id="e7d7b087-0a89-46e5-a20b-4c595bec4af2")
+        self.assertEqual(conflict.exception.code, "binding_mismatch")
+        wrong_project_root = self.root / "project-other"
+        subprocess.run(["git", "clone", "--local", "--no-hardlinks", "-q",
+                        str(self.project), str(wrong_project_root)], check=True)
+        with self.assertRaises(context_pack.ContextPackError) as wrong_project:
+            context_pack.preview_store_upgrade(
+                wrong_project_root, store=store, project_id="synthetic",
+                old_context_root=old_root, new_context_root=new_root)
+        self.assertEqual(wrong_project.exception.code, "binding_mismatch")
+        with self.assertRaises(context_pack.ContextPackError) as wrong_id:
+            context_pack.preview_store_upgrade(
+                self.project, store=store, project_id="different-project-id",
+                old_context_root=old_root, new_context_root=new_root)
+        self.assertEqual(wrong_id.exception.code, "binding_mismatch")
+        retry_store = self.root / "retry-store"
+        context_pack.ContextPackService(self.project, store=retry_store,
+                                        context_root=old_root, project_id="synthetic")
+        retry_preview = context_pack.preview_store_upgrade(
+            self.project, store=retry_store, project_id="synthetic",
+            old_context_root=old_root, new_context_root=new_root)
+        retry_id = "f0b172df-743a-4d5c-8cc4-1bc90bde5630"
+        with mock.patch.object(context_pack, "_replace_binding", side_effect=OSError("synthetic interruption")):
+            with self.assertRaises(OSError):
+                context_pack.apply_store_upgrade(
+                    self.project, store=retry_store, project_id="synthetic",
+                    old_context_root=old_root, new_context_root=new_root,
+                    expected_preview_digest=retry_preview["preview_digest"], request_id=retry_id)
+        recovered = context_pack.apply_store_upgrade(
+            self.project, store=retry_store, project_id="synthetic",
+            old_context_root=old_root, new_context_root=new_root,
+            expected_preview_digest=retry_preview["preview_digest"], request_id=retry_id)
+        self.assertEqual(recovered["status"], "applied")
 
 
 if __name__ == "__main__":

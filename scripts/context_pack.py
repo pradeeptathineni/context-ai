@@ -540,6 +540,33 @@ def _locked(store):
         os.close(fd)
 
 
+@contextmanager
+def _locked_existing(store):
+    """Take the existing store lock without creating or changing any file."""
+    path = store / ".lock"
+    fd = None
+    try:
+        fd = os.open(path, os.O_RDWR | os.O_NOFOLLOW | getattr(os, "O_CLOEXEC", 0))
+        info = os.fstat(fd)
+        if (not stat.S_ISREG(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o600
+                or info.st_uid != os.getuid()):
+            raise ContextPackError("store_invalid", "private store lock is unsafe")
+    except OSError as error:
+        if fd is not None:
+            os.close(fd)
+        raise ContextPackError("store_invalid", "existing private store lock is unavailable") from error
+    except Exception:
+        if fd is not None:
+            os.close(fd)
+        raise
+    try:
+        fcntl.flock(fd, fcntl.LOCK_EX)
+        yield
+    finally:
+        fcntl.flock(fd, fcntl.LOCK_UN)
+        os.close(fd)
+
+
 def _write(store, name, value):
     data = _json(value).encode("utf-8")
     if len(data) > MAX_STORE_OBJECT:
@@ -565,6 +592,191 @@ def _write(store, name, value):
             os.unlink(temp)
         except FileNotFoundError:
             pass
+
+
+def _replace_binding(store, value):
+    """Atomically replace only the mutable source binding under the store lock."""
+    data = _json(value).encode("utf-8")
+    if len(data) > MAX_STORE_OBJECT:
+        raise ContextPackError("store_full", "stored object exceeds the size limit")
+    target = store / "binding.json"
+    fd, temp = tempfile.mkstemp(prefix=".binding-", dir=store)
+    try:
+        os.fchmod(fd, 0o600)
+        with os.fdopen(fd, "wb") as stream:
+            stream.write(data)
+            stream.flush()
+            os.fsync(stream.fileno())
+        os.replace(temp, target)
+        directory_fd = os.open(store, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+        try:
+            os.fsync(directory_fd)
+        finally:
+            os.close(directory_fd)
+    except OSError as e:
+        raise ContextPackError("store_invalid", "could not persist upgraded binding") from e
+    finally:
+        try:
+            os.unlink(temp)
+        except FileNotFoundError:
+            pass
+
+
+def _sync_store_directory(store):
+    fd = os.open(store, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
+    try:
+        os.fsync(fd)
+    finally:
+        os.close(fd)
+
+
+def _binding_value(store):
+    current = _load(store, "binding.json")
+    binding = current.get("binding")
+    if not isinstance(binding, dict) or set(binding) != {"project", "context_root", "project_id"}:
+        raise ContextPackError("store_invalid", "stored binding schema is unsupported")
+    return binding
+
+
+def _engine_schema(root):
+    path = root / "scripts" / "context_pack.py"
+    try:
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        value = next(node.value for node in tree.body
+                     if isinstance(node, ast.Assign)
+                     and any(isinstance(target, ast.Name) and target.id == "SCHEMA_VERSION"
+                             for target in node.targets))
+        result = ast.literal_eval(value)
+    except (OSError, UnicodeError, SyntaxError, StopIteration, ValueError) as error:
+        raise ContextPackError("incompatible_schema", "configured Context engine schema is unreadable") from error
+    if type(result) is not int:
+        raise ContextPackError("incompatible_schema", "configured Context engine schema is invalid")
+    return result
+
+
+def preview_store_upgrade(project, *, store, project_id, old_context_root, new_context_root):
+    """Read-only, exact-identity preview for an operator-requested owner upgrade."""
+    project = _safe_root(project, "invalid_project")
+    old_root = _safe_root(old_context_root, "invalid_request")
+    new_root = _safe_root(new_context_root, "invalid_request")
+    store = Path(store).expanduser()
+    if store.is_symlink() or not store.is_dir():
+        raise ContextPackError("binding_mismatch", "store must be an existing private directory")
+    store = store.resolve()
+    if store.is_relative_to(project) or store.is_relative_to(old_root) or store.is_relative_to(new_root):
+        raise ContextPackError("binding_mismatch", "store must be outside source trees")
+    store_info = store.stat()
+    if not stat.S_ISDIR(store_info.st_mode) or stat.S_IMODE(store_info.st_mode) != 0o700 \
+            or store_info.st_uid != os.getuid():
+        raise ContextPackError("binding_mismatch", "store must be an existing private directory")
+    if not isinstance(project_id, str) or not project_id or len(project_id) > 120:
+        raise ContextPackError("invalid_request", "project_id must be a short non-empty string")
+    with _locked_existing(store):
+        old = _binding_value(store)
+        requested_old = {"project": str(project), "context_root": str(old_root), "project_id": project_id}
+        new = {"project": str(project), "context_root": str(new_root), "project_id": project_id}
+        if old != requested_old:
+            raise ContextPackError("binding_mismatch", "old binding does not exactly match this project and ID")
+        schema_old, schema_new = _engine_schema(old_root), _engine_schema(new_root)
+        if schema_old != SCHEMA_VERSION or schema_new != SCHEMA_VERSION:
+            raise ContextPackError("incompatible_schema", "old, new and store schemas must match")
+        # Validate every persisted record's envelope before declaring it compatible.
+        for path in store.iterdir():
+            if path.name == ".lock" or path.name.startswith(".tmp-"):
+                continue
+            if path.name == "binding.json" or path.name.startswith(("candidates-", "preview-")):
+                _load(store, path.name)
+        digest = _sha(_json({"schema_version": SCHEMA_VERSION, "old_binding": old,
+                             "new_binding": new}).encode("utf-8"))
+        return {"schema_version": 1, "old_binding": old, "new_binding": new,
+                "preview_digest": digest, "store_schema": SCHEMA_VERSION,
+                "qualifiers": ["same project path and project ID", "existing immutable records retained",
+                               "legacy records remain historical; new source verification requires a fresh scan"]}
+
+
+def apply_store_upgrade(project, *, store, project_id, old_context_root, new_context_root,
+                        expected_preview_digest, request_id):
+    """Apply a previously reviewed binding-only upgrade with CAS and UUID replay safety."""
+    if not isinstance(request_id, str) or not re.fullmatch(
+            r"[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", request_id):
+        raise ContextPackError("invalid_request", "request_id must be a UUID")
+    # UUID replay must remain readable after the binding has moved, so resolve an
+    # existing matching receipt before requiring the original old binding again.
+    store_path = Path(store).expanduser().resolve()
+    receipt_name = "upgrade-" + request_id + ".json"
+    if (store_path / receipt_name).exists():
+        old_root = _safe_root(old_context_root, "invalid_request")
+        new_root = _safe_root(new_context_root, "invalid_request")
+        project_root = _safe_root(project, "invalid_project")
+        intent = {"preview_digest": expected_preview_digest,
+                  "old_binding": {"project": str(project_root), "context_root": str(old_root),
+                                  "project_id": project_id},
+                  "new_binding": {"project": str(project_root), "context_root": str(new_root),
+                                  "project_id": project_id}, "request_id": request_id}
+        with _locked(store_path):
+            receipt = _load(store_path, receipt_name)
+            if receipt.get("intent") != intent:
+                raise ContextPackError("request_id_conflict", "request UUID was used for a different upgrade")
+            current = _binding_value(store_path)
+            if current == intent["new_binding"]:
+                result_name = "upgrade-result-" + request_id + ".json"
+                if (store_path / result_name).exists():
+                    completed = _load(store_path, result_name)
+                    if completed.get("intent") != intent:
+                        raise ContextPackError("store_invalid", "upgrade result intent differs")
+                    return completed["result"]
+                result = {"request_id": request_id, "binding": intent["new_binding"],
+                          "status": "applied", "retained_old_binding": True}
+                _write(store_path, result_name, {"schema_version": SCHEMA_VERSION,
+                                                 "intent": intent, "result": result})
+                _sync_store_directory(store_path)
+                return result
+            if current != intent["old_binding"]:
+                raise ContextPackError("binding_mismatch", "recorded upgrade no longer matches current binding")
+    preview = preview_store_upgrade(project, store=store, project_id=project_id,
+                                    old_context_root=old_context_root, new_context_root=new_context_root)
+    if expected_preview_digest != preview["preview_digest"]:
+        raise ContextPackError("stale_preview", "preview digest does not match current binding")
+    store = Path(store).expanduser().resolve()
+    intent = {"preview_digest": expected_preview_digest, "old_binding": preview["old_binding"],
+              "new_binding": preview["new_binding"], "request_id": request_id}
+    receipt_name = "upgrade-" + request_id + ".json"
+    with _locked(store):
+        receipt = None
+        if (store / receipt_name).exists():
+            receipt = _load(store, receipt_name)
+            if receipt.get("intent") != intent:
+                raise ContextPackError("request_id_conflict", "request UUID was used for a different upgrade")
+        current = _binding_value(store)
+        if current == preview["new_binding"] and receipt is not None:
+            result_name = "upgrade-result-" + request_id + ".json"
+            if (store / result_name).exists():
+                completed = _load(store, result_name)
+                if completed.get("intent") != intent:
+                    raise ContextPackError("store_invalid", "upgrade result intent differs")
+                return completed["result"]
+            result = {"request_id": request_id, "binding": preview["new_binding"],
+                      "status": "applied", "retained_old_binding": True}
+            _write(store, result_name, {"schema_version": SCHEMA_VERSION,
+                                        "intent": intent, "result": result})
+            _sync_store_directory(store)
+            return result
+        if current != preview["old_binding"]:
+            raise ContextPackError("stale_preview", "store binding changed after preview")
+        if receipt is None:
+            prepared = {"schema_version": SCHEMA_VERSION, "intent": intent,
+                        "old_binding": preview["old_binding"], "new_binding": preview["new_binding"],
+                        "state": "prepared"}
+            _write(store, receipt_name, prepared)
+            _sync_store_directory(store)
+        _replace_binding(store, {"schema_version": SCHEMA_VERSION, "binding": preview["new_binding"]})
+        result = {"request_id": request_id, "binding": preview["new_binding"],
+                  "status": "applied", "retained_old_binding": True}
+        # Receipt filenames are immutable; update completion is represented by a second immutable object.
+        _write(store, "upgrade-result-" + request_id + ".json",
+               {"schema_version": SCHEMA_VERSION, "intent": intent, "result": result})
+        _sync_store_directory(store)
+        return result
 
 
 def _load(store, name):
@@ -644,6 +856,7 @@ class ContextPackService:
         self.project_id = project_id
         binding = {"project": str(self.project), "context_root": str(self.context_root),
                    "project_id": project_id}
+        self.binding = binding
         with _locked(self.store):
             path = self.store / "binding.json"
             if path.exists():
@@ -824,8 +1037,13 @@ class ContextPackService:
                 omissions.append({"reason": "candidate response size limit", "count": len(removed)})
             result["omissions"] = {"count": len(omissions), "items": omissions[:8]}
         with _locked(self.store):
+            self._assert_current_binding()
             _write(self.store, "candidates-" + candidate_id + ".json", result)
         return result
+
+    def _assert_current_binding(self):
+        if _binding_value(self.store) != self.binding:
+            raise ContextPackError("binding_mismatch", "configured source changed; reopen the Context store")
 
     def _verify(self, source_items, project_obs, context_obs):
         total_reads = [0]
@@ -879,6 +1097,7 @@ class ContextPackService:
         if len(set(exclude_ids)) != len(tuple(exclude_ids)):
             raise ContextPackError("invalid_request", "duplicate exclude ID")
         with _locked(self.store):
+            self._assert_current_binding()
             if not isinstance(candidate_set_id, str) or not re.fullmatch(r"[0-9a-f]{32}", candidate_set_id):
                 raise ContextPackError("unknown_selection", "candidate set ID is invalid")
             candidates = _load(self.store, "candidates-" + candidate_set_id + ".json")
@@ -1026,8 +1245,18 @@ class ContextPackService:
 def _cli():
     parser = argparse.ArgumentParser(description="Create and export frozen, source-bound Context packs.")
     subs = parser.add_subparsers(dest="command", required=True)
-    for name in ("candidates", "preview", "export", "reduce"):
+    for name in ("candidates", "preview", "export", "reduce", "store-upgrade-preview", "store-upgrade-apply"):
         p = subs.add_parser(name)
+        if name.startswith("store-upgrade-"):
+            p.add_argument("--project", required=True, type=Path)
+            p.add_argument("--store", required=True, type=Path)
+            p.add_argument("--project-id", required=True)
+            p.add_argument("--old-context-root", required=True, type=Path)
+            p.add_argument("--new-context-root", required=True, type=Path)
+            if name.endswith("apply"):
+                p.add_argument("--expected-preview-digest", required=True)
+                p.add_argument("--request-id", required=True)
+            continue
         p.add_argument("--project", required=True, type=Path)
         p.add_argument("--store", required=True, type=Path)
         p.add_argument("--project-id", default="selected-project")
@@ -1053,6 +1282,20 @@ def _cli():
             p.add_argument("--output", type=Path)
     args = parser.parse_args()
     try:
+        if args.command == "store-upgrade-preview":
+            result = preview_store_upgrade(args.project, store=args.store, project_id=args.project_id,
+                                           old_context_root=args.old_context_root,
+                                           new_context_root=args.new_context_root)
+            sys.stdout.write(_json(result) + "\n")
+            return 0
+        if args.command == "store-upgrade-apply":
+            result = apply_store_upgrade(args.project, store=args.store, project_id=args.project_id,
+                                         old_context_root=args.old_context_root,
+                                         new_context_root=args.new_context_root,
+                                         expected_preview_digest=args.expected_preview_digest,
+                                         request_id=args.request_id)
+            sys.stdout.write(_json(result) + "\n")
+            return 0
         service = ContextPackService(args.project, store=args.store, context_root=args.context_root,
                                      project_id=args.project_id)
         if args.command == "candidates":
