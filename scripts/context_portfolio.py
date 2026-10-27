@@ -315,7 +315,7 @@ def status(store, projects, operation_id):
                 result[project_id] = {'status': 'unknown', 'detail': str(error)[:300]}
         else:
             result[project_id] = {'status': receipt['status'], 'detail': receipt.get('detail')}
-    return {'operation_id': operation_id, 'projects': result}
+    return {'operation_id': operation_id, 'preview_id': operation['preview_id'], 'projects': result}
 
 
 def rollback(store, projects, operation_id, project_ids):
