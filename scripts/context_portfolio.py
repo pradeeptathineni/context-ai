@@ -111,7 +111,8 @@ def read_portfolio(store, portfolio_id):
 
 
 def catalog():
-    return {'loadouts': [{'id': key, 'description': value['description']}
+    return {'source_revision': ai.source_revision(),
+            'loadouts': [{'id': key, 'description': value['description']}
                          for key, value in sorted(ai.catalogue().items())]}
 
 
