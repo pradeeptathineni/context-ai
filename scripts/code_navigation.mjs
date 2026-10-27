@@ -18,6 +18,7 @@ const MAX_RESULTS = 200;
 const MAX_SITES = 100;
 const MAX_PREPARED = 50;
 const MAX_DIAGNOSTICS = 40;
+const MAX_STATIC_DIAGNOSTICS = 500;
 const MAX_MESSAGE = 200;
 const MAX_NAME = 1024;
 const MAX_QUERY = 200;
@@ -105,6 +106,8 @@ function parseRequest(request) {
     if (!file || !Number.isInteger(position.offset) || position.offset < 0 || position.offset > file.text.length) {
       throw new WorkerError("invalid_request", "inspect position is malformed");
     }
+  } else if (request.operation === "diagnostics") {
+    // Syntax-only diagnostics need no selector or project configuration.
   } else {
     throw new WorkerError("invalid_request", "unknown operation");
   }
@@ -381,17 +384,43 @@ function run(ts, request) {
   try {
     const program = service.getProgram();
     if (!program) throw new WorkerError("engine_failed", "TypeScript did not create a program");
+    const syntaxFiles = [];
+    let syntaxTotal = 0;
     for (const file of request.files.values()) {
       const sourceFile = program.getSourceFile(`${ROOT}/${file.path}`);
       if (!sourceFile) {
         notes.add("source_not_loaded", `${file.path} was not loaded by TypeScript`);
+        if (request.operation === "diagnostics") syntaxFiles.push({ path: file.path, total: 0, diagnostics: [], loaded: false });
         continue;
       }
-      const count = program.getSyntacticDiagnostics(sourceFile).length;
-      if (count) notes.add("syntax", `${file.path}: ${count} syntax diagnostic(s); results in this file may be incomplete`);
+      const diagnostics = program.getSyntacticDiagnostics(sourceFile);
+      if (diagnostics.length) notes.add("syntax", `${file.path}: ${diagnostics.length} syntax diagnostic(s); results in this file may be incomplete`);
+      if (request.operation === "diagnostics") {
+        const rows = [];
+        for (const diagnostic of diagnostics) {
+          syntaxTotal += 1;
+          if (syntaxTotal <= MAX_STATIC_DIAGNOSTICS) {
+            const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, " ").replace(/[\r\n\t ]+/g, " ").trim();
+            const category = diagnostic.category;
+            const severity = category === ts.DiagnosticCategory.Error ? "error"
+              : category === ts.DiagnosticCategory.Warning ? "warning"
+                : category === ts.DiagnosticCategory.Suggestion ? "suggestion" : "info";
+            rows.push({
+              code: `TS${diagnostic.code}`,
+              severity,
+              message: clip(message),
+              start: Number.isInteger(diagnostic.start) ? diagnostic.start : null,
+              length: Number.isInteger(diagnostic.length) ? diagnostic.length : null,
+            });
+          }
+        }
+        syntaxFiles.push({ path: file.path, total: diagnostics.length, diagnostics: rows, loaded: true });
+      }
     }
     const context = { ts, service, program, request, notes };
-    const result = request.operation === "search" ? search(context) : inspect(context);
+    const result = request.operation === "search" ? search(context)
+      : request.operation === "inspect" ? inspect(context)
+        : { files: syntaxFiles, diagnosticTotal: syntaxTotal, omittedDiagnostics: Math.max(0, syntaxTotal - MAX_STATIC_DIAGNOSTICS) };
     const { items, total } = notes.result();
     return { diagnostics: items, diagnosticTotal: total, result };
   } finally {

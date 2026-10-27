@@ -338,15 +338,26 @@ def _read_sources(root, eligible):
                 source = raw.decode("utf-8")
             except UnicodeDecodeError:
                 sources[path] = {
-                    "source": None, "tree": None, "digest": hashlib.sha256(raw).hexdigest()
+                    "source": None, "tree": None, "digest": hashlib.sha256(raw).hexdigest(),
+                    "parse_error": None,
                 }
                 continue
+            parse_error = None
             try:
                 tree = ast.parse(source, filename=path)
-            except (SyntaxError, RecursionError, MemoryError):
+            except SyntaxError as exc:
                 tree = None
+                parse_error = {
+                    "kind": "syntax", "message": exc.msg,
+                    "line": exc.lineno, "offset": exc.offset,
+                    "end_line": exc.end_lineno, "end_offset": exc.end_offset,
+                }
+            except (RecursionError, MemoryError):
+                tree = None
+                parse_error = {"kind": "analysis_limit", "message": "Python AST parser limit reached"}
             sources[path] = {
-                "source": source, "tree": tree, "digest": hashlib.sha256(raw).hexdigest()
+                "source": source, "tree": tree, "digest": hashlib.sha256(raw).hexdigest(),
+                "parse_error": parse_error,
             }
         return sources
     finally:
