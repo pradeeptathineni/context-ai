@@ -48,7 +48,8 @@ class StaticDiagnosticsTests(unittest.TestCase):
         )
 
     def test_mixed_syntax_partial_unknown_hashes_and_fixed_bytes(self):
-        first = self.analyze()
+        with patch.object(static_diagnostics, "MAX_DIAGNOSTICS", 2):
+            first = self.analyze()
         self.assertEqual(first["schema"], "context.static-diagnostics.v1")
         self.assertTrue(first["stable"])
         self.assertEqual(first["status"], "partial")
@@ -57,6 +58,14 @@ class StaticDiagnosticsTests(unittest.TestCase):
         self.assertEqual(files["src/broken.ts"]["status"], "analyzed")
         self.assertEqual(files["src/broken.py"]["status"], "analyzed")
         by_code = {item["code"]: item for row in files.values() for item in row["diagnostics"]}
+        diagnostic_coverage = first["coverage"]["diagnostics"]
+        self.assertEqual(diagnostic_coverage["total"], sum(row["diagnostic_total"] for row in files.values()))
+        self.assertEqual(diagnostic_coverage["returned"], sum(len(row["diagnostics"]) for row in files.values()))
+        self.assertEqual(diagnostic_coverage["omitted"], diagnostic_coverage["total"] - diagnostic_coverage["returned"])
+        self.assertEqual(diagnostic_coverage["returned"], 2)
+        self.assertEqual(diagnostic_coverage["omitted"], 1)
+        for row in files.values():
+            self.assertLessEqual(len(row["diagnostics"]), row["diagnostic_total"])
         self.assertTrue(any(code.startswith("TS") for code in by_code))
         python = by_code["PY-SYNTAX"]
         self.assertEqual(python["range"]["start"]["line"], 2)

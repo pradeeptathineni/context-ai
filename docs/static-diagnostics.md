@@ -46,6 +46,13 @@ severity,range}`; the message is excluded. JSON uses UTF-8 scalar strings,
 1-based UTF-16 code-unit columns, with an end-exclusive endpoint. No source
 excerpt is returned.
 
+`files[].diagnostic_total` is the parser-reported count before location and
+response filtering. `coverage.diagnostics.total` is the sum of those per-file
+totals; `returned` is the number of serialized diagnostic rows; and `omitted`
+is `total - returned`, including findings without valid locations and findings
+outside the response cap. Thus `returned` equals the sum of per-file diagnostic
+array lengths, and each array length is at most its `diagnostic_total`.
+
 `source_digest` is Context-local: sort captured `{path,sha256}` rows by UTF-8
 path bytes, then SHA-256 the concatenation of `path_utf8`, NUL, and the raw
 32-byte file hash for each row. `snapshot.id` is SHA-256 of compact UTF-8 JSON

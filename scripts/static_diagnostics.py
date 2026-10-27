@@ -164,7 +164,6 @@ def _add_diagnostic(row, code, severity, message, location):
     if location is None:
         row["unknown_reasons"].append("A parser diagnostic did not include a valid source range; it is not selectable.")
         return
-    row["diagnostic_total"] += 1
     diagnostic = {
         "diagnosticId": _diagnostic_id(row["path"], row["sha256"], code, severity, location),
         "code": code, "message": _message(message), "severity": severity,
@@ -302,7 +301,7 @@ def analyze_project(project, *, node_executable, typescript_path):
         shown = set(item["diagnosticId"] for item in all_diagnostics[:MAX_DIAGNOSTICS])
         for row in all_files:
             row["diagnostics"] = [item for item in row["diagnostics"] if item["diagnosticId"] in shown]
-        diagnostic_total = ts_total + python_total
+        diagnostic_total = sum(row["diagnostic_total"] for row in all_files)
         diagnostics_omitted = max(0, diagnostic_total - len(shown))
 
         source_digest = _source_digest(all_files)
