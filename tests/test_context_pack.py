@@ -470,6 +470,11 @@ class ContextPackTests(unittest.TestCase):
         self.assertEqual((store / "binding.json").read_bytes(), old_binding)
         self.assertTrue(upgrade["requires_quiescence"])
         request_id = "e7d7b087-0a89-46e5-a20b-4c595bec4af1"
+        before_status_files = set(path.name for path in store.iterdir())
+        self.assertEqual(context_pack.read_store_upgrade_status(
+            self.project, store=store, project_id="synthetic", current_context_root=new_root,
+            allowed_old_context_roots=[old_root], request_id=request_id)["status"], "not_found")
+        self.assertEqual(set(path.name for path in store.iterdir()), before_status_files)
         with self.assertRaises(context_pack.ContextPackError) as not_quiescent:
             context_pack.apply_store_upgrade(
                 self.project, store=store, project_id="synthetic",
@@ -483,6 +488,13 @@ class ContextPackTests(unittest.TestCase):
             "--expected-preview-digest", upgrade["preview_digest"], "--request-id", request_id,
             "--operator-quiescent"], text=True))
         self.assertEqual(applied["status"], "applied")
+        cli_status = json.loads(subprocess.check_output([
+            sys.executable, "-B", str(cli), "store-upgrade-status",
+            "--project", str(self.project), "--store", str(store), "--project-id", "synthetic",
+            "--current-context-root", str(new_root), "--old-context-root", str(old_root),
+            "--request-id", request_id], text=True))
+        self.assertEqual(cli_status["status"], "applied")
+        self.assertTrue(cli_status["result_persisted"])
         self.assertEqual(context_pack.apply_store_upgrade(
             self.project, store=store, project_id="synthetic",
             old_context_root=old_root, new_context_root=new_root,
@@ -544,12 +556,19 @@ class ContextPackTests(unittest.TestCase):
                     old_context_root=old_root, new_context_root=new_root,
                     expected_preview_digest=retry_preview["preview_digest"], request_id=retry_id,
                     operator_quiescent=True)
+        pending_status = context_pack.read_store_upgrade_status(
+            self.project, store=retry_store, project_id="synthetic", current_context_root=new_root,
+            allowed_old_context_roots=[old_root], request_id=retry_id)
+        self.assertEqual(pending_status["status"], "pending")
         recovered = context_pack.apply_store_upgrade(
             self.project, store=retry_store, project_id="synthetic",
             old_context_root=old_root, new_context_root=new_root,
             expected_preview_digest=retry_preview["preview_digest"], request_id=retry_id,
             operator_quiescent=True)
         self.assertEqual(recovered["status"], "applied")
+        self.assertEqual(context_pack.read_store_upgrade_status(
+            self.project, store=retry_store, project_id="synthetic", current_context_root=new_root,
+            allowed_old_context_roots=[old_root], request_id=retry_id)["status"], "applied")
 
 
 if __name__ == "__main__":

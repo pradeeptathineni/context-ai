@@ -788,6 +788,69 @@ def apply_store_upgrade(project, *, store, project_id, old_context_root, new_con
         return result
 
 
+def read_store_upgrade_status(project, *, store, project_id, current_context_root,
+                              allowed_old_context_roots, request_id):
+    """Read one durable upgrade receipt and its current binding without mutation."""
+    if not isinstance(request_id, str) or not re.fullmatch(
+            r"[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", request_id):
+        raise ContextPackError("invalid_request", "request_id must be a UUID")
+    project_root = _safe_root(project, "invalid_project")
+    current_root = _safe_root(current_context_root, "invalid_request")
+    old_roots = {_safe_root(root, "invalid_request") for root in allowed_old_context_roots}
+    if not isinstance(project_id, str) or not project_id or len(project_id) > 120:
+        raise ContextPackError("invalid_request", "project_id must be a short non-empty string")
+    store_path = Path(store).expanduser()
+    if store_path.is_symlink() or not store_path.is_dir():
+        raise ContextPackError("binding_mismatch", "store must be an existing private directory")
+    store_path = store_path.resolve()
+    if any(store_path.is_relative_to(root) for root in {project_root, current_root, *old_roots}):
+        raise ContextPackError("binding_mismatch", "store must be outside source trees")
+    info = store_path.stat()
+    if not stat.S_ISDIR(info.st_mode) or stat.S_IMODE(info.st_mode) != 0o700 or info.st_uid != os.getuid():
+        raise ContextPackError("binding_mismatch", "store must be an existing private directory")
+    receipt_name = "upgrade-" + request_id + ".json"
+    with _locked_existing(store_path):
+        if not (store_path / receipt_name).exists():
+            return {"status": "not_found", "request_id": request_id}
+        receipt = _load(store_path, receipt_name)
+        intent = receipt.get("intent")
+        if not isinstance(intent, dict) or intent.get("request_id") != request_id:
+            raise ContextPackError("store_invalid", "upgrade receipt identity is invalid")
+        old_binding = receipt.get("old_binding")
+        new_binding = receipt.get("new_binding")
+        expected_old = {"project": str(project_root), "project_id": project_id}
+        expected_new = {"project": str(project_root), "context_root": str(current_root),
+                        "project_id": project_id}
+        if (not isinstance(old_binding, dict) or not isinstance(new_binding, dict)
+                or old_binding.get("project") != expected_old["project"]
+                or old_binding.get("project_id") != project_id
+                or old_binding.get("context_root") not in {str(root) for root in old_roots}
+                or new_binding != expected_new or intent.get("old_binding") != old_binding
+                or intent.get("new_binding") != new_binding or intent.get("operator_quiescent") is not True):
+            raise ContextPackError("binding_mismatch", "upgrade receipt does not match this configured project history")
+        current_binding = _binding_value(store_path)
+        result_name = "upgrade-result-" + request_id + ".json"
+        persisted = (store_path / result_name).exists()
+        if persisted:
+            completed = _load(store_path, result_name)
+            if completed.get("intent") != intent or not isinstance(completed.get("result"), dict):
+                raise ContextPackError("store_invalid", "upgrade result is invalid")
+            result = completed["result"]
+        else:
+            result = {"request_id": request_id, "binding": new_binding,
+                      "status": "applied", "retained_old_binding": True,
+                      "operator_quiescent": True}
+        if current_binding == new_binding:
+            status = "applied"
+        elif current_binding == old_binding:
+            status = "pending"
+        else:
+            status = "binding_changed"
+        return {"status": status, "request_id": request_id, "old_binding": old_binding,
+                "new_binding": new_binding, "result": result if status == "applied" else None,
+                "result_persisted": persisted, "receipt_persisted": True}
+
+
 def _load(store, name):
     path = store / name
     if path.is_symlink():
@@ -1254,8 +1317,17 @@ class ContextPackService:
 def _cli():
     parser = argparse.ArgumentParser(description="Create and export frozen, source-bound Context packs.")
     subs = parser.add_subparsers(dest="command", required=True)
-    for name in ("candidates", "preview", "export", "reduce", "store-upgrade-preview", "store-upgrade-apply"):
+    for name in ("candidates", "preview", "export", "reduce", "store-upgrade-preview",
+                 "store-upgrade-apply", "store-upgrade-status"):
         p = subs.add_parser(name)
+        if name == "store-upgrade-status":
+            p.add_argument("--project", required=True, type=Path)
+            p.add_argument("--store", required=True, type=Path)
+            p.add_argument("--project-id", required=True)
+            p.add_argument("--current-context-root", required=True, type=Path)
+            p.add_argument("--old-context-root", required=True, type=Path, action="append")
+            p.add_argument("--request-id", required=True)
+            continue
         if name.startswith("store-upgrade-"):
             p.add_argument("--project", required=True, type=Path)
             p.add_argument("--store", required=True, type=Path)
@@ -1305,6 +1377,13 @@ def _cli():
                                          expected_preview_digest=args.expected_preview_digest,
                                          request_id=args.request_id,
                                          operator_quiescent=args.operator_quiescent)
+            sys.stdout.write(_json(result) + "\n")
+            return 0
+        if args.command == "store-upgrade-status":
+            result = read_store_upgrade_status(
+                args.project, store=args.store, project_id=args.project_id,
+                current_context_root=args.current_context_root,
+                allowed_old_context_roots=args.old_context_root, request_id=args.request_id)
             sys.stdout.write(_json(result) + "\n")
             return 0
         service = ContextPackService(args.project, store=args.store, context_root=args.context_root,
