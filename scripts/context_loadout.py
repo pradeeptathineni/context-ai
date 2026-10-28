@@ -18,6 +18,7 @@ SCHEMA_VERSION = 1
 SOURCE_ONLY_SCHEMA_VERSION = 2
 CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION = 3
 RESEARCH_CITATION_SCHEMA_VERSION = 4
+PRINCIPLE_DECISION_SCHEMA_VERSION = 5
 MAX_SPEC_BYTES = 512 * 1024
 MAX_REDUCTION_PREVIEWS = 8
 MAX_REDUCTION_BYTES = 512 * 1024
@@ -287,7 +288,89 @@ def _research_citation(value):
     return {"reference": reference, "peek": peek}
 
 
+def _principle_decision(value, *, require_current=True):
+    if not isinstance(value, dict) or set(value) != {"reference", "read"}:
+        _fail("invalid_request", "Principles decision source must contain its exact binding and owner read")
+    reference = value["reference"]
+    ref_fields = {"schema", "owner", "decisionId", "version", "decisionSha256", "corpusRevision"}
+    if not isinstance(reference, dict) or set(reference) != ref_fields or reference.get("schema") != "deep.principle-atlas-decision-binding.v1":
+        _fail("invalid_request", "Principles decision binding schema is invalid")
+    owner = reference.get("owner")
+    if (not isinstance(owner, dict) or set(owner) != {"id", "revision"} or owner.get("id") != "principles-ai"
+            or not isinstance(owner.get("revision"), str) or not re.fullmatch(r"[a-f0-9]{40,64}", owner["revision"])
+            or not isinstance(reference.get("decisionId"), str)
+            or not re.fullmatch(r"[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}", reference["decisionId"])
+            or type(reference.get("version")) is not int or reference["version"] < 1
+            or not isinstance(reference.get("decisionSha256"), str) or not re.fullmatch(r"[a-f0-9]{64}", reference["decisionSha256"])
+            or not isinstance(reference.get("corpusRevision"), str) or not re.fullmatch(r"[a-f0-9]{64}", reference["corpusRevision"])):
+        _fail("invalid_request", "Principles decision source binding is invalid")
+    read = value["read"]
+    read_fields = {"schema", "owner", "ownerRevision", "generatedAt", "decision", "currentness"}
+    if (not isinstance(read, dict) or set(read) != read_fields or read.get("schema") != "principles.domain-atlas/1"
+            or read.get("owner") != "principles-ai" or read.get("ownerRevision") != owner["revision"]
+            or not isinstance(read.get("generatedAt"), str) or not read["generatedAt"]):
+        _fail("invalid_request", "Principles decision owner read schema is invalid")
+    record = read.get("decision")
+    if (not isinstance(record, dict) or record.get("schema") != "principles.contextual-decision/1"
+            or record.get("id") != reference["decisionId"] or record.get("requestId") != reference["decisionId"]
+            or record.get("operation") not in {"decision.create", "decision.successor"}
+            or not isinstance(record.get("inputSha256"), str) or not re.fullmatch(r"[a-f0-9]{64}", record["inputSha256"])
+            or not isinstance(record.get("versions"), list) or not record["versions"] or len(record["versions"]) > 64):
+        _fail("invalid_request", "Principles contextual decision record is invalid")
+    for index, row in enumerate(record["versions"], start=1):
+        if (not isinstance(row, dict) or set(row) != {"version", "payload", "sha256"}
+                or type(row.get("version")) is not int or row["version"] != index
+                or not isinstance(row.get("payload"), dict) or not isinstance(row.get("sha256"), str)
+                or not re.fullmatch(r"[a-f0-9]{64}", row["sha256"])):
+            _fail("invalid_request", "Principles decision history is invalid")
+        canonical = json.dumps(row["payload"], sort_keys=True, separators=(",", ":"), ensure_ascii=False, allow_nan=False).encode("utf-8")
+        if _sha(canonical) != row["sha256"]:
+            _fail("invalid_request", "Principles decision version digest does not match its authored fields")
+    latest = record["versions"][-1]
+    payload = latest["payload"]
+    basis = payload.get("basis")
+    currentness = read.get("currentness")
+    if (latest["version"] != reference["version"] or latest["sha256"] != reference["decisionSha256"]
+            or "claimReview" in payload or not isinstance(payload.get("title"), str) or not payload["title"].strip()
+            or not isinstance(payload.get("reviewer"), str) or not isinstance(payload.get("context"), str)
+            or not isinstance(payload.get("applicability"), str) or not isinstance(payload.get("exceptions"), list)
+            or not isinstance(payload.get("valueAssumptions"), list) or not isinstance(payload.get("tradeoffs"), list)
+            or not isinstance(payload.get("judgment"), str) or not isinstance(payload.get("principleIds"), list)
+            or not isinstance(basis, dict) or basis.get("corpusRevision") != reference["corpusRevision"]
+            or not isinstance(payload.get("qualification"), str)
+            or not isinstance(currentness, dict) or currentness.get("status") not in {"current", "changed", "missing", "unknown"}):
+        _fail("invalid_request", "Principles decision version or currentness differs from its source binding")
+    if require_current and currentness.get("status") != "current":
+        _fail("source_stale", "Principles decision basis is changed, missing or unknown; reopen the owner decision before review")
+    if len(json.dumps(value, ensure_ascii=False).encode("utf-8")) > 200_000:
+        _fail("invalid_request", "Principles decision owner read exceeds its size limit")
+    return {"reference": reference, "read": read}
+
+
 def _spec(value, *, require_active=True):
+    if (isinstance(value, dict) and type(value.get("schemaVersion")) is int
+            and value.get("schemaVersion") == PRINCIPLE_DECISION_SCHEMA_VERSION):
+        allowed = {"schemaVersion", "variant", "task", "contextPreviewId", "maxTokens",
+                   "reductionRequests", "principleDecision"}
+        if set(value) - allowed or value.get("variant") != "principle-decision":
+            _fail("invalid_request", "loadout spec must match context-loadout/v5 principle-decision")
+        task = value.get("task")
+        if not isinstance(task, str) or not task.strip() or len(task) > context_pack.MAX_TASK_CHARS:
+            _fail("invalid_request", "task must contain 1 to 2048 characters")
+        if not isinstance(value.get("contextPreviewId"), str) or not re.fullmatch(r"[0-9a-f]{32}", value["contextPreviewId"]):
+            _fail("invalid_request", "Context preview ID is invalid")
+        budget = value.get("maxTokens")
+        if type(budget) is not int or not 100 <= budget <= 8192:
+            _fail("invalid_request", "maxTokens must be an integer from 100 to 8192")
+        if value.get("reductionRequests", []) != []:
+            _fail("invalid_request", "Principles decision loadouts preserve the exact authored decision without unrelated reduction requests")
+        decision = _principle_decision(value.get("principleDecision"))
+        normalized = {"schemaVersion": PRINCIPLE_DECISION_SCHEMA_VERSION, "variant": "principle-decision",
+                      "task": task, "contextPreviewId": value["contextPreviewId"], "maxTokens": budget,
+                      "reductionRequests": [], "principleDecision": decision}
+        if len(context_pack._json(normalized).encode("utf-8")) > MAX_SPEC_BYTES:
+            _fail("invalid_request", "loadout spec exceeds its size limit")
+        return normalized
     if (isinstance(value, dict) and type(value.get("schemaVersion")) is int
             and value.get("schemaVersion") == RESEARCH_CITATION_SCHEMA_VERSION):
         allowed = {"schemaVersion", "variant", "task", "contextPreviewId", "maxTokens",
@@ -698,6 +781,59 @@ def _assemble_research_citation(revision, service):
             "text": combined, "textSha256": _sha(raw)}
 
 
+def _principle_decision_text(source):
+    reference, read = source["reference"], source["read"]
+    record = read["decision"]
+    version = record["versions"][-1]
+    payload = version["payload"]
+    lines = [
+        "## One exact Principles contextual decision",
+        "",
+        "This is a human-authored decision retained from the Principles owner. Context preserves its wording and qualifications; it does not infer correctness, resolve conflicts, grant approval, or activate it.",
+        "The host must reread the exact current Principles decision before freezing and verifying use.",
+        "",
+        f"- Decision: {reference['decisionId']} · version {reference['version']} · SHA-256 {reference['decisionSha256']}",
+        f"- Principles owner revision: {reference['owner']['revision']}",
+        f"- Reviewed corpus revision: {reference['corpusRevision']}",
+        f"- Currentness at review: {read['currentness']['status']} · {read['currentness'].get('qualification', '')}",
+        "",
+        "### Exact human-authored decision fields",
+        "",
+        json.dumps(payload, ensure_ascii=False, indent=2),
+    ]
+    return "\n".join(lines)
+
+
+def _assemble_principle_decision(revision, service):
+    spec = revision["spec"]
+    base_spec = {"schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "variant": "source-pack-only",
+                 "task": spec["task"], "contextPreviewId": spec["contextPreviewId"],
+                 "maxTokens": spec["maxTokens"], "reductionRequests": []}
+    base_revision = {"schema_version": SCHEMA_VERSION, "schemaVersion": SOURCE_ONLY_SCHEMA_VERSION,
+                     "loadoutId": revision["loadoutId"], "version": revision["version"],
+                     "spec": base_spec, "digest": _revision_digest(revision["loadoutId"], revision["version"], base_spec)}
+    base = _assemble_source_only(base_revision, service)
+    source = _principle_decision(spec["principleDecision"])
+    decision_text = _principle_decision_text(source)
+    combined = base["text"] + "\n\n" + decision_text
+    raw = combined.encode("utf-8")
+    if len(raw) > 4 * spec["maxTokens"]:
+        _fail("budget_too_small", "The Context pack and exact Principles decision do not fit; choose a larger budget or smaller pack.")
+    reference, read = source["reference"], source["read"]
+    latest = read["decision"]["versions"][-1]
+    inspection = {**base["inspection"], "combinedBytes": len(raw), "estimatedTokens": (len(raw) + 3) // 4,
+                  "principleDecision": {"owner": reference["owner"], "decisionId": reference["decisionId"],
+                                       "version": latest["version"], "decisionSha256": latest["sha256"],
+                                       "corpusRevision": reference["corpusRevision"],
+                                       "currentness": read["currentness"]["status"],
+                                       "principleIds": latest["payload"]["principleIds"]}}
+    return {"schemaVersion": PRINCIPLE_DECISION_SCHEMA_VERSION, "loadout": _public_revision(revision),
+            "assemblyState": "assembled", "deliveryState": "not_sent", "contextPack": base["contextPack"],
+            "sourceArtifact": base["sourceArtifact"], "principleDecision": source,
+            "reductionPreviews": base["reductionPreviews"], "inspection": inspection,
+            "text": combined, "textSha256": _sha(raw)}
+
+
 def _assemble(store, revision, service):
     _assert_disjoint(store, service)
     spec = revision["spec"]
@@ -707,6 +843,8 @@ def _assemble(store, revision, service):
         return _assemble_custom_context_packet(revision, service)
     if spec["schemaVersion"] == RESEARCH_CITATION_SCHEMA_VERSION:
         return _assemble_research_citation(revision, service)
+    if spec["schemaVersion"] == PRINCIPLE_DECISION_SCHEMA_VERSION:
+        return _assemble_principle_decision(revision, service)
     project_json = service.export(spec["contextPreviewId"], format="json")
     project_text = service.export(spec["contextPreviewId"], format="text")
     try:
@@ -1034,6 +1172,70 @@ def _read_research_citation(artifact_id, body):
     return body
 
 
+def _read_principle_decision(artifact_id, body):
+    expected_fields = {"schema_version", "schemaVersion", "loadout", "assemblyState", "deliveryState",
+                       "contextPack", "sourceArtifact", "principleDecision", "reductionPreviews",
+                       "inspection", "text", "textSha256", "artifactState", "artifactId"}
+    if (not isinstance(body, dict) or set(body) != expected_fields or body.get("artifactId") != artifact_id
+            or body.get("schema_version") != SCHEMA_VERSION or body.get("schemaVersion") != PRINCIPLE_DECISION_SCHEMA_VERSION
+            or body.get("assemblyState") != "assembled" or body.get("deliveryState") != "not_sent"
+            or body.get("artifactState") != "frozen" or _snapshot_id(body) != artifact_id):
+        _fail("store_invalid", "frozen Principles decision Context loadout integrity check failed")
+    loadout = body.get("loadout")
+    if (not isinstance(loadout, dict) or loadout.get("state") != "referenced"
+            or loadout.get("schemaVersion") != PRINCIPLE_DECISION_SCHEMA_VERSION
+            or loadout.get("loadoutId") != _identity(loadout.get("loadoutId"))
+            or type(loadout.get("version")) is not int or loadout["version"] < 1):
+        _fail("store_invalid", "frozen Principles decision loadout revision is invalid")
+    spec = _spec(loadout.get("spec"), require_active=False)
+    if (spec != loadout.get("spec") or loadout.get("digest") !=
+            _revision_digest(loadout["loadoutId"], loadout["version"], spec)):
+        _fail("store_invalid", "frozen Principles decision loadout revision is invalid")
+    source = _principle_decision(body.get("principleDecision"), require_current=False)
+    if source != spec["principleDecision"]:
+        _fail("store_invalid", "frozen Principles decision differs from its exact reviewed source")
+    context_source = body.get("sourceArtifact")
+    if not isinstance(context_source, dict) or not isinstance(context_source.get("textRender"), str):
+        _fail("store_invalid", "frozen Context source pack is missing")
+    base_text = f"# Context loadout {loadout['loadoutId']} v{loadout['version']}\n\n{context_source['textRender']}"
+    expected_text = base_text + "\n\n" + _principle_decision_text(source)
+    raw = expected_text.encode("utf-8")
+    if (body.get("text") != expected_text or body.get("textSha256") != _sha(raw)
+            or len(raw) > 4 * spec["maxTokens"]):
+        _fail("store_invalid", "frozen Principles decision render or budget is invalid")
+    inspection = body.get("inspection")
+    if not isinstance(inspection, dict):
+        _fail("store_invalid", "frozen Principles decision inspection is invalid")
+    base_inspection = {key: value for key, value in inspection.items() if key != "principleDecision"}
+    base_bytes = len(base_text.encode("utf-8"))
+    base_inspection["combinedBytes"] = base_bytes
+    base_inspection["estimatedTokens"] = (base_bytes + 3) // 4
+    reference, read = source["reference"], source["read"]
+    latest = read["decision"]["versions"][-1]
+    expected_inspection = {**base_inspection, "combinedBytes": len(raw), "estimatedTokens": (len(raw) + 3) // 4,
+                           "principleDecision": {"owner": reference["owner"], "decisionId": reference["decisionId"],
+                                                "version": latest["version"], "decisionSha256": latest["sha256"],
+                                                "corpusRevision": reference["corpusRevision"],
+                                                "currentness": read["currentness"]["status"],
+                                                "principleIds": latest["payload"]["principleIds"]}}
+    if inspection != expected_inspection or inspection.get("budgetTokens") != spec["maxTokens"]:
+        _fail("store_invalid", "frozen Principles decision inspection does not match its exact projection")
+    base_spec = {"schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "variant": "source-pack-only",
+                 "task": spec["task"], "contextPreviewId": spec["contextPreviewId"],
+                 "maxTokens": spec["maxTokens"], "reductionRequests": []}
+    base_loadout = {**loadout, "schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "spec": base_spec,
+                    "digest": _revision_digest(loadout["loadoutId"], loadout["version"], base_spec)}
+    base_body = {key: value for key, value in body.items() if key != "principleDecision"}
+    base_body["schemaVersion"] = SOURCE_ONLY_SCHEMA_VERSION
+    base_body["loadout"] = base_loadout
+    base_body["inspection"] = base_inspection
+    base_body["text"] = base_text
+    base_body["textSha256"] = _sha(base_text.encode("utf-8"))
+    base_body["artifactId"] = _snapshot_id(base_body)
+    _read_source_only(base_body["artifactId"], base_body)
+    return body
+
+
 def freeze(store, loadout_id, *, version, digest, service):
     """Freeze an exact inspected assembly as an immutable portable artifact."""
     assembled = inspect(store, loadout_id, version=version, digest=digest, service=service)
@@ -1064,6 +1266,8 @@ def read(store, artifact_id):
         return _read_custom_context_packet(artifact_id, body)
     if isinstance(body, dict) and body.get("schemaVersion") == RESEARCH_CITATION_SCHEMA_VERSION:
         return _read_research_citation(artifact_id, body)
+    if isinstance(body, dict) and body.get("schemaVersion") == PRINCIPLE_DECISION_SCHEMA_VERSION:
+        return _read_principle_decision(artifact_id, body)
     if (set(body) != {"schema_version", "schemaVersion", "loadout", "assemblyState", "deliveryState",
                       "contextPack", "ownerArtifact", "reductionPreviews", "inspection", "text", "textSha256",
                       "artifactState", "artifactId"}

@@ -42,6 +42,16 @@ citation read tool. The host binds the artifact to the active conversation in
 its own durable association. Selection, installation and sending remain
 separate host actions.
 
+The additive `context-loadout/v5` spec with `variant: "principle-decision"`
+retains one exact Principles contextual-decision version and the owner `decision.read`
+result. Context validates the version digest and owner-reported currentness, then
+renders the complete human-authored applicability, exceptions, assumptions,
+tradeoffs, judgment and qualifications without interpreting them. The integrating
+host rereads the same decision before review, freeze and send verification; changed,
+missing or unknown currentness blocks those steps. Frozen v5 artifacts remain
+`not_sent`; cold reads verify the historical bytes without transferring approval or
+activation. The existing v1-v4 readers remain unchanged.
+
 ```json
 {
   "schemaVersion": 2,

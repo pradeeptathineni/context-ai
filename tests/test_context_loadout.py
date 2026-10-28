@@ -67,6 +67,37 @@ def research_citation_source():
     return {"reference": reference, "peek": peek}
 
 
+def principle_decision_source(status="current"):
+    import datetime
+    payload = {
+        "version": 1, "title": "Synthetic contextual decision", "reviewer": "Reviewer",
+        "reviewerKind": "caller_asserted_human", "context": "Synthetic situation",
+        "applicability": "Apply when the fixture conditions hold.",
+        "exceptions": ["Do not apply if the equipment is unavailable."],
+        "valueAssumptions": ["Preserve operator time."], "tradeoffs": ["Speed versus traceability."],
+        "judgment": "Consider both the local constraint and the exception.",
+        "principleIds": ["PRN-000001"],
+        "basis": {"ownerRevision": "a" * 40, "corpusRevision": "b" * 64,
+                  "principles": [{"principleId": "PRN-000001"}], "sources": []},
+        "reviewedCorpusRevision": "b" * 64, "comparisonSignals": [],
+        "qualification": "Human-authored qualification: this does not establish truth or approval.",
+        "createdAt": "2026-10-28T00:00:00.000Z",
+    }
+    canonical = json.dumps(payload, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
+    sha = hashlib.sha256(canonical).hexdigest()
+    record_id = "11111111-1111-4111-8111-111111111111"
+    read = {"schema": "principles.domain-atlas/1", "owner": "principles-ai", "ownerRevision": "a" * 40,
+            "generatedAt": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+            "decision": {"schema": "principles.contextual-decision/1", "id": record_id,
+                         "requestId": record_id, "operation": "decision.create", "inputSha256": "c" * 64,
+                         "versions": [{"version": 1, "payload": payload, "sha256": sha}]},
+            "currentness": {"status": status, "qualification": "Owner reported currentness; no truth judgment."}}
+    reference = {"schema": "deep.principle-atlas-decision-binding.v1",
+                 "owner": {"id": "principles-ai", "revision": "a" * 40},
+                 "decisionId": record_id, "version": 1, "decisionSha256": sha, "corpusRevision": "b" * 64}
+    return {"reference": reference, "read": read}
+
+
 class ContextLoadoutTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -417,6 +448,37 @@ class ContextLoadoutTests(unittest.TestCase):
         with self.assertRaises(context_pack.ContextPackError) as mismatch:
             context_loadout.create(self.loadout_store, "citation-mismatch", changed_spec)
         self.assertEqual(mismatch.exception.code, "invalid_request")
+
+    def test_exact_principles_decision_is_inspected_frozen_and_cold_read(self):
+        source = principle_decision_source()
+        spec = {"schemaVersion": 5, "variant": "principle-decision", "task": "change billing total",
+                "contextPreviewId": self.preview_id, "maxTokens": 8192,
+                "reductionRequests": [], "principleDecision": source}
+        created = context_loadout.create(self.loadout_store, "principle-decision-task", spec)
+        inspected = context_loadout.inspect(self.loadout_store, "principle-decision-task", version=1,
+                                            digest=created["digest"], service=self.service)
+        self.assertEqual(inspected["schemaVersion"], 5)
+        self.assertEqual(inspected["deliveryState"], "not_sent")
+        self.assertEqual(inspected["principleDecision"], source)
+        self.assertIn("Apply when the fixture conditions hold.", inspected["text"])
+        self.assertIn("Do not apply if the equipment is unavailable.", inspected["text"])
+        self.assertIn("Human-authored qualification", inspected["text"])
+        frozen = context_loadout.freeze(self.loadout_store, "principle-decision-task", version=1,
+                                        digest=created["digest"], service=self.service)
+        reopened = context_loadout.read(self.loadout_store, frozen["artifactId"])
+        self.assertEqual(reopened, frozen)
+        self.assertEqual(reopened["deliveryState"], "not_sent")
+        self.assertEqual(reopened["principleDecision"], source)
+
+    def test_principles_decision_with_changed_or_unknown_basis_cannot_be_selected(self):
+        for status in ("changed", "missing", "unknown"):
+            with self.subTest(status=status):
+                spec = {"schemaVersion": 5, "variant": "principle-decision", "task": "change billing total",
+                        "contextPreviewId": self.preview_id, "maxTokens": 8192,
+                        "reductionRequests": [], "principleDecision": principle_decision_source(status)}
+                with self.assertRaises(context_pack.ContextPackError) as stale:
+                    context_loadout.create(self.loadout_store, f"stale-{status}", spec)
+                self.assertEqual(stale.exception.code, "source_stale")
 
 
 if __name__ == "__main__":
