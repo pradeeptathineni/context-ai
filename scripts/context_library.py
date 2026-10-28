@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """Personal choices and finite maintenance; native hosts own semantic interpretation."""
 from contextlib import contextmanager
+from copy import deepcopy
 from datetime import date, timedelta
 import json
 from pathlib import Path
 import re
+from uuid import uuid4
 
 import yaml
 from jsonschema import ValidationError
@@ -471,6 +473,257 @@ def approve_selection(state, profile_id, option_id, evidence_sha):
         return {'event': key, 'selection': updated, 'next_action': 'Preview profile delivery; installed consumers stay pinned.'}
 
 
+def _review_closed(value, keys, required=None):
+    required = keys if required is None else required
+    if (not isinstance(value, dict) or set(value) - set(keys) or
+            any(key not in value for key in required)):
+        raise Invalid('equipment review has unknown or missing fields')
+    return value
+
+
+def _review_sha(value, label):
+    if not isinstance(value, str) or not re.fullmatch(r'[0-9a-f]{64}', value):
+        raise Invalid(label + ' must be a lowercase SHA-256 digest')
+    return value
+
+
+def _effective_profile(state, profile_id):
+    current = selection(profile_id, state)
+    path = inside(ROOT, 'library/profiles/' + profile_id + '.yaml')
+    file_sha = digest(path.read_bytes())
+    identity = digest(encoded({'owner_profile_sha256': file_sha,
+                               'effective_profile': current['profile']}))
+    return current, identity
+
+
+def _trial_review_input(value):
+    _review_closed(value, ['reference', 'pair', 'equipment_binding'])
+    ref = _review_closed(value['reference'],
+                         ['owner', 'id', 'packetSha256', 'sandboxRevision', 'planSha256',
+                          'baselineAttemptId', 'baselineAttemptSha256',
+                          'candidateAttemptId', 'candidateAttemptSha256'])
+    if ref['owner'] != 'sandbox-experiment-evidence':
+        raise Invalid('equipment review requires the retained Sandbox evidence owner')
+    if not re.fullmatch(r'[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}', str(ref['id'])):
+        raise Invalid('invalid retained Sandbox evidence ID')
+    for key in ('packetSha256', 'planSha256', 'baselineAttemptSha256', 'candidateAttemptSha256'):
+        _review_sha(ref[key], key)
+    for key in ('sandboxRevision',):
+        if not isinstance(ref[key], str) or not re.fullmatch(r'[0-9a-f]{40}', ref[key]):
+            raise Invalid(key + ' must be an exact owner revision')
+    for key in ('baselineAttemptId', 'candidateAttemptId'):
+        if not isinstance(ref[key], str) or not ref[key] or len(ref[key]) > 120:
+            raise Invalid('invalid selected trial attempt identity')
+    pair = _review_closed(value['pair'],
+                          ['verdict', 'outcomeComparable', 'baselineStatus', 'candidateStatus',
+                           'treatmentFields', 'unresolved', 'unknownCriteria',
+                           'unknownMeasurements', 'resourceQualifications', 'contextIdentityMatched'])
+    if (not isinstance(pair['verdict'], str) or len(pair['verdict']) > 80 or
+            type(pair['outcomeComparable']) is not bool or
+            type(pair['contextIdentityMatched']) is not bool or
+            pair['baselineStatus'] not in ('completed', 'failed', 'partial', 'blocked', 'unknown') or
+            pair['candidateStatus'] not in ('completed', 'failed', 'partial', 'blocked', 'unknown')):
+        raise Invalid('invalid retained trial comparison status')
+    for key in ('treatmentFields', 'unresolved', 'unknownCriteria', 'unknownMeasurements',
+                'resourceQualifications'):
+        values = pair[key]
+        if not isinstance(values, list) or len(values) > 100 or any(
+                not isinstance(item, str) or not item or len(item) > 300 for item in values):
+            raise Invalid('invalid bounded trial qualification list')
+    binding = _review_closed(value['equipment_binding'],
+                             ['contextOwnerRevision', 'profileId', 'profileDigest',
+                              'baselineOptionId', 'candidateOptionId'])
+    if not isinstance(binding['contextOwnerRevision'], str) or not re.fullmatch(
+            r'[0-9a-f]{40}', binding['contextOwnerRevision']):
+        raise Invalid('invalid Context owner revision in trial binding')
+    if not isinstance(binding['profileId'], str) or not re.fullmatch(
+            r'[a-z][a-z0-9-]{0,63}', binding['profileId']):
+        raise Invalid('invalid Context profile in trial binding')
+    _review_sha(binding['profileDigest'], 'profileDigest')
+    for key in ('baselineOptionId', 'candidateOptionId'):
+        if not isinstance(binding[key], str) or not re.fullmatch(r'[a-z][a-z0-9-]{0,63}', binding[key]):
+            raise Invalid('invalid Context equipment option in trial binding')
+    return {'reference': ref, 'pair': pair, 'equipment_binding': binding}
+
+
+def _equipment_review_preview(state, request):
+    _review_closed(request, ['schema', 'operation', 'profileId', 'candidateOptionId', 'contextOwnerRevision',
+                             'criterion', 'evidence'])
+    if request['schema'] != 'context-equipment-review-request.v1' or request['operation'] != 'preview':
+        raise Invalid('unsupported Context equipment review request')
+    profile_id, candidate_id = request['profileId'], request['candidateOptionId']
+    if not isinstance(profile_id, str) or not re.fullmatch(r'[a-z][a-z0-9-]{0,63}', profile_id):
+        raise Invalid('invalid Context profile ID')
+    if not isinstance(candidate_id, str) or not re.fullmatch(r'[a-z][a-z0-9-]{0,63}', candidate_id):
+        raise Invalid('invalid Context equipment option ID')
+    owner_revision = request['contextOwnerRevision']
+    if not isinstance(owner_revision, str) or not re.fullmatch(r'[0-9a-f]{40}', owner_revision):
+        raise Invalid('invalid current Context owner revision')
+    criterion = request['criterion']
+    if not isinstance(criterion, str) or not criterion.strip() or len(criterion) > 2000:
+        raise Invalid('provide one explicit bounded review criterion')
+    evidence = _trial_review_input(request['evidence'])
+    current, profile_digest = _effective_profile(state, profile_id)
+    options = inventory()
+    if candidate_id not in options:
+        raise Invalid('candidate is not in the current Context equipment catalog')
+    candidate = options[candidate_id]
+    if candidate['delivery']['kind'] not in ('loadout', 'capability'):
+        raise Invalid('candidate has no supported Context loadout delivery')
+    concern = candidate['concern']
+    current_rows = [row for row in current['profile']['selections'] if row['concern'] == concern]
+    if len(current_rows) > 1:
+        raise Invalid('current Context profile has conflicting equipment choices for this concern')
+    current_option = current_rows[0]['option'] if current_rows else 'none'
+    if candidate_id not in current['profile']['policy']['updates']:
+        raise Invalid('Context profile policy does not allow this future selection')
+    binding = evidence['equipment_binding']
+    pair = evidence['pair']
+    identity_matches = (
+        binding['profileId'] == profile_id and
+        binding['profileDigest'] == profile_digest and
+        binding['contextOwnerRevision'] == owner_revision and
+        binding['baselineOptionId'] == current_option and
+        binding['candidateOptionId'] == candidate_id
+    )
+    evidence_sufficient = (
+        pair['verdict'] == 'comparable' and pair['outcomeComparable'] is True and
+        pair['baselineStatus'] == 'completed' and pair['candidateStatus'] == 'completed' and
+        pair['treatmentFields'] == ['identity.equipment'] and
+        not pair['unresolved'] and not pair['unknownCriteria'] and
+        pair['contextIdentityMatched'] is True and identity_matches
+    )
+    proposed = deepcopy(current['profile'])
+    proposed['selections'] = [row for row in proposed['selections'] if row['concern'] != concern]
+    proposed['selections'].append({
+        'option': candidate_id, 'concern': concern,
+        'reason': 'Explicitly reviewed candidate for: ' + criterion.strip(),
+    })
+    target = selected(proposed)
+    from context_ai import explain, capability_registry
+    try:
+        before_explanation = explain(current['loadouts'])
+        after_explanation = explain(target['loadouts'])
+        registry = capability_registry()['capabilities']
+        if any(key not in registry for key in target['capabilities']):
+            raise Invalid('candidate profile includes an unresolved Context capability')
+        compatibility = {'status': 'owner-declared-compatible',
+                         'before': before_explanation['composition'],
+                         'after': after_explanation['composition'],
+                         'capabilities': {key: registry[key] for key in target['capabilities']},
+                         'decisions': after_explanation['decisions'],
+                         'checks': after_explanation['checks'],
+                         'capabilityRequirements': after_explanation['capability_requirements'],
+                         'qualification': 'Context declarations only; no host runtime or installation was checked.'}
+    except Invalid as error:
+        compatibility = {'status': 'blocked', 'detail': str(error),
+                         'before': current['loadouts'], 'after': target['loadouts'],
+                         'qualification': 'Declared Context conflict; no change was made.'}
+        evidence_sufficient = False
+    result = {
+        'schema': 'context-equipment-review-preview.v1',
+        'status': 'candidate_for_human_review' if evidence_sufficient else 'insufficient_evidence',
+        'canAccept': bool(evidence_sufficient and compatibility['status'] == 'owner-declared-compatible'),
+        'profileId': profile_id, 'profileDigest': profile_digest,
+        'contextOwnerRevision': owner_revision,
+        'currentOptionId': current_option, 'candidateOptionId': candidate_id,
+        'concern': concern, 'criterion': criterion.strip(),
+        'evidence': evidence, 'compatibility': compatibility,
+        'explanation': ('This exact candidate is eligible for your review under the supplied criterion. '
+                        'A single structural comparison does not establish benefit or superiority.'
+                        if evidence_sufficient else
+                        'The exact comparison, profile binding, or declared compatibility is insufficient; '
+                        'review only, with no profile change.'),
+        'limitations': [
+            'Sandbox comparability describes recorded trial structure, not general performance or superiority.',
+            'Unknown measurements remain unknown and cannot support a resource-efficiency claim.',
+            'A future profile choice is not installation or activation.',
+        ],
+    }
+    result['previewDigest'] = digest(encoded(result))
+    return result
+
+
+def equipment_review(state, request):
+    """Review exact Context profile equipment against a reread Sandbox pair; adoption is explicit."""
+    if not isinstance(request, dict) or request.get('schema') != 'context-equipment-review-request.v1':
+        raise Invalid('unsupported Context equipment review request')
+    operation = request.get('operation')
+    if operation == 'preview':
+        return _equipment_review_preview(state, request)
+    if operation == 'accept':
+        _review_closed(request, ['schema', 'operation', 'profileId', 'candidateOptionId', 'contextOwnerRevision', 'criterion',
+                                 'evidence', 'previewDigest', 'reviewId', 'accepted', 'reason'])
+        if request['accepted'] is not True:
+            raise Invalid('explicit human acceptance is required')
+        _review_sha(request['previewDigest'], 'previewDigest')
+        review_id = request['reviewId']
+        if not isinstance(review_id, str) or not re.fullmatch(
+                r'[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}', review_id):
+            raise Invalid('invalid equipment review identity')
+        reason = request['reason']
+        if not isinstance(reason, str) or not reason.strip() or len(reason) > 2000:
+            raise Invalid('provide a bounded human acceptance reason')
+        preview_request = {key: request[key] for key in
+                           ('schema', 'profileId', 'candidateOptionId', 'contextOwnerRevision', 'criterion', 'evidence')}
+        preview_request['operation'] = 'preview'
+        with locked(state):
+            preview = _equipment_review_preview(state, preview_request)
+            if preview['previewDigest'] != request['previewDigest']:
+                raise Invalid('equipment review preview changed; review the current profile again')
+            if not preview['canAccept']:
+                raise Invalid('insufficient evidence or Context compatibility blocks profile adoption')
+            current = selection(request['profileId'], state)['profile']
+            concern = preview['concern']
+            updated = [row for row in current['selections'] if row['concern'] != concern]
+            updated.append({'option': request['candidateOptionId'], 'concern': concern,
+                            'reason': reason.strip()})
+            retained = {
+                'schema': 'context-equipment-review.v1', 'reviewId': review_id,
+                'acceptedAt': date.today().isoformat(), 'profileId': request['profileId'],
+                'predecessorProfileDigest': preview['profileDigest'],
+                'contextOwnerRevision': preview['contextOwnerRevision'],
+                'successorSelections': updated, 'candidateOptionId': request['candidateOptionId'],
+                'criterion': preview['criterion'], 'humanReason': reason.strip(),
+                'evidenceReference': preview['evidence']['reference'],
+                'evidenceAssessment': preview['evidence']['pair'],
+                'equipmentBinding': preview['evidence']['equipment_binding'],
+                'evidenceQualification': preview['explanation'],
+                'previewDigest': preview['previewDigest'],
+                'compatibility': preview['compatibility'],
+                'activeConsumerChanges': False,
+                'deliveryState': 'not-installed',
+            }
+            event = {'schema_version': 1, 'equipment_reviews': [retained],
+                     'profile_updates': [{'profile': request['profileId'], 'selections': updated}],
+                     'authority': 'explicit human future-profile selection; no consumer delivery',
+                     'source_binding': preview['evidence']['reference']}
+            event_id = save_event(state, event)
+        return {'schema': 'context-equipment-review-receipt.v1', 'status': 'accepted_for_future_profile',
+                'reviewId': review_id, 'eventId': event_id, 'profileId': request['profileId'],
+                'selection': updated, 'activeConsumerChanges': False, 'deliveryState': 'not-installed'}
+    if operation == 'read':
+        _review_closed(request, ['schema', 'operation', 'reviewId', 'profileId'])
+        review_id, profile_id = request['reviewId'], request['profileId']
+        if not isinstance(review_id, str) or not re.fullmatch(
+                r'[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}', review_id):
+            raise Invalid('invalid equipment review identity')
+        current, current_digest = _effective_profile(state, profile_id)
+        found = None
+        for event in events(state):
+            for row in event.get('equipment_reviews', []):
+                if row.get('reviewId') == review_id and row.get('profileId') == profile_id:
+                    found = row
+        if found is None:
+            raise Invalid('exact accepted equipment review was not found')
+        return {'schema': 'context-equipment-review-read.v1', 'review': found,
+                'profileDigest': current_digest,
+                'currentness': 'current' if current_digest == found['predecessorProfileDigest'] else 'successor-created',
+                'effectiveProfile': current['profile'],
+                'activeConsumerChanges': False, 'deliveryState': 'not-installed'}
+    raise Invalid('unsupported Context equipment review operation')
+
+
 def record_assessment(state, path):
     value = read_yaml(Path(path))
     validate_schema('library-assessment', value)
@@ -504,6 +757,17 @@ def control(state, paused):
 
 def dispatch(args):
     command = args.command
+    if command == 'equipment-review':
+        if not args.state or not args.input or args.loadouts:
+            raise Invalid('equipment-review needs --state and one exact --input request')
+        path = Path(args.input)
+        if not path.is_absolute() or path.is_symlink() or not path.is_file() or path.stat().st_size > 1_000_000:
+            raise Invalid('equipment-review input must be one bounded absolute regular file')
+        try:
+            request = json.loads(path.read_text(encoding='utf-8'))
+        except (OSError, UnicodeError, ValueError):
+            raise Invalid('equipment-review request is unreadable JSON') from None
+        return equipment_review(args.state, request)
     if command == 'assess':
         if not args.state or not args.input:
             raise Invalid('assess needs --state and --input assessment file')

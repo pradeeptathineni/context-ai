@@ -1333,7 +1333,7 @@ def undo(project):
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover','catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess','handoff','validate-skill'])
+    parser.add_argument('command',choices=['list','explain','decisions','owners','tools','packet','plan','apply','verify','undo','refresh','export','rebind','recover','catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess','equipment-review','handoff','validate-skill'])
     parser.add_argument('loadouts',nargs='*')
     parser.add_argument('--project')
     parser.add_argument('--package',type=Path,help='Absolute candidate Agent Skills package directory for read-only validate-skill')
@@ -1423,7 +1423,7 @@ def main():
             result=external_delivery(args.library_profile,args.project,args.provider,args.command)
         print(encoded(result).decode(),end='')
         return
-    if args.command in ('catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess'):
+    if args.command in ('catalog','profiles','select','suggestions','trial','evolve','pause','resume','decide','assess','equipment-review'):
         from context_library import dispatch
         result=dispatch(args)
         print(encoded(result).decode(),end='')

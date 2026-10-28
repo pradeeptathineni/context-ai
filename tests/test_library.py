@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from uuid import uuid4
 
 import yaml
 from unittest.mock import patch
@@ -210,6 +211,81 @@ class PersonalLibrary(unittest.TestCase):
         with self.assertRaisesRegex(c.Invalid, 'unknown option'):
             lib.approve_selection(self.state, 'signals', 'arbitrary-shell-command', 'a' * 64)
         self.assertTrue(result['event'])
+
+    def test_equipment_review_requires_exact_comparable_pair_and_creates_future_profile_successor(self):
+        current, profile_digest = lib._effective_profile(self.state, 'signals')
+        request = {
+            'schema': 'context-equipment-review-request.v1',
+            'operation': 'preview',
+            'profileId': 'signals',
+            'candidateOptionId': 'context-tdd',
+            'contextOwnerRevision': 'e' * 40,
+            'criterion': 'Preserve a focused test-first workflow for this project.',
+            'evidence': {
+                'reference': {
+                    'owner': 'sandbox-experiment-evidence',
+                    'id': str(uuid4()),
+                    'packetSha256': 'a' * 64,
+                    'sandboxRevision': '0' * 40,
+                    'planSha256': 'b' * 64,
+                    'baselineAttemptId': 'baseline-1',
+                    'baselineAttemptSha256': 'c' * 64,
+                    'candidateAttemptId': 'candidate-1',
+                    'candidateAttemptSha256': 'd' * 64,
+                },
+                'pair': {
+                    'verdict': 'comparable', 'outcomeComparable': True,
+                    'baselineStatus': 'completed', 'candidateStatus': 'completed',
+                    'treatmentFields': ['identity.equipment'], 'unresolved': [],
+                    'unknownCriteria': [], 'unknownMeasurements': ['elapsed'],
+                    'resourceQualifications': ['elapsed: unknown; no resource claim'],
+                    'contextIdentityMatched': True,
+                },
+                'equipment_binding': {
+                    'contextOwnerRevision': 'e' * 40, 'profileId': 'signals',
+                    'profileDigest': profile_digest, 'baselineOptionId': 'none',
+                    'candidateOptionId': 'context-tdd',
+                },
+            },
+        }
+        self.assertIn('signals', current['profile']['id'])
+        preview = lib.equipment_review(self.state, request)
+        self.assertEqual(preview['status'], 'candidate_for_human_review')
+        self.assertTrue(preview['canAccept'])
+        self.assertEqual(preview['currentOptionId'], 'none')
+        self.assertEqual(preview['compatibility']['status'], 'owner-declared-compatible')
+        self.assertEqual(preview['evidence']['pair']['unknownMeasurements'], ['elapsed'])
+        self.assertEqual(lib.events(self.state), [])
+
+        insufficient = copy.deepcopy(request)
+        insufficient['evidence']['pair']['candidateStatus'] = 'partial'
+        withheld = lib.equipment_review(self.state, insufficient)
+        self.assertEqual(withheld['status'], 'insufficient_evidence')
+        self.assertFalse(withheld['canAccept'])
+        with self.assertRaisesRegex(c.Invalid, 'insufficient evidence'):
+            lib.equipment_review(self.state, {
+                **insufficient, 'operation': 'accept', 'previewDigest': withheld['previewDigest'],
+                'reviewId': str(uuid4()), 'accepted': True, 'reason': 'Synthetic test acceptance',
+            })
+        self.assertEqual(lib.events(self.state), [])
+
+        accepted = lib.equipment_review(self.state, {
+            **request, 'operation': 'accept', 'previewDigest': preview['previewDigest'],
+            'reviewId': str(uuid4()), 'accepted': True,
+            'reason': 'The named project criterion is met by this explicit profile choice.',
+        })
+        self.assertEqual(accepted['status'], 'accepted_for_future_profile')
+        self.assertFalse(accepted['activeConsumerChanges'])
+        self.assertEqual(accepted['deliveryState'], 'not-installed')
+        reopened = lib.equipment_review(self.state, {
+            'schema': 'context-equipment-review-request.v1', 'operation': 'read',
+            'reviewId': accepted['reviewId'], 'profileId': 'signals',
+        })
+        self.assertEqual(reopened['review']['evidenceReference'], request['evidence']['reference'])
+        self.assertEqual(reopened['currentness'], 'successor-created')
+        self.assertEqual(reopened['effectiveProfile']['selections'][-1]['option'], 'context-tdd')
+        self.assertEqual(reopened['review']['deliveryState'], 'not-installed')
+        self.assertEqual(len(lib.events(self.state)), 1)
 
     def test_history_sequence_survives_missing_earlier_event(self):
         with lib.locked(self.state):

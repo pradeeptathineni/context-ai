@@ -116,4 +116,18 @@ A new observation creates scoped inspection/trial proposals. Each activation per
 
 `decide PROFILE OPTION --sha256 INTAKE_DIGEST --state PRIVATE_DIR` requires non-fixture retained intake and an option in that profile's allowed-update policy. It changes the effective future selection, replacing its concern owner. Installed consumers remain pinned until a separate delivery preview/apply. No public release, billing, global settings or production timer follows from a decision.
 
+Deep may also request a Context-owned equipment review using the exact retained
+Sandbox trial-pair reference and an explicit project criterion. The owner checks
+the current profile, allowed update, selected baseline/candidate identities,
+single declared `identity.equipment` treatment, completed comparable pair and
+declared Context compatibility. Insufficient or changed evidence cannot be
+accepted. A successful preview only makes the exact candidate eligible for
+human review; it does not infer benefit or superiority. Separate explicit
+acceptance appends an immutable event to the existing private profile state and
+changes future profile selection only. The event preserves the Sandbox ID and
+digest, predecessor profile digest, criterion, human reason and compatibility
+qualification. It does not install, activate or send anything. Deep rereads the
+canonical Sandbox packet and current Context owner before preview, acceptance
+and cold reopening; unknown measurements remain unknown.
+
 Private state holds immutable numbered events, exact admitted bundles and assessment artifacts. Catalog exports include that state only when `--state` is explicitly provided. The public portal reads approved committed library data. Scheduling uses the native host configuration in [the maintenance example](../examples/library-maintenance.yaml); production recurrence remains disabled until explicitly configured.
