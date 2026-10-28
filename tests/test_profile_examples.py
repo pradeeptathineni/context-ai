@@ -23,7 +23,7 @@ class ProfileExamples(unittest.TestCase):
             '988960602abefa808247a81669dda533a6ab5dead9b85c7300b0be0d3dfea001'),
         'docs/loadouts.md': (
             '0cd664a08578adfa6aff1c78bc97286023d7048e70297e8dbacf4cef2961d864',
-            '3e65b749c78bfeac1c52076c4e6d7a2fe8dc3c95225e1af0251538bf06a1807d'),
+            '7dba0f39df31aae2613163d7584232363e32351c46e2ed000d3645f363e86a93'),
         'overlays/orchestration.md': (
             '3368af30d805e364dde687b1ea486c145294d27e621c8996d894a440a295eafb',
             '894661cce95ad6644d58cc0088cb9cfaa9ebf623d84c93b7022668652a69ea81'),
