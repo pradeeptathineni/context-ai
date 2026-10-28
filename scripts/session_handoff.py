@@ -25,6 +25,7 @@ MAX_PREVIEW_BYTES = 250_000
 OWNER_KINDS = {
     "planning-ai": {"decision", "review", "reflection"},
     "principles-ai": {"principle", "study-session"},
+    "context-ai": {"context-loadout"},
 }
 SIGNALS_KINDS = {"entity", "lead", "answer", "imported_answer", "research_note"}
 SECTIONS = {"decision", "finding", "question", "work"}
@@ -91,7 +92,7 @@ def _record_key(record):
 def _validate_record(record):
     _require_fields(record, ("selection", "content", "content_type", "export_as_of",
                              "observation", "qualification", "section"),
-                    ("include", "omit_reason"))
+                    ("include", "omit_reason", "owner_binding"))
     selection = record["selection"]
     _require_fields(selection, ("ref", "instance_id", "owner_epoch"))
     ref = selection["ref"]
@@ -104,6 +105,8 @@ def _validate_record(record):
     if owner in OWNER_KINDS and kind not in OWNER_KINDS[owner]:
         raise Error("invalid_owner", "record kind is not supported for its owner")
     if owner == "signals-ai" and kind not in SIGNALS_KINDS:
+        raise Error("invalid_owner", "record kind is not supported for its owner")
+    if owner == "context-ai" and kind not in OWNER_KINDS[owner]:
         raise Error("invalid_owner", "record kind is not supported for its owner")
     digest = ref["digest"]
     if not isinstance(digest, str) or not re.fullmatch(r"[0-9a-f]{64}", digest):
@@ -148,6 +151,41 @@ def _validate_record(record):
         "observation": observation, "qualification": qualification,
         "section": section, "include": include,
     }
+    owner_binding = record.get("owner_binding")
+    if owner == "context-ai":
+        _require_fields(owner_binding,
+                        ("artifact_id", "loadout_id", "version", "digest", "text_sha256",
+                         "source_artifact_id", "source_kind", "source_pack_id", "owner_revision"),
+                        code="invalid_owner")
+        for field in ("artifact_id", "source_artifact_id"):
+            if not isinstance(owner_binding[field], str) or not re.fullmatch(
+                    r"[0-9a-f]{64}", owner_binding[field]):
+                raise Error("invalid_owner", "Context loadout binding has an invalid artifact identity")
+        _bounded_text(owner_binding["loadout_id"], "Context loadout ID", 64)
+        version = owner_binding["version"]
+        if isinstance(version, bool) or not isinstance(version, int) or version < 1:
+            raise Error("invalid_owner", "Context loadout binding has an invalid version")
+        for field in ("digest", "text_sha256"):
+            if not isinstance(owner_binding[field], str) or not re.fullmatch(
+                    r"[0-9a-f]{64}", owner_binding[field]):
+                raise Error("invalid_owner", "Context loadout binding has an invalid digest")
+        if not isinstance(owner_binding["owner_revision"], str) or not re.fullmatch(
+                r"[a-f0-9]{40}", owner_binding["owner_revision"]):
+            raise Error("invalid_owner", "Context loadout binding has an invalid owner revision")
+        source_kind, source_pack_id = owner_binding["source_kind"], owner_binding["source_pack_id"]
+        if source_kind is None:
+            if source_pack_id is not None:
+                raise Error("invalid_owner", "Context loadout source binding is inconsistent")
+        elif source_kind != "context_source_pack" or not isinstance(source_pack_id, str) or not re.fullmatch(
+                r"[0-9a-f]{64}", source_pack_id):
+            raise Error("invalid_owner", "Context loadout source binding is unsupported")
+        if (owner_binding["artifact_id"] != record_id or
+                owner_binding["text_sha256"] != digest or
+                owner_binding["text_sha256"] != _sha(raw) or epoch is not None):
+            raise Error("invalid_owner", "Context loadout binding differs from its exact selected content")
+        normalized["owner_binding"] = dict(owner_binding)
+    elif owner_binding is not None:
+        raise Error("invalid_owner", "owner_binding is supported only for exact Context loadouts")
     if not include:
         normalized["omit_reason"] = omission
     return normalized

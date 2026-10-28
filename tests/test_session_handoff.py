@@ -47,6 +47,50 @@ class SessionHandoffTests(unittest.TestCase):
             session_handoff._validate_record(unsupported)
         self.assertEqual(error.exception.code, "invalid_owner")
 
+    def test_context_loadout_reconstruction_keeps_exact_lineage_without_approval(self):
+        content = "Selected project context; source freshness must be checked again.\n"
+        artifact = hashlib.sha256(b"synthetic artifact identity").hexdigest()
+        owner_binding = {
+            "artifact_id": artifact,
+            "loadout_id": "release-context",
+            "version": 3,
+            "digest": hashlib.sha256(b"synthetic loadout revision").hexdigest(),
+            "text_sha256": hashlib.sha256(content.encode()).hexdigest(),
+            "source_artifact_id": hashlib.sha256(b"synthetic source association").hexdigest(),
+            "source_kind": None,
+            "source_pack_id": None,
+            "owner_revision": "9b4172e9d2c93adadd0967fb873f050f70c5a79a",
+        }
+        record = self._record("context-ai", "context-project:synthetic-project",
+                              "context-loadout", artifact, content, "work", epoch=None,
+                              export_as_of=None)
+        record["content_type"] = "text/plain"
+        record["owner_binding"] = owner_binding
+        record["qualification"] = "Exact retained bytes, not a sent receipt or transferred approval."
+        request = {
+            "request_id": "1af5a24e-3902-4ab1-b20c-240be44b8f0b",
+            "purpose": "Continue reviewing a retained context loadout",
+            "handoff": "Recheck current sources and obtain any needed approval in the new session.",
+            "guidance_ids": ["guidance:core/testing.md"],
+            "records": [record],
+        }
+        created = self.service.create(request)
+        reopened = self.service.reopen(created["handoff_id"])
+        self.assertEqual(reopened["records"][0]["owner_binding"], owner_binding)
+        self.assertEqual(reopened["records"][0]["content"], content)
+        preview = self.service.preview(created["handoff_id"], format="json")
+        payload = json.loads(self.service.export(preview["preview_id"]))
+        self.assertFalse(payload["fresh_history"]["prior_execution_state_carried"])
+        self.assertFalse(payload["fresh_history"]["task_acceptance_carried"])
+        self.assertEqual(payload["records"][0]["owner_binding"], owner_binding)
+        self.assertIn("not a sent receipt", payload["records"][0]["qualification"])
+
+        changed_binding = dict(owner_binding, text_sha256="0" * 64)
+        rejected = dict(record, owner_binding=changed_binding)
+        with self.assertRaises(context_pack.ContextPackError) as error:
+            session_handoff._validate_record(rejected)
+        self.assertEqual(error.exception.code, "invalid_owner")
+
     def _git(self, *args):
         subprocess.run(["git", "-C", str(self.project), *args], check=True,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)

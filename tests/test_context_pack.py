@@ -447,20 +447,36 @@ class ContextPackTests(unittest.TestCase):
 
     def test_explicit_store_upgrade_preserves_history_and_fences_stale_instances(self):
         current_root = Path(__file__).resolve().parents[1]
+        accepted_current = "9b4172e9d2c93adadd0967fb873f050f70c5a79a"
+        accepted_previous = "5c0926db635d93376b6b10729991c066efdbc32e"
         store = self.root / "upgrade-store"
         old_root = self.root / "context-old"
         subprocess.run(["git", "clone", "--local", "--no-hardlinks", "-q", str(current_root), str(old_root)],
                        check=True)
-        subprocess.run(["git", "-C", str(old_root), "checkout", "-q", "3db958db5e1d10332ef85bc8d4fdb329b3fb5e18"],
+        subprocess.run(["git", "-C", str(old_root), "checkout", "-q", accepted_previous],
                        check=True)
         new_root = self.root / "context-new"
         subprocess.run(["git", "clone", "--local", "--no-hardlinks", "-q", str(current_root), str(new_root)],
                        check=True)
-        old_service = context_pack.ContextPackService(
-            self.project, store=store, context_root=old_root, project_id="synthetic")
-        candidates = old_service.candidates("change total pricing")
-        preview = old_service.preview(candidates["candidate_set_id"], max_tokens=8192)
-        old_render = (store / f"preview-{preview['preview_id']}.json").read_bytes()
+        subprocess.run(["git", "-C", str(new_root), "checkout", "-q", accepted_current],
+                       check=True)
+        # Produce the records with the exact previous owner CLI, then upgrade
+        # that same private store to the exact accepted current owner.
+        old_cli = old_root / "scripts" / "context_pack.py"
+        old_candidates = json.loads(subprocess.check_output([
+            sys.executable, "-B", str(old_cli), "candidates",
+            "--project", str(self.project), "--store", str(store),
+            "--project-id", "synthetic", "--context-root", str(old_root),
+            "--task", "change total pricing"], text=True))
+        subprocess.run([
+            sys.executable, "-B", str(old_cli), "preview",
+            "--project", str(self.project), "--store", str(store),
+            "--project-id", "synthetic", "--context-root", str(old_root),
+            "--candidates", old_candidates["candidate_set_id"], "--max-tokens", "8192",
+            "--format", "json"], check=True, stdout=subprocess.DEVNULL)
+        old_preview_path = next(store.glob("preview-*.json"))
+        preview = json.loads(old_preview_path.read_text(encoding="utf-8"))
+        old_render = old_preview_path.read_bytes()
         old_binding = (store / "binding.json").read_bytes()
         cli = Path(__file__).resolve().parents[1] / "scripts" / "context_pack.py"
         upgrade = json.loads(subprocess.check_output([
@@ -508,9 +524,14 @@ class ContextPackTests(unittest.TestCase):
                 operator_quiescent=True)
         self.assertEqual(reused.exception.code, "request_id_conflict")
         self.assertEqual((store / f"preview-{preview['preview_id']}.json").read_bytes(), old_render)
-        with self.assertRaises(context_pack.ContextPackError) as stale:
-            old_service.candidates("stale old process")
-        self.assertEqual(stale.exception.code, "binding_mismatch")
+        stale_old_process = subprocess.run([
+            sys.executable, "-B", str(old_cli), "candidates",
+            "--project", str(self.project), "--store", str(store),
+            "--project-id", "synthetic", "--context-root", str(old_root),
+            "--task", "stale old process"], capture_output=True, text=True)
+        self.assertEqual(stale_old_process.returncode, 2)
+        self.assertEqual(json.loads(stale_old_process.stderr)["error"]["code"],
+                         "binding_mismatch")
         current = context_pack.ContextPackService(self.project, store=store,
                                                  context_root=new_root, project_id="synthetic")
         with self.assertRaises(context_pack.ContextPackError) as historical:
