@@ -240,6 +240,12 @@ class PersonalLibrary(unittest.TestCase):
                     'unknownCriteria': [], 'unknownMeasurements': ['elapsed'],
                     'resourceQualifications': ['elapsed: unknown; no resource claim'],
                     'contextIdentityMatched': True,
+                    'criterionId': 'known-evidence',
+                    'criterionStatement': 'Expose source identity and judgment completeness.',
+                    'criterionKind': 'consumer', 'criterionOwner': 'sandbox-test',
+                    'criterionVersion': '1', 'criterionReference': 'test fixture',
+                    'criterionSha256': 'b' * 64, 'criterionIndependentOfSubject': True,
+                    'baselineCriterionResult': 'fail', 'candidateCriterionResult': 'pass',
                 },
                 'equipment_binding': {
                     'contextOwnerRevision': 'e' * 40, 'profileId': 'signals',
@@ -256,6 +262,13 @@ class PersonalLibrary(unittest.TestCase):
         self.assertEqual(preview['compatibility']['status'], 'owner-declared-compatible')
         self.assertEqual(preview['evidence']['pair']['unknownMeasurements'], ['elapsed'])
         self.assertEqual(lib.events(self.state), [])
+
+        no_improvement = copy.deepcopy(request)
+        no_improvement['evidence']['pair']['baselineCriterionResult'] = 'pass'
+        same_result = lib.equipment_review(self.state, no_improvement)
+        self.assertEqual(same_result['status'], 'insufficient_evidence')
+        self.assertFalse(same_result['canAccept'])
+        self.assertIn('exact criterion result', same_result['explanation'])
 
         insufficient = copy.deepcopy(request)
         insufficient['evidence']['pair']['candidateStatus'] = 'partial'

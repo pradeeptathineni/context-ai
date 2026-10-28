@@ -517,13 +517,34 @@ def _trial_review_input(value):
     pair = _review_closed(value['pair'],
                           ['verdict', 'outcomeComparable', 'baselineStatus', 'candidateStatus',
                            'treatmentFields', 'unresolved', 'unknownCriteria',
-                           'unknownMeasurements', 'resourceQualifications', 'contextIdentityMatched'])
+                           'unknownMeasurements', 'resourceQualifications', 'contextIdentityMatched',
+                           'criterionId', 'criterionStatement', 'criterionKind', 'criterionOwner',
+                           'criterionVersion', 'criterionReference', 'criterionSha256',
+                           'criterionIndependentOfSubject', 'baselineCriterionResult',
+                           'candidateCriterionResult'])
     if (not isinstance(pair['verdict'], str) or len(pair['verdict']) > 80 or
             type(pair['outcomeComparable']) is not bool or
             type(pair['contextIdentityMatched']) is not bool or
             pair['baselineStatus'] not in ('completed', 'failed', 'partial', 'blocked', 'unknown') or
-            pair['candidateStatus'] not in ('completed', 'failed', 'partial', 'blocked', 'unknown')):
+            pair['candidateStatus'] not in ('completed', 'failed', 'partial', 'blocked', 'unknown') or
+            type(pair['criterionIndependentOfSubject']) is not bool or
+            pair['baselineCriterionResult'] not in ('pass', 'fail', 'unknown') or
+            pair['candidateCriterionResult'] not in ('pass', 'fail', 'unknown')):
         raise Invalid('invalid retained trial comparison status')
+    if (not isinstance(pair['criterionId'], str) or
+            not re.fullmatch(r'[a-z][a-z0-9-]{0,63}', pair['criterionId']) or
+            not isinstance(pair['criterionStatement'], str) or
+            not pair['criterionStatement'].strip() or len(pair['criterionStatement']) > 1000 or
+            not isinstance(pair['criterionKind'], str) or
+            not re.fullmatch(r'[a-z][a-z0-9-]{0,63}', pair['criterionKind']) or
+            not isinstance(pair['criterionOwner'], str) or
+            not pair['criterionOwner'].strip() or len(pair['criterionOwner']) > 200 or
+            not isinstance(pair['criterionVersion'], str) or
+            not pair['criterionVersion'].strip() or len(pair['criterionVersion']) > 100 or
+            not isinstance(pair['criterionReference'], str) or
+            not pair['criterionReference'].strip() or len(pair['criterionReference']) > 300):
+        raise Invalid('invalid selected Sandbox criterion provenance')
+    _review_sha(pair['criterionSha256'], 'criterionSha256')
     for key in ('treatmentFields', 'unresolved', 'unknownCriteria', 'unknownMeasurements',
                 'resourceQualifications'):
         values = pair[key]
@@ -590,6 +611,8 @@ def _equipment_review_preview(state, request):
         pair['verdict'] == 'comparable' and pair['outcomeComparable'] is True and
         pair['baselineStatus'] == 'completed' and pair['candidateStatus'] == 'completed' and
         pair['treatmentFields'] == ['identity.equipment'] and
+        pair['baselineCriterionResult'] == 'fail' and
+        pair['candidateCriterionResult'] == 'pass' and
         not pair['unresolved'] and not pair['unknownCriteria'] and
         pair['contextIdentityMatched'] is True and identity_matches
     )
@@ -629,10 +652,11 @@ def _equipment_review_preview(state, request):
         'currentOptionId': current_option, 'candidateOptionId': candidate_id,
         'concern': concern, 'criterion': criterion.strip(),
         'evidence': evidence, 'compatibility': compatibility,
-        'explanation': ('This exact candidate is eligible for your review under the supplied criterion. '
-                        'A single structural comparison does not establish benefit or superiority.'
+        'explanation': ('This retained pair records the candidate passing the selected Sandbox criterion '
+                        'while the baseline failed; review whether that evidence fits your separate project criterion. '
+                        'One pair does not establish general benefit or superiority.'
                         if evidence_sufficient else
-                        'The exact comparison, profile binding, or declared compatibility is insufficient; '
+                        'The exact criterion result, comparison, profile binding, or declared compatibility is insufficient; '
                         'review only, with no profile change.'),
         'limitations': [
             'Sandbox comparability describes recorded trial structure, not general performance or superiority.',

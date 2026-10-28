@@ -120,9 +120,13 @@ Deep may also request a Context-owned equipment review using the exact retained
 Sandbox trial-pair reference and an explicit project criterion. The owner checks
 the current profile, allowed update, selected baseline/candidate identities,
 single declared `identity.equipment` treatment, completed comparable pair and
-declared Context compatibility. Insufficient or changed evidence cannot be
-accepted. A successful preview only makes the exact candidate eligible for
-human review; it does not infer benefit or superiority. Separate explicit
+declared Context compatibility. The selected criterion must be frozen in the
+Sandbox plan and record candidate `pass` against baseline `fail`; a structural
+pair without that exact result remains `insufficient_evidence`. Insufficient
+or changed evidence cannot be accepted. A successful preview only makes the
+exact candidate eligible for human review; it does not infer general benefit
+or superiority, and the user's project criterion remains separate from the
+Sandbox criterion. Separate explicit
 acceptance appends an immutable event to the existing private profile state and
 changes future profile selection only. The event preserves the Sandbox ID and
 digest, predecessor profile digest, criterion, human reason and compatibility
