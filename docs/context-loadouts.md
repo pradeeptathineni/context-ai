@@ -24,6 +24,24 @@ read(store, artifact_id)
 
 The additive `context-loadout/v2` spec with `variant: "source-pack-only"` freezes an exact Context preview without Research, Planning or Custom input. V1 schemas, digest bytes, artifacts and cold-reader behavior remain unchanged. The source-only artifact records the Context project ID, preview ID, project revision, exact Context manifest and text/JSON renders, and each selected source file hash. `inspect`, `compare` and `freeze` re-export through the canonical Context pack service and refuse source drift; `read` verifies retained bytes and hashes without reopening project files. Both variants use the same UTF-8 bytes divided by four estimate and explicit budget. See [context-loadout-v2.schema.json](../schemas/context-loadout-v2.schema.json).
 
+The additive `context-loadout/v4` spec with `variant: "research-citation"`
+retains one exact Research citation binding and the bounded canonical owner read
+that contains its quote, source locator, matching answer paragraphs, status,
+coverage and qualifications. It does not expand the selection to the whole Study
+answer. The native Context engine validates and preserves this closed projection;
+the integrating host remains responsible for rereading Research before review,
+freeze and send verification. A frozen v4 artifact remains `not_sent`, and the
+native cold reader verifies the exact retained bytes without claiming that a
+quote proves entailment, truth, currentness or completeness. The existing v1,
+v2 and v3 readers remain unchanged. The v4 spec includes `task`,
+`contextPreviewId`, `maxTokens`, an empty `reductionRequests` list, and
+`researchCitation: {reference, peek}`. `reference` uses
+`deep.research-study-citation-binding.v1`; `peek` must be the complete, closed
+`deep.research-study-citation-peek.v1` projection returned by Research's
+citation read tool. The host binds the artifact to the active conversation in
+its own durable association. Selection, installation and sending remain
+separate host actions.
+
 ```json
 {
   "schemaVersion": 2,

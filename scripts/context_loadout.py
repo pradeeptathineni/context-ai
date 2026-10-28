@@ -17,6 +17,7 @@ import linked_context
 SCHEMA_VERSION = 1
 SOURCE_ONLY_SCHEMA_VERSION = 2
 CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION = 3
+RESEARCH_CITATION_SCHEMA_VERSION = 4
 MAX_SPEC_BYTES = 512 * 1024
 MAX_REDUCTION_PREVIEWS = 8
 MAX_REDUCTION_BYTES = 512 * 1024
@@ -210,7 +211,107 @@ def _custom_context_packet_reference(value):
     return value
 
 
+def _research_citation(value):
+    reference_fields = {"schema", "study", "question", "citation"}
+    if not isinstance(value, dict) or set(value) != {"reference", "peek"}:
+        _fail("invalid_request", "Research citation source must contain its exact binding and owner read")
+    reference = value["reference"]
+    if not isinstance(reference, dict) or set(reference) != reference_fields or reference.get("schema") != "deep.research-study-citation-binding.v1":
+        _fail("invalid_request", "Research citation binding schema is invalid")
+    study = reference.get("study")
+    question = reference.get("question")
+    binding_citation = reference.get("citation")
+    if (not isinstance(study, dict) or set(study) != {"id", "sha256", "revision"}
+            or not isinstance(study.get("id"), str) or not re.fullmatch(r"study:[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}", study["id"])
+            or not isinstance(study.get("sha256"), str) or not re.fullmatch(r"[a-f0-9]{64}", study["sha256"])
+            or type(study.get("revision")) is not int or study["revision"] < 1
+            or not isinstance(question, dict) or set(question) != {"id", "sha256"}
+            or not isinstance(question.get("id"), str) or not re.fullmatch(r"study-question:[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}", question["id"])
+            or not isinstance(question.get("sha256"), str) or not re.fullmatch(r"[a-f0-9]{64}", question["sha256"])):
+        _fail("invalid_request", "Research Study or question binding is invalid")
+    if (not isinstance(binding_citation, dict) or set(binding_citation) != {"id", "sourceDigest", "recordId", "version"}
+            or not isinstance(binding_citation.get("id"), str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._:-]{0,127}", binding_citation["id"])
+            or not isinstance(binding_citation.get("sourceDigest"), str) or not re.fullmatch(r"[a-f0-9]{64}", binding_citation["sourceDigest"])
+            or not isinstance(binding_citation.get("recordId"), str) or not binding_citation["recordId"].strip()
+            or len(binding_citation["recordId"]) > 256
+            or not (binding_citation.get("version") is None or
+                    (isinstance(binding_citation.get("version"), str) and len(binding_citation["version"]) <= 128) or
+                    (type(binding_citation.get("version")) is int and abs(binding_citation["version"]) <= 2**53 - 1))):
+        _fail("invalid_request", "Research citation source binding is invalid")
+
+    peek = value["peek"]
+    peek_fields = {"schema", "owner", "studyId", "studySha256", "studyRevision", "questionId", "questionSha256",
+                   "resultStatus", "coverage", "paragraphRefs", "citation", "position", "qualifications", "sourceBinding"}
+    if not isinstance(peek, dict) or set(peek) != peek_fields or peek.get("schema") != "deep.research-study-citation-peek.v1":
+        _fail("invalid_request", "Research citation owner read schema is invalid")
+    owner = peek.get("owner")
+    if (not isinstance(owner, dict) or set(owner) != {"id", "revision"} or owner.get("id") != "research-ai"
+            or not isinstance(owner.get("revision"), str) or not re.fullmatch(r"[a-f0-9]{40,64}", owner["revision"])):
+        _fail("invalid_request", "Research citation owner identity is invalid")
+    if (peek.get("studyId") != study["id"] or peek.get("studySha256") != study["sha256"]
+            or peek.get("studyRevision") != study["revision"] or peek.get("questionId") != question["id"]
+            or peek.get("questionSha256") != question["sha256"] or peek.get("sourceBinding") != reference):
+        _fail("invalid_request", "Research citation owner read does not match its exact source binding")
+    if (not isinstance(peek.get("resultStatus"), str) or not peek["resultStatus"] or len(peek["resultStatus"]) > 128
+            or not isinstance(peek.get("coverage"), str) or not peek["coverage"] or len(peek["coverage"]) > 256):
+        _fail("invalid_request", "Research citation answer status or coverage is invalid")
+    citation = peek.get("citation")
+    citation_fields = {"id", "page", "start", "end", "quote", "quoteTruncated", "notebookId", "recordId", "version", "sourceDigest", "sourceTitle"}
+    if (not isinstance(citation, dict) or set(citation) != citation_fields
+            or citation.get("id") != binding_citation["id"] or citation.get("sourceDigest") != binding_citation["sourceDigest"]
+            or citation.get("recordId") != binding_citation["recordId"] or citation.get("version") != binding_citation["version"]
+            or type(citation.get("page")) is not int or citation["page"] < 1
+            or type(citation.get("start")) is not int or citation["start"] < 0
+            or type(citation.get("end")) is not int or citation["end"] < citation["start"]
+            or not isinstance(citation.get("quote"), str) or not citation["quote"].strip() or len(citation["quote"].encode("utf-8")) > 32_000
+            or type(citation.get("quoteTruncated")) is not bool
+            or not isinstance(citation.get("notebookId"), str) or not citation["notebookId"] or len(citation["notebookId"]) > 256
+            or not isinstance(citation.get("sourceTitle"), str) or not citation["sourceTitle"].strip() or len(citation["sourceTitle"]) > 512):
+        _fail("invalid_request", "Research citation projection is invalid")
+    position = peek.get("position")
+    expected_position = {"page": citation["page"], "start": citation["start"], "end": citation["end"],
+                         "sourceDigest": citation["sourceDigest"], "recordId": citation["recordId"],
+                         "version": citation["version"]}
+    if not isinstance(position, dict) or set(position) != set(expected_position) or position != expected_position:
+        _fail("invalid_request", "Research citation coordinates do not match the retained source")
+    paragraphs = peek.get("paragraphRefs")
+    if (not isinstance(paragraphs, list) or len(paragraphs) > 64
+            or any(not isinstance(row, dict) or set(row) != {"text", "evidenceId"}
+                   or row.get("evidenceId") != citation["id"] or not isinstance(row.get("text"), str)
+                   or not row["text"].strip() or len(row["text"].encode("utf-8")) > 32_000 for row in paragraphs)):
+        _fail("invalid_request", "Research citation answer paragraphs are invalid")
+    qualifications = peek.get("qualifications")
+    if (not isinstance(qualifications, list) or not 1 <= len(qualifications) <= 16
+            or any(not isinstance(item, str) or not item.strip() or len(item) > 1000 for item in qualifications)):
+        _fail("invalid_request", "Research citation qualifications are invalid")
+    return {"reference": reference, "peek": peek}
+
+
 def _spec(value, *, require_active=True):
+    if (isinstance(value, dict) and type(value.get("schemaVersion")) is int
+            and value.get("schemaVersion") == RESEARCH_CITATION_SCHEMA_VERSION):
+        allowed = {"schemaVersion", "variant", "task", "contextPreviewId", "maxTokens",
+                   "reductionRequests", "researchCitation"}
+        if set(value) - allowed or value.get("variant") != "research-citation":
+            _fail("invalid_request", "loadout spec must match context-loadout/v4 research-citation")
+        task = value.get("task")
+        if not isinstance(task, str) or not task.strip() or len(task) > context_pack.MAX_TASK_CHARS:
+            _fail("invalid_request", "task must contain 1 to 2048 characters")
+        if not isinstance(value.get("contextPreviewId"), str) or not re.fullmatch(r"[0-9a-f]{32}", value["contextPreviewId"]):
+            _fail("invalid_request", "Context preview ID is invalid")
+        budget = value.get("maxTokens")
+        if type(budget) is not int or not 100 <= budget <= 8192:
+            _fail("invalid_request", "maxTokens must be an integer from 100 to 8192")
+        requests = value.get("reductionRequests", [])
+        if requests != []:
+            _fail("invalid_request", "Research citation loadouts preserve the selected citation without unrelated reduction requests")
+        citation = _research_citation(value.get("researchCitation"))
+        normalized = {"schemaVersion": RESEARCH_CITATION_SCHEMA_VERSION, "variant": "research-citation",
+                      "task": task, "contextPreviewId": value["contextPreviewId"], "maxTokens": budget,
+                      "reductionRequests": [], "researchCitation": citation}
+        if len(context_pack._json(normalized).encode("utf-8")) > MAX_SPEC_BYTES:
+            _fail("invalid_request", "loadout spec exceeds its size limit")
+        return normalized
     if (isinstance(value, dict) and type(value.get("schemaVersion")) is int
             and value.get("schemaVersion") == CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION):
         allowed = {"schemaVersion", "variant", "task", "contextPreviewId", "maxTokens",
@@ -522,6 +623,81 @@ def _assemble_custom_context_packet(revision, service):
             "inspection": inspection, "text": combined, "textSha256": _sha(raw)}
 
 
+def _research_citation_text(source):
+    reference, peek = source["reference"], source["peek"]
+    citation = peek["citation"]
+    study, question = reference["study"], reference["question"]
+    lines = [
+        "## One exact Research citation",
+        "",
+        "This loadout retains one selected citation and its matching answer paragraphs; it does not expand to the whole Study answer.",
+        "The host must reread the canonical Research source before freezing and verifying use. Context does not infer entailment, truth, currentness or completeness.",
+        "",
+        f"- Study: {study['id']} · revision {study['revision']} · SHA-256 {study['sha256']}",
+        f"- Question: {question['id']} · SHA-256 {question['sha256']}",
+        f"- Citation: {citation['id']} · {citation['sourceTitle']}",
+        f"- Source record: {citation['recordId']} · version {citation['version']}",
+        f"- Source digest: {citation['sourceDigest']} · notebook {citation['notebookId']}",
+        f"- Exact location: page {citation['page']}, offsets {citation['start']}–{citation['end']}",
+        f"- Research answer status: {peek['resultStatus']} · coverage: {peek['coverage']}",
+        "",
+        "### Retained citation quote" + (" · truncated by Research" if citation["quoteTruncated"] else ""),
+        "",
+        citation["quote"],
+        "",
+        "### Matching Research answer paragraphs",
+        "",
+    ]
+    if peek["paragraphRefs"]:
+        lines.extend(f"- {row['text']}" for row in peek["paragraphRefs"])
+    else:
+        lines.append("No retained answer paragraph references this citation.")
+    lines.extend(["", "### Source qualifications", ""])
+    lines.extend(f"- {qualification}" for qualification in peek["qualifications"])
+    return "\n".join(lines)
+
+
+def _assemble_research_citation(revision, service):
+    spec = revision["spec"]
+    base_spec = {"schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "variant": "source-pack-only",
+                 "task": spec["task"], "contextPreviewId": spec["contextPreviewId"],
+                 "maxTokens": spec["maxTokens"], "reductionRequests": []}
+    base_revision = {"schema_version": SCHEMA_VERSION, "schemaVersion": SOURCE_ONLY_SCHEMA_VERSION,
+                     "loadoutId": revision["loadoutId"], "version": revision["version"],
+                     "spec": base_spec,
+                     "digest": _revision_digest(revision["loadoutId"], revision["version"], base_spec)}
+    base = _assemble_source_only(base_revision, service)
+    source = spec["researchCitation"]
+    citation_text = _research_citation_text(source)
+    combined = base["text"] + "\n\n" + citation_text
+    raw = combined.encode("utf-8")
+    if len(raw) > 4 * spec["maxTokens"]:
+        _fail("budget_too_small", "The selected Context pack and exact Research citation do not fit; choose a larger budget or smaller pack.")
+    reference, peek = source["reference"], source["peek"]
+    citation = peek["citation"]
+    inspection = {**base["inspection"], "researchCitation": {
+        "binding": reference,
+        "owner": peek["owner"],
+        "citationTitle": citation["sourceTitle"],
+        "sourceDigest": citation["sourceDigest"],
+        "recordId": citation["recordId"],
+        "version": citation["version"],
+        "page": citation["page"],
+        "start": citation["start"],
+        "end": citation["end"],
+        "quoteTruncated": citation["quoteTruncated"],
+        "matchingParagraphCount": len(peek["paragraphRefs"]),
+        "resultStatus": peek["resultStatus"],
+        "coverage": peek["coverage"],
+        "qualifications": peek["qualifications"],
+    }, "combinedBytes": len(raw), "estimatedTokens": (len(raw) + 3) // 4}
+    return {"schemaVersion": RESEARCH_CITATION_SCHEMA_VERSION, "loadout": _public_revision(revision),
+            "assemblyState": "assembled", "deliveryState": "not_sent", "contextPack": base["contextPack"],
+            "sourceArtifact": base["sourceArtifact"], "researchCitation": source,
+            "reductionPreviews": base["reductionPreviews"], "inspection": inspection,
+            "text": combined, "textSha256": _sha(raw)}
+
+
 def _assemble(store, revision, service):
     _assert_disjoint(store, service)
     spec = revision["spec"]
@@ -529,6 +705,8 @@ def _assemble(store, revision, service):
         return _assemble_source_only(revision, service)
     if spec["schemaVersion"] == CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION:
         return _assemble_custom_context_packet(revision, service)
+    if spec["schemaVersion"] == RESEARCH_CITATION_SCHEMA_VERSION:
+        return _assemble_research_citation(revision, service)
     project_json = service.export(spec["contextPreviewId"], format="json")
     project_text = service.export(spec["contextPreviewId"], format="text")
     try:
@@ -788,6 +966,74 @@ def _read_custom_context_packet(artifact_id, body):
     return body
 
 
+def _read_research_citation(artifact_id, body):
+    expected_fields = {"schema_version", "schemaVersion", "loadout", "assemblyState", "deliveryState",
+                       "contextPack", "sourceArtifact", "researchCitation", "reductionPreviews",
+                       "inspection", "text", "textSha256", "artifactState", "artifactId"}
+    if (not isinstance(body, dict) or set(body) != expected_fields or body.get("artifactId") != artifact_id
+            or body.get("schema_version") != SCHEMA_VERSION or body.get("schemaVersion") != RESEARCH_CITATION_SCHEMA_VERSION
+            or body.get("assemblyState") != "assembled" or body.get("deliveryState") != "not_sent"
+            or body.get("artifactState") != "frozen" or _snapshot_id(body) != artifact_id):
+        _fail("store_invalid", "frozen Research citation Context loadout integrity check failed")
+    loadout = body.get("loadout")
+    if (not isinstance(loadout, dict) or loadout.get("state") != "referenced"
+            or loadout.get("schemaVersion") != RESEARCH_CITATION_SCHEMA_VERSION
+            or loadout.get("loadoutId") != _identity(loadout.get("loadoutId"))
+            or type(loadout.get("version")) is not int or loadout["version"] < 1):
+        _fail("store_invalid", "frozen Research citation loadout revision is invalid")
+    spec = _spec(loadout.get("spec"), require_active=False)
+    if (spec != loadout.get("spec") or loadout.get("digest") !=
+            _revision_digest(loadout["loadoutId"], loadout["version"], spec)):
+        _fail("store_invalid", "frozen Research citation loadout revision is invalid")
+    source = _research_citation(body.get("researchCitation"))
+    if source != spec["researchCitation"]:
+        _fail("store_invalid", "frozen Research citation differs from its reviewed source binding")
+    context_source = body.get("sourceArtifact")
+    if not isinstance(context_source, dict) or not isinstance(context_source.get("textRender"), str):
+        _fail("store_invalid", "frozen Context source pack is missing")
+    base_text = f"# Context loadout {loadout['loadoutId']} v{loadout['version']}\n\n{context_source['textRender']}"
+    expected_text = base_text + "\n\n" + _research_citation_text(source)
+    raw = expected_text.encode("utf-8")
+    if (body.get("text") != expected_text or body.get("textSha256") != _sha(raw)
+            or len(raw) > 4 * spec["maxTokens"]):
+        _fail("store_invalid", "frozen Research citation render or budget is invalid")
+    inspection = body.get("inspection")
+    if not isinstance(inspection, dict):
+        _fail("store_invalid", "frozen Research citation inspection is invalid")
+    base_inspection = {key: value for key, value in inspection.items() if key != "researchCitation"}
+    base_bytes = len(base_text.encode("utf-8"))
+    base_inspection["combinedBytes"] = base_bytes
+    base_inspection["estimatedTokens"] = (base_bytes + 3) // 4
+    peek, citation = source["peek"], source["peek"]["citation"]
+    expected_inspection = {**base_inspection, "combinedBytes": len(raw), "estimatedTokens": (len(raw) + 3) // 4,
+                           "researchCitation": {
+                               "binding": source["reference"], "owner": peek["owner"],
+                               "citationTitle": citation["sourceTitle"], "sourceDigest": citation["sourceDigest"],
+                               "recordId": citation["recordId"], "version": citation["version"],
+                               "page": citation["page"], "start": citation["start"], "end": citation["end"],
+                               "quoteTruncated": citation["quoteTruncated"],
+                               "matchingParagraphCount": len(peek["paragraphRefs"]),
+                               "resultStatus": peek["resultStatus"], "coverage": peek["coverage"],
+                               "qualifications": peek["qualifications"],
+                           }}
+    if inspection != expected_inspection or inspection.get("budgetTokens") != spec["maxTokens"]:
+        _fail("store_invalid", "frozen Research citation inspection does not match its exact projection")
+    base_spec = {"schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "variant": "source-pack-only",
+                 "task": spec["task"], "contextPreviewId": spec["contextPreviewId"],
+                 "maxTokens": spec["maxTokens"], "reductionRequests": []}
+    base_loadout = {**loadout, "schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "spec": base_spec,
+                    "digest": _revision_digest(loadout["loadoutId"], loadout["version"], base_spec)}
+    base_body = {key: value for key, value in body.items() if key != "researchCitation"}
+    base_body["schemaVersion"] = SOURCE_ONLY_SCHEMA_VERSION
+    base_body["loadout"] = base_loadout
+    base_body["inspection"] = base_inspection
+    base_body["text"] = base_text
+    base_body["textSha256"] = _sha(base_text.encode("utf-8"))
+    base_body["artifactId"] = _snapshot_id(base_body)
+    _read_source_only(base_body["artifactId"], base_body)
+    return body
+
+
 def freeze(store, loadout_id, *, version, digest, service):
     """Freeze an exact inspected assembly as an immutable portable artifact."""
     assembled = inspect(store, loadout_id, version=version, digest=digest, service=service)
@@ -816,6 +1062,8 @@ def read(store, artifact_id):
         return _read_source_only(artifact_id, body)
     if isinstance(body, dict) and body.get("schemaVersion") == CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION:
         return _read_custom_context_packet(artifact_id, body)
+    if isinstance(body, dict) and body.get("schemaVersion") == RESEARCH_CITATION_SCHEMA_VERSION:
+        return _read_research_citation(artifact_id, body)
     if (set(body) != {"schema_version", "schemaVersion", "loadout", "assemblyState", "deliveryState",
                       "contextPack", "ownerArtifact", "reductionPreviews", "inspection", "text", "textSha256",
                       "artifactState", "artifactId"}

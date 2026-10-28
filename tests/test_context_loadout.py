@@ -38,6 +38,35 @@ def preference_profile(text):
             "qualification": context_loadout.PREFERENCE_PROFILE_QUALIFICATION}
 
 
+def research_citation_source():
+    reference = {
+        "schema": "deep.research-study-citation-binding.v1",
+        "study": {"id": "study:11111111-1111-4111-8111-111111111111", "sha256": "a" * 64, "revision": 3},
+        "question": {"id": "study-question:22222222-2222-4222-8222-222222222222", "sha256": "b" * 64},
+        "citation": {"id": "citation-1", "sourceDigest": "c" * 64, "recordId": "source-1", "version": "r2"},
+    }
+    citation = {"id": "citation-1", "page": 4, "start": 12, "end": 39,
+                "quote": "The retained exact quotation.", "quoteTruncated": False,
+                "notebookId": "notebook-1", "recordId": "source-1", "version": "r2",
+                "sourceDigest": "c" * 64, "sourceTitle": "Synthetic source"}
+    peek = {
+        "schema": "deep.research-study-citation-peek.v1",
+        "owner": {"id": "research-ai", "revision": "d" * 40},
+        "studyId": reference["study"]["id"], "studySha256": reference["study"]["sha256"],
+        "studyRevision": reference["study"]["revision"],
+        "questionId": reference["question"]["id"], "questionSha256": reference["question"]["sha256"],
+        "resultStatus": "complete", "coverage": "partial",
+        "paragraphRefs": [{"text": "One exact matching answer paragraph.", "evidenceId": "citation-1"}],
+        "citation": citation,
+        "position": {"page": citation["page"], "start": citation["start"], "end": citation["end"],
+                     "sourceDigest": citation["sourceDigest"], "recordId": citation["recordId"],
+                     "version": citation["version"]},
+        "qualifications": ["Synthetic retained owner read.", "A quote alone does not establish entailment."],
+        "sourceBinding": reference,
+    }
+    return {"reference": reference, "peek": peek}
+
+
 class ContextLoadoutTests(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
@@ -356,6 +385,38 @@ class ContextLoadoutTests(unittest.TestCase):
             context_loadout.inspect(self.loadout_store, "custom-packet-too-small", version=1,
                                     digest=short["digest"], service=self.service)
         self.assertEqual(overflow.exception.code, "budget_too_small")
+
+    def test_exact_research_citation_loadout_is_inspected_frozen_and_cold_read(self):
+        source = research_citation_source()
+        spec = {"schemaVersion": 4, "variant": "research-citation",
+                "task": "change billing total", "contextPreviewId": self.preview_id,
+                "maxTokens": 8192, "reductionRequests": [], "researchCitation": source}
+        created = context_loadout.create(self.loadout_store, "citation-task", spec)
+        inspected = context_loadout.inspect(self.loadout_store, "citation-task", version=1,
+                                            digest=created["digest"], service=self.service)
+        self.assertEqual(inspected["loadout"]["schemaVersion"], 4)
+        self.assertEqual(inspected["deliveryState"], "not_sent")
+        self.assertEqual(inspected["researchCitation"], source)
+        self.assertIn("The retained exact quotation.", inspected["text"])
+        self.assertIn("One exact matching answer paragraph.", inspected["text"])
+        self.assertIn("Exact location: page 4, offsets 12–39", inspected["text"])
+        self.assertIn("coverage: partial", inspected["text"])
+        self.assertIn("A quote alone does not establish entailment.", inspected["text"])
+
+        frozen = context_loadout.freeze(self.loadout_store, "citation-task", version=1,
+                                        digest=created["digest"], service=self.service)
+        reopened = context_loadout.read(self.loadout_store, frozen["artifactId"])
+        self.assertEqual(reopened, frozen)
+        self.assertEqual(reopened["artifactState"], "frozen")
+        self.assertEqual(reopened["deliveryState"], "not_sent")
+        self.assertEqual(reopened["researchCitation"], source)
+
+        changed = research_citation_source()
+        changed["peek"]["citation"]["id"] = "another-citation"
+        changed_spec = {**spec, "researchCitation": changed}
+        with self.assertRaises(context_pack.ContextPackError) as mismatch:
+            context_loadout.create(self.loadout_store, "citation-mismatch", changed_spec)
+        self.assertEqual(mismatch.exception.code, "invalid_request")
 
 
 if __name__ == "__main__":
