@@ -16,6 +16,7 @@ import linked_context
 
 SCHEMA_VERSION = 1
 SOURCE_ONLY_SCHEMA_VERSION = 2
+CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION = 3
 MAX_SPEC_BYTES = 512 * 1024
 MAX_REDUCTION_PREVIEWS = 8
 MAX_REDUCTION_BYTES = 512 * 1024
@@ -171,7 +172,76 @@ def _preference_profile(value, *, require_active=True):
     return value
 
 
+def _custom_context_packet_reference(value):
+    fields = {"schema", "owner", "selection", "packetDigest", "contextSha256",
+              "kitDigest", "profileDigest", "continuityDigest", "exported"}
+    if not isinstance(value, dict) or set(value) != fields or value.get("schema") != "custom.scoped-context-packet-reference.v1":
+        _fail("invalid_request", "Custom Context packet reference is invalid")
+    owner = value.get("owner")
+    if (not isinstance(owner, dict) or set(owner) != {"id", "revision"} or owner.get("id") != "custom-ai"
+            or not isinstance(owner.get("revision"), str) or not re.fullmatch(r"[0-9a-f]{40,64}", owner["revision"])):
+        _fail("invalid_request", "Custom Context packet owner identity is invalid")
+    selection = value.get("selection")
+    if (not isinstance(selection, dict) or set(selection) - {"kitId", "profile_id", "continuityStoreId", "project_id", "resource"}
+            or not {"kitId", "profile_id", "continuityStoreId", "project_id"} <= set(selection)):
+        _fail("invalid_request", "Custom Context packet selection is invalid")
+    for key in ("kitId", "profile_id", "continuityStoreId"):
+        if not isinstance(selection.get(key), str) or not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,62}", selection[key]):
+            _fail("invalid_request", "Custom Context packet selection is invalid")
+    project_id = selection.get("project_id")
+    if project_id is not None and (not isinstance(project_id, str) or not re.fullmatch(r"[A-Za-z0-9._:-]{1,200}", project_id)):
+        _fail("invalid_request", "Custom Context packet project identity is invalid")
+    if "resource" in selection:
+        resource = selection["resource"]
+        if (not isinstance(resource, dict) or set(resource) - {"observationIds", "maxAgeSeconds"}
+                or not isinstance(resource.get("observationIds"), list) or not 1 <= len(resource["observationIds"]) <= 32
+                or any(not isinstance(item, str) or not re.fullmatch(r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}", item)
+                       for item in resource["observationIds"])
+                or len(set(resource["observationIds"])) != len(resource["observationIds"])
+                or ("maxAgeSeconds" in resource and (type(resource["maxAgeSeconds"]) is not int
+                    or not 0 <= resource["maxAgeSeconds"] <= 31_536_000))):
+            _fail("invalid_request", "Custom Context packet resource selection is invalid")
+    for key in ("packetDigest", "contextSha256", "kitDigest", "profileDigest", "continuityDigest"):
+        if not isinstance(value.get(key), str) or not re.fullmatch(r"[a-f0-9]{64}", value[key]):
+            _fail("invalid_request", "Custom Context packet digest is invalid")
+    if (not isinstance(value.get("exported"), str)
+            or not re.fullmatch(r"exports/context-[a-z0-9][a-z0-9-]{0,62}-[a-f0-9]{12}-[a-f0-9]{16}\.md", value["exported"])):
+        _fail("invalid_request", "Custom Context packet export identity is invalid")
+    return value
+
+
 def _spec(value, *, require_active=True):
+    if (isinstance(value, dict) and type(value.get("schemaVersion")) is int
+            and value.get("schemaVersion") == CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION):
+        allowed = {"schemaVersion", "variant", "task", "contextPreviewId", "maxTokens",
+                   "reductionRequests", "customContextPacket", "customContextPacketText"}
+        if set(value) - allowed or value.get("variant") != "custom-context-packet":
+            _fail("invalid_request", "loadout spec must match context-loadout/v3 custom-context-packet")
+        task = value.get("task")
+        if not isinstance(task, str) or not task.strip() or len(task) > context_pack.MAX_TASK_CHARS:
+            _fail("invalid_request", "task must contain 1 to 2048 characters")
+        if not isinstance(value.get("contextPreviewId"), str) or not re.fullmatch(r"[0-9a-f]{32}", value["contextPreviewId"]):
+            _fail("invalid_request", "Context preview ID is invalid")
+        budget = value.get("maxTokens")
+        if type(budget) is not int or not 100 <= budget <= 8192:
+            _fail("invalid_request", "maxTokens must be an integer from 100 to 8192")
+        reference = _custom_context_packet_reference(value.get("customContextPacket"))
+        text = value.get("customContextPacketText")
+        if not isinstance(text, str) or len(text.encode("utf-8")) > 200_000 or _sha(text.encode("utf-8")) != reference["contextSha256"]:
+            _fail("invalid_request", "Custom Context packet bytes do not match their exact source reference")
+        requests = value.get("reductionRequests", [])
+        if not isinstance(requests, list) or len(requests) > MAX_REDUCTION_PREVIEWS:
+            _fail("invalid_request", "reductionRequests must contain at most eight entries")
+        if requests:
+            _fail("invalid_request", "Custom packet loadouts do not accept unrelated reduction requests")
+        normalized = {"schemaVersion": CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION,
+                      "variant": "custom-context-packet", "task": task,
+                      "contextPreviewId": value["contextPreviewId"], "maxTokens": budget,
+                      "reductionRequests": [], "customContextPacket": reference,
+                      "customContextPacketText": text}
+        if len(context_pack._json(normalized).encode("utf-8")) > MAX_SPEC_BYTES:
+            _fail("invalid_request", "loadout spec exceeds its size limit")
+        return normalized
     if (isinstance(value, dict) and type(value.get("schemaVersion")) is int
             and value.get("schemaVersion") == SOURCE_ONLY_SCHEMA_VERSION):
         allowed = {"schemaVersion", "variant", "task", "contextPreviewId", "maxTokens", "reductionRequests"}
@@ -417,11 +487,48 @@ def _assemble_source_only(revision, service):
             "inspection": inspection, "text": combined, "textSha256": _sha(raw_combined)}
 
 
+def _custom_packet_qualification(reference):
+    return ("Source: current canonical Custom scoped Context packet. "
+            f"Custom owner revision {reference['owner']['revision']}; "
+            f"packet digest {reference['packetDigest']}. "
+            "This retained content does not transfer approvals, authority or delivery state.")
+
+
+def _assemble_custom_context_packet(revision, service):
+    spec = revision["spec"]
+    base_spec = {"schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "variant": "source-pack-only",
+                 "task": spec["task"], "contextPreviewId": spec["contextPreviewId"],
+                 "maxTokens": spec["maxTokens"], "reductionRequests": []}
+    base_revision = {"schema_version": SCHEMA_VERSION, "schemaVersion": SOURCE_ONLY_SCHEMA_VERSION,
+                     "loadoutId": revision["loadoutId"], "version": revision["version"],
+                     "spec": base_spec, "digest": _revision_digest(revision["loadoutId"], revision["version"], base_spec)}
+    base = _assemble_source_only(base_revision, service)
+    reference = spec["customContextPacket"]
+    custom_text = spec["customContextPacketText"]
+    combined = (base["text"] + "\n\n## Custom scoped Context packet\n\n" +
+                _custom_packet_qualification(reference) + "\n\n" + custom_text)
+    raw = combined.encode("utf-8")
+    if len(raw) > 4 * spec["maxTokens"]:
+        _fail("budget_too_small", "The complete Custom Context packet does not fit; choose a larger budget or smaller source packet.")
+    inspection = {**base["inspection"], "combinedBytes": len(raw), "estimatedTokens": (len(raw) + 3) // 4,
+                  "customContextPacket": {"owner": reference["owner"]["id"],
+                                          "ownerRevision": reference["owner"]["revision"],
+                                          "packetDigest": reference["packetDigest"],
+                                          "contextSha256": reference["contextSha256"]}}
+    return {"schemaVersion": CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION, "loadout": _public_revision(revision),
+            "assemblyState": "assembled", "deliveryState": "not_sent", "contextPack": base["contextPack"],
+            "sourceArtifact": base["sourceArtifact"], "customContextPacket": reference,
+            "customContextPacketText": custom_text, "reductionPreviews": base["reductionPreviews"],
+            "inspection": inspection, "text": combined, "textSha256": _sha(raw)}
+
+
 def _assemble(store, revision, service):
     _assert_disjoint(store, service)
     spec = revision["spec"]
     if spec["schemaVersion"] == SOURCE_ONLY_SCHEMA_VERSION:
         return _assemble_source_only(revision, service)
+    if spec["schemaVersion"] == CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION:
+        return _assemble_custom_context_packet(revision, service)
     project_json = service.export(spec["contextPreviewId"], format="json")
     project_text = service.export(spec["contextPreviewId"], format="text")
     try:
@@ -616,6 +723,71 @@ def _read_source_only(artifact_id, body):
     return body
 
 
+def _read_custom_context_packet(artifact_id, body):
+    expected_fields = {"schema_version", "schemaVersion", "loadout", "assemblyState", "deliveryState",
+                       "contextPack", "sourceArtifact", "customContextPacket", "customContextPacketText",
+                       "reductionPreviews", "inspection", "text", "textSha256", "artifactState", "artifactId"}
+    if (not isinstance(body, dict) or set(body) != expected_fields or body.get("artifactId") != artifact_id
+            or body.get("schema_version") != SCHEMA_VERSION or body.get("schemaVersion") != CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION
+            or body.get("assemblyState") != "assembled" or body.get("deliveryState") != "not_sent"
+            or body.get("artifactState") != "frozen" or _snapshot_id(body) != artifact_id):
+        _fail("store_invalid", "frozen Custom Context loadout artifact integrity check failed")
+    loadout = body.get("loadout")
+    if (not isinstance(loadout, dict) or loadout.get("state") != "referenced"
+            or loadout.get("schemaVersion") != CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION
+            or loadout.get("loadoutId") != _identity(loadout.get("loadoutId"))
+            or type(loadout.get("version")) is not int or loadout["version"] < 1):
+        _fail("store_invalid", "frozen Custom Context loadout revision is invalid")
+    spec = _spec(loadout.get("spec"), require_active=False)
+    if (spec != loadout.get("spec") or spec["variant"] != "custom-context-packet"
+            or loadout.get("digest") != _revision_digest(loadout["loadoutId"], loadout["version"], spec)):
+        _fail("store_invalid", "frozen Custom Context loadout revision is invalid")
+    reference = _custom_context_packet_reference(body.get("customContextPacket"))
+    custom_text = body.get("customContextPacketText")
+    if (reference != spec["customContextPacket"] or custom_text != spec["customContextPacketText"]
+            or not isinstance(custom_text, str) or _sha(custom_text.encode("utf-8")) != reference["contextSha256"]):
+        _fail("store_invalid", "frozen Custom Context packet source changed")
+    source = body.get("sourceArtifact")
+    if not isinstance(source, dict) or not isinstance(source.get("textRender"), str):
+        _fail("store_invalid", "frozen Context source pack is missing")
+    base_text = f"# Context loadout {loadout['loadoutId']} v{loadout['version']}\n\n{source['textRender']}"
+    expected_text = (base_text + "\n\n## Custom scoped Context packet\n\n" +
+                     _custom_packet_qualification(reference) + "\n\n" + custom_text)
+    raw = expected_text.encode("utf-8")
+    if (body.get("text") != expected_text or body.get("textSha256") != _sha(raw)
+            or len(raw) > 4 * spec["maxTokens"]):
+        _fail("store_invalid", "frozen Custom Context packet render or budget is invalid")
+    inspection = body.get("inspection")
+    if not isinstance(inspection, dict):
+        _fail("store_invalid", "frozen Custom Context packet inspection is invalid")
+    base_inspection = {key: value for key, value in inspection.items() if key != "customContextPacket"}
+    base_size = len(base_text.encode("utf-8"))
+    base_inspection["combinedBytes"] = base_size
+    base_inspection["estimatedTokens"] = (base_size + 3) // 4
+    expected_inspection = {**base_inspection, "combinedBytes": len(raw), "estimatedTokens": (len(raw) + 3) // 4,
+                           "customContextPacket": {"owner": reference["owner"]["id"],
+                                                   "ownerRevision": reference["owner"]["revision"],
+                                                   "packetDigest": reference["packetDigest"],
+                                                   "contextSha256": reference["contextSha256"]}}
+    if inspection != expected_inspection or inspection.get("budgetTokens") != spec["maxTokens"]:
+        _fail("store_invalid", "frozen Custom Context packet inspection does not match its render")
+    base_spec = {"schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "variant": "source-pack-only",
+                 "task": spec["task"], "contextPreviewId": spec["contextPreviewId"],
+                 "maxTokens": spec["maxTokens"], "reductionRequests": []}
+    base_loadout = {**loadout, "schemaVersion": SOURCE_ONLY_SCHEMA_VERSION, "spec": base_spec,
+                    "digest": _revision_digest(loadout["loadoutId"], loadout["version"], base_spec)}
+    base_body = {key: value for key, value in body.items()
+                 if key not in {"customContextPacket", "customContextPacketText"}}
+    base_body["schemaVersion"] = SOURCE_ONLY_SCHEMA_VERSION
+    base_body["loadout"] = base_loadout
+    base_body["inspection"] = base_inspection
+    base_body["text"] = base_text
+    base_body["textSha256"] = _sha(base_text.encode("utf-8"))
+    base_body["artifactId"] = _snapshot_id(base_body)
+    _read_source_only(base_body["artifactId"], base_body)
+    return body
+
+
 def freeze(store, loadout_id, *, version, digest, service):
     """Freeze an exact inspected assembly as an immutable portable artifact."""
     assembled = inspect(store, loadout_id, version=version, digest=digest, service=service)
@@ -642,6 +814,8 @@ def read(store, artifact_id):
     body = context_pack._load(store, f"snapshot-{artifact_id}.json")
     if isinstance(body, dict) and body.get("schemaVersion") == SOURCE_ONLY_SCHEMA_VERSION:
         return _read_source_only(artifact_id, body)
+    if isinstance(body, dict) and body.get("schemaVersion") == CUSTOM_CONTEXT_PACKET_SCHEMA_VERSION:
+        return _read_custom_context_packet(artifact_id, body)
     if (set(body) != {"schema_version", "schemaVersion", "loadout", "assemblyState", "deliveryState",
                       "contextPack", "ownerArtifact", "reductionPreviews", "inspection", "text", "textSha256",
                       "artifactState", "artifactId"}

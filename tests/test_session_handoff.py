@@ -91,6 +91,48 @@ class SessionHandoffTests(unittest.TestCase):
             session_handoff._validate_record(rejected)
         self.assertEqual(error.exception.code, "invalid_owner")
 
+    def test_custom_context_packet_binding_survives_reconstruction_exactly(self):
+        content = "Exact synthetic Context render containing a Custom packet.\n"
+        packet_reference = {
+            "schema": "custom.scoped-context-packet-reference.v1",
+            "owner": {"id": "custom-ai", "revision": "a" * 40},
+            "selection": {"kitId": "synthetic-kit", "profile_id": "personal-default",
+                          "continuityStoreId": "synthetic-continuity", "project_id": "synthetic-project"},
+            "packetDigest": "b" * 64, "contextSha256": "c" * 64,
+            "kitDigest": "d" * 64, "profileDigest": "e" * 64,
+            "continuityDigest": "f" * 64,
+            "exported": "exports/context-personal-default-123456789abc-1234567890abcdef.md",
+        }
+        artifact = hashlib.sha256(b"custom packet context artifact").hexdigest()
+        owner_binding = {
+            "artifact_id": artifact, "loadout_id": "custom-context", "version": 1,
+            "digest": hashlib.sha256(b"custom loadout revision").hexdigest(),
+            "text_sha256": hashlib.sha256(content.encode()).hexdigest(),
+            "source_artifact_id": packet_reference["packetDigest"],
+            "source_kind": "custom_context_packet", "source_pack_id": None,
+            "owner_revision": "9b4172e9d2c93adadd0967fb873f050f70c5a79a",
+            "custom_context_packet_reference": packet_reference,
+        }
+        record = self._record("context-ai", "context-project:synthetic-project",
+                              "context-loadout", artifact, content, "work", epoch=None,
+                              export_as_of=None)
+        record["content_type"] = "text/plain"
+        record["owner_binding"] = owner_binding
+        request = {
+            "request_id": "2af5a24e-3902-4ab1-b20c-240be44b8f0b",
+            "purpose": "Reopen exact Custom Context guidance",
+            "handoff": "Review currentness before using this historical content.",
+            "guidance_ids": [], "records": [record],
+        }
+        created = self.service.create(request)
+        reopened = self.service.reopen(created["handoff_id"])
+        self.assertEqual(reopened["records"][0]["owner_binding"], owner_binding)
+        altered = dict(packet_reference, packetDigest="0" * 64)
+        bad_binding = dict(owner_binding, custom_context_packet_reference=altered)
+        with self.assertRaises(context_pack.ContextPackError) as error:
+            session_handoff._validate_record(dict(record, owner_binding=bad_binding))
+        self.assertEqual(error.exception.code, "invalid_owner")
+
     def _git(self, *args):
         subprocess.run(["git", "-C", str(self.project), *args], check=True,
                        stdout=subprocess.PIPE, stderr=subprocess.PIPE)

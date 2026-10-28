@@ -320,6 +320,43 @@ class ContextLoadoutTests(unittest.TestCase):
             context_loadout.create(self.loadout_store, "expired-profile", spec)
         self.assertEqual(inactive.exception.code, "profile_expired")
 
+    def test_custom_context_packet_is_atomic_and_frozen_with_exact_source_identity(self):
+        packet_text = "# Synthetic Custom packet\n\nKeep this exact scoped guidance intact.\n"
+        packet_sha = hashlib.sha256(packet_text.encode("utf-8")).hexdigest()
+        reference = {
+            "schema": "custom.scoped-context-packet-reference.v1",
+            "owner": {"id": "custom-ai", "revision": "a" * 40},
+            "selection": {"kitId": "synthetic-kit", "profile_id": "personal-default",
+                          "continuityStoreId": "synthetic-continuity", "project_id": "fixture-project"},
+            "packetDigest": "b" * 64, "contextSha256": packet_sha,
+            "kitDigest": "c" * 64, "profileDigest": "d" * 64,
+            "continuityDigest": "e" * 64,
+            "exported": "exports/context-personal-default-123456789abc-1234567890abcdef.md",
+        }
+        spec = {"schemaVersion": 3, "variant": "custom-context-packet",
+                "task": "change billing total", "contextPreviewId": self.preview_id,
+                "maxTokens": 8192, "reductionRequests": [],
+                "customContextPacket": reference, "customContextPacketText": packet_text}
+        created = context_loadout.create(self.loadout_store, "custom-packet-task", spec)
+        inspected = context_loadout.inspect(self.loadout_store, "custom-packet-task", version=1,
+                                            digest=created["digest"], service=self.service)
+        self.assertIn(packet_text, inspected["text"])
+        self.assertEqual(inspected["customContextPacket"], reference)
+        self.assertEqual(inspected["customContextPacketText"], packet_text)
+        frozen = context_loadout.freeze(self.loadout_store, "custom-packet-task", version=1,
+                                        digest=created["digest"], service=self.service)
+        reopened = context_loadout.read(self.loadout_store, frozen["artifactId"])
+        self.assertEqual(reopened, frozen)
+        self.assertEqual(reopened["customContextPacket"], reference)
+        self.assertEqual(reopened["customContextPacketText"], packet_text)
+
+        too_small = {**spec, "maxTokens": 100}
+        short = context_loadout.create(self.loadout_store, "custom-packet-too-small", too_small)
+        with self.assertRaises(context_pack.ContextPackError) as overflow:
+            context_loadout.inspect(self.loadout_store, "custom-packet-too-small", version=1,
+                                    digest=short["digest"], service=self.service)
+        self.assertEqual(overflow.exception.code, "budget_too_small")
+
 
 if __name__ == "__main__":
     unittest.main()

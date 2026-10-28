@@ -156,6 +156,7 @@ def _validate_record(record):
         _require_fields(owner_binding,
                         ("artifact_id", "loadout_id", "version", "digest", "text_sha256",
                          "source_artifact_id", "source_kind", "source_pack_id", "owner_revision"),
+                        ("custom_context_packet_reference",),
                         code="invalid_owner")
         for field in ("artifact_id", "source_artifact_id"):
             if not isinstance(owner_binding[field], str) or not re.fullmatch(
@@ -175,11 +176,67 @@ def _validate_record(record):
                 r"[a-f0-9]{40}", owner_binding["owner_revision"]):
             raise Error("invalid_owner", "Context loadout binding has an invalid owner revision")
         source_kind, source_pack_id = owner_binding["source_kind"], owner_binding["source_pack_id"]
+        source_artifact_id = owner_binding["source_artifact_id"]
+        custom_reference = owner_binding.get("custom_context_packet_reference")
         if source_kind is None:
             if source_pack_id is not None:
                 raise Error("invalid_owner", "Context loadout source binding is inconsistent")
-        elif source_kind != "context_source_pack" or not isinstance(source_pack_id, str) or not re.fullmatch(
-                r"[0-9a-f]{64}", source_pack_id):
+            if custom_reference is not None:
+                raise Error("invalid_owner", "Context loadout source binding is inconsistent")
+        elif source_kind == "context_source_pack":
+            if custom_reference is not None or not isinstance(source_pack_id, str) or not re.fullmatch(
+                    r"[0-9a-f]{64}", source_pack_id):
+                raise Error("invalid_owner", "Context loadout source binding is unsupported")
+        elif source_kind == "custom_context_packet":
+            _require_fields(custom_reference,
+                            ("schema", "owner", "selection", "packetDigest", "contextSha256",
+                             "kitDigest", "profileDigest", "continuityDigest", "exported"),
+                            code="invalid_owner")
+            _require_fields(custom_reference["owner"], ("id", "revision"), code="invalid_owner")
+            _require_fields(custom_reference["selection"],
+                            ("kitId", "profile_id", "continuityStoreId", "project_id"),
+                            ("resource",), code="invalid_owner")
+            packet_selection = custom_reference["selection"]
+            for selection_field in ("kitId", "profile_id", "continuityStoreId"):
+                if not isinstance(packet_selection[selection_field], str) or not re.fullmatch(
+                        r"[a-z0-9][a-z0-9-]{0,62}", packet_selection[selection_field]):
+                    raise Error("invalid_owner", "Context Custom packet selection is invalid")
+            if packet_selection["project_id"] is not None and (
+                    not isinstance(packet_selection["project_id"], str) or
+                    not re.fullmatch(r"[A-Za-z0-9._:-]{1,200}", packet_selection["project_id"])):
+                raise Error("invalid_owner", "Context Custom packet project identity is invalid")
+            if "resource" in packet_selection:
+                resource = packet_selection["resource"]
+                _require_fields(resource, ("observationIds",), ("maxAgeSeconds",), code="invalid_owner")
+                if (not isinstance(resource["observationIds"], list) or
+                        not 1 <= len(resource["observationIds"]) <= 32 or
+                        any(not isinstance(item, str) or not re.fullmatch(
+                            r"[a-f0-9]{8}-(?:[a-f0-9]{4}-){3}[a-f0-9]{12}", item)
+                            for item in resource["observationIds"]) or
+                        len(set(resource["observationIds"])) != len(resource["observationIds"]) or
+                        ("maxAgeSeconds" in resource and (type(resource["maxAgeSeconds"]) is not int or
+                         not 0 <= resource["maxAgeSeconds"] <= 31_536_000))):
+                    raise Error("invalid_owner", "Context Custom packet resource selection is invalid")
+            if (source_pack_id is not None or
+                    custom_reference["schema"] != "custom.scoped-context-packet-reference.v1" or
+                    custom_reference["owner"]["id"] != "custom-ai" or
+                    not isinstance(custom_reference["owner"]["revision"], str) or
+                    not re.fullmatch(r"[a-f0-9]{40,64}", custom_reference["owner"]["revision"]) or
+                    not isinstance(custom_reference["packetDigest"], str) or
+                    not re.fullmatch(r"[0-9a-f]{64}", custom_reference["packetDigest"]) or
+                    not isinstance(custom_reference["contextSha256"], str) or
+                    not re.fullmatch(r"[0-9a-f]{64}", custom_reference["contextSha256"]) or
+                    source_artifact_id != custom_reference["packetDigest"]):
+                raise Error("invalid_owner", "Context Custom packet source binding is unsupported")
+            for digest_field in ("kitDigest", "profileDigest", "continuityDigest"):
+                if not isinstance(custom_reference[digest_field], str) or not re.fullmatch(
+                        r"[0-9a-f]{64}", custom_reference[digest_field]):
+                    raise Error("invalid_owner", "Context Custom packet source binding has an invalid digest")
+            if not isinstance(custom_reference["exported"], str) or not re.fullmatch(
+                    r"exports/context-[a-z0-9][a-z0-9-]{0,62}-[a-f0-9]{12}-[a-f0-9]{16}\.md",
+                    custom_reference["exported"]):
+                raise Error("invalid_owner", "Context Custom packet source binding has an invalid export identity")
+        else:
             raise Error("invalid_owner", "Context loadout source binding is unsupported")
         if (owner_binding["artifact_id"] != record_id or
                 owner_binding["text_sha256"] != digest or
