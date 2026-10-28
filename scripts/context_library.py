@@ -6,7 +6,6 @@ from datetime import date, timedelta
 import json
 from pathlib import Path
 import re
-from uuid import uuid4
 
 import yaml
 from jsonschema import ValidationError
