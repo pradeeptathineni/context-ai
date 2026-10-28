@@ -162,6 +162,8 @@ def _validate_record(record):
                     r"[0-9a-f]{64}", owner_binding[field]):
                 raise Error("invalid_owner", "Context loadout binding has an invalid artifact identity")
         _bounded_text(owner_binding["loadout_id"], "Context loadout ID", 64)
+        if not re.fullmatch(r"[a-z0-9][a-z0-9-]{0,63}", owner_binding["loadout_id"]):
+            raise Error("invalid_owner", "Context loadout binding has an invalid loadout ID")
         version = owner_binding["version"]
         if isinstance(version, bool) or not isinstance(version, int) or version < 1:
             raise Error("invalid_owner", "Context loadout binding has an invalid version")
