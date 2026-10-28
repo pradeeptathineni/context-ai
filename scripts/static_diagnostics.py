@@ -9,7 +9,6 @@ reader and AST parser. No project configuration or source code is executed.
 import argparse
 import hashlib
 import json
-import os
 from pathlib import Path, PurePosixPath
 import subprocess
 import sys

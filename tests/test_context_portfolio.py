@@ -1,5 +1,4 @@
 """Whole-workflow qualification of the named-project loadout portfolio owner."""
-import json
 import sys
 import tempfile
 import unittest

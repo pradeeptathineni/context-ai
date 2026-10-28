@@ -7,7 +7,6 @@ receipts. It delegates every project mutation to context_ai's native lifecycle.
 import base64
 import hashlib
 import json
-import os
 from pathlib import Path
 import re
 import sys
