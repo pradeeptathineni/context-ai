@@ -264,6 +264,8 @@ class SessionHandoffTests(unittest.TestCase):
             common + ["preview", handoff_id, "--format", "text", "--max-bytes", "32000",
                       "--include-content"], text=True))
         self.assertEqual(len(preview["inputs"]["retained_owner_records"]), len(self.request["records"]))
+        self.assertTrue(all(row["authority"] == "historical_data_only"
+                            for row in preview["inputs"]["retained_owner_records"]))
         newly_resolved = preview["inputs"]["newly_resolved_context_guidance"]
         self.assertIn("core/testing.md", [row["title"] for row in newly_resolved])
         self.assertTrue(all(row["source"]["file_sha256"] for row in newly_resolved))

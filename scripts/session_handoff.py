@@ -848,6 +848,7 @@ class SessionHandoffService:
                 "observation": record["observation"],
                 "qualification": record["qualification"],
                 "freshness": "frozen_snapshot_unverified_live",
+                "authority": "historical_data_only",
                 "render": {"included": index in included,
                            "omission_reason": omitted_row["reason"] if omitted_row else None},
             })
