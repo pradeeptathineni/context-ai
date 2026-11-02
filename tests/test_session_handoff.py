@@ -261,18 +261,48 @@ class SessionHandoffTests(unittest.TestCase):
         shown = json.loads(subprocess.check_output(common + ["show", handoff_id], text=True))
         self.assertNotIn("handoff", shown)
         preview = json.loads(subprocess.check_output(
-            common + ["preview", handoff_id, "--format", "text", "--max-bytes", "32000"], text=True))
+            common + ["preview", handoff_id, "--format", "text", "--max-bytes", "32000",
+                      "--include-content"], text=True))
+        self.assertEqual(len(preview["inputs"]["retained_owner_records"]), len(self.request["records"]))
+        newly_resolved = preview["inputs"]["newly_resolved_context_guidance"]
+        self.assertIn("core/testing.md", [row["title"] for row in newly_resolved])
+        self.assertTrue(all(row["source"]["file_sha256"] for row in newly_resolved))
+        self.assertFalse(preview["inputs"]["approval_transfer"])
+        self.assertEqual(preview["review_render"]["sha256"], preview["render"]["sha256"])
+        self.assertIn("Fresh-session reconstruction", preview["review_render"]["content"])
         output = self.root / "fresh-session.md"
+        mismatch = subprocess.run(
+            common + ["continue", preview["preview_id"], "--review-sha256", "0" * 64,
+                      "--format", "text", "--output", str(output)],
+            capture_output=True, text=True)
+        self.assertEqual(mismatch.returncode, 2)
+        self.assertIn("review_mismatch", mismatch.stderr)
         result = json.loads(subprocess.check_output(
-            common + ["export", preview["preview_id"], "--format", "text", "--output", str(output)],
+            common + ["continue", preview["preview_id"], "--review-sha256",
+                      preview["review_render"]["sha256"], "--format", "text", "--output", str(output)],
             text=True))
         self.assertTrue(result["written"])
-        self.assertIn("Fresh-session reconstruction", output.read_text())
-        duplicate = subprocess.run(common + ["export", preview["preview_id"],
+        self.assertTrue(result["continued"])
+        self.assertFalse(result["approval_transfer"])
+        self.assertEqual(output.read_text(), preview["review_render"]["content"])
+        duplicate = subprocess.run(common + ["continue", preview["preview_id"],
+                                               "--review-sha256", preview["review_render"]["sha256"],
                                                "--format", "text", "--output", str(output)],
                                    capture_output=True, text=True)
         self.assertEqual(duplicate.returncode, 2)
         self.assertIn("output_exists", duplicate.stderr)
+        restarted = session_handoff.SessionHandoffService(
+            self.project, store=self.store, context_root=self.service.context_root,
+            project_id="synthetic-project")
+        self.assertEqual(restarted.continue_reviewed(
+            preview["preview_id"], reviewed_sha256=preview["review_render"]["sha256"],
+            format="text"), output.read_bytes())
+        restarted.revise(handoff_id, expected_revision=1, handoff="Updated synthetic continuation.")
+        with self.assertRaises(context_pack.ContextPackError) as stale:
+            restarted.continue_reviewed(
+                preview["preview_id"], reviewed_sha256=preview["review_render"]["sha256"],
+                format="text")
+        self.assertEqual(stale.exception.code, "handoff_stale")
 
     def test_wrong_digest_forged_owner_duplicate_and_changed_meaning_fail_closed(self):
         wrong = self._request()

@@ -781,7 +781,7 @@ class SessionHandoffService:
             context_pack._write(self.store, self._record_path(handoff_id, doc["revision"]), sealed)
             return self._metadata(sealed)
 
-    def preview(self, handoff_id, *, max_bytes=32_000, format="json"):
+    def preview(self, handoff_id, *, max_bytes=32_000, format="json", include_content=False):
         """Freeze an exact whole-record selection and complete bounded render."""
         handoff_id = _normalise_uuid(handoff_id, "handoff_id")
         if (isinstance(max_bytes, bool) or not isinstance(max_bytes, int)
@@ -789,6 +789,8 @@ class SessionHandoffService:
             raise Error("invalid_request", f"max_bytes must be 1 to {MAX_PREVIEW_BYTES}")
         if not isinstance(format, str) or format not in {"json", "text"}:
             raise Error("invalid_request", "format must be json or text")
+        if not isinstance(include_content, bool):
+            raise Error("invalid_request", "include_content must be a boolean")
         with context_pack._locked(self.store):
             doc = self._latest(handoff_id)
             self._check_live_sources(doc)
@@ -828,11 +830,56 @@ class SessionHandoffService:
             sealed = _sealed(manifest)
             self._check_live_sources(doc)
             context_pack._write(self.store, "session-preview-" + preview_id + ".json", sealed)
-        return {"preview_id": preview_id, "handoff_id": handoff_id,
-                "revision": doc["revision"], "format": format,
-                "max_bytes": max_bytes, "included_indices": included,
-                "omitted": omitted_rows,
-                "render": {key: value for key, value in render.items() if key != "content"}}
+        retained = []
+        for index, record in enumerate(doc["records"]):
+            ref = record["selection"]["ref"]
+            omitted_row = next((row for row in omitted_rows if row["index"] == index), None)
+            retained.append({
+                "index": index,
+                "owner": ref["owner"],
+                "owner_instance_id": record["selection"]["instance_id"],
+                "owner_epoch": record["selection"]["owner_epoch"],
+                "kind": ref["kind"],
+                "id": ref["id"],
+                "revision": ref["revision"],
+                "digest": ref["digest"],
+                "source_bytes": len(record["content"].encode("utf-8")),
+                "export_as_of": record["export_as_of"],
+                "observation": record["observation"],
+                "qualification": record["qualification"],
+                "freshness": "frozen_snapshot_unverified_live",
+                "render": {"included": index in included,
+                           "omission_reason": omitted_row["reason"] if omitted_row else None},
+            })
+        resolved = [{
+            "item_id": item["item_id"],
+            "kind": item["kind"],
+            "title": item["title"],
+            "reason": item["reason"],
+            "source": item["source"],
+        } for item in doc["guidance"]]
+        result = {"preview_id": preview_id, "handoff_id": handoff_id,
+                  "revision": doc["revision"], "format": format,
+                  "basis": {"handoff_id": handoff_id, "revision": doc["revision"],
+                            "snapshot_sha256": doc["snapshot_sha256"]},
+                  "max_bytes": max_bytes, "included_indices": included,
+                  "omitted": omitted_rows,
+                  "inputs": {"retained_owner_records": retained,
+                             "newly_resolved_context_guidance": resolved,
+                             "approval_transfer": False},
+                  "render": {key: value for key, value in render.items() if key != "content"}}
+        if include_content:
+            result["review_render"] = render
+        return result
+
+    def continue_reviewed(self, preview_id, *, reviewed_sha256, format=None):
+        """Return exact preview bytes only when the caller confirms their reviewed digest."""
+        if not isinstance(reviewed_sha256, str) or not re.fullmatch(r"[0-9a-f]{64}", reviewed_sha256):
+            raise Error("invalid_request", "reviewed_sha256 must be lowercase SHA-256")
+        raw = self.export(preview_id, format=format)
+        if _sha(raw) != reviewed_sha256:
+            raise Error("review_mismatch", "reviewed render digest does not match the current preview")
+        return raw
 
     def export(self, preview_id, *, format=None):
         """Replay a saved preview only while its revision and source observations remain current."""
@@ -983,10 +1030,17 @@ def _cli():
     preview.add_argument("handoff_id")
     preview.add_argument("--max-bytes", type=int, default=32_000)
     preview.add_argument("--format", choices=("json", "text"), default="json")
+    preview.add_argument("--include-content", action="store_true",
+                         help="include the exact render for explicit human review")
     export = commands.add_parser("export", help="write a preview to a new local file")
     export.add_argument("preview_id")
     export.add_argument("--format", choices=("json", "text"))
     export.add_argument("--output", required=True, type=Path)
+    continuation = commands.add_parser("continue", help="write only a digest-reviewed fresh-session handoff")
+    continuation.add_argument("preview_id")
+    continuation.add_argument("--review-sha256", required=True)
+    continuation.add_argument("--format", choices=("json", "text"))
+    continuation.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
     try:
         service = SessionHandoffService(args.project, store=args.store,
@@ -1003,11 +1057,21 @@ def _cli():
             result = service.revise(args.handoff_id, expected_revision=args.expected_revision,
                                     handoff=args.handoff)
         elif args.command == "preview":
-            result = service.preview(args.handoff_id, max_bytes=args.max_bytes, format=args.format)
+            result = service.preview(args.handoff_id, max_bytes=args.max_bytes,
+                                    format=args.format, include_content=args.include_content)
         else:
-            raw = service.export(args.preview_id, format=args.format)
+            if args.command == "continue":
+                raw = service.continue_reviewed(args.preview_id,
+                                                reviewed_sha256=args.review_sha256,
+                                                format=args.format)
+            else:
+                raw = service.export(args.preview_id, format=args.format)
             _write_new_export(args.output, raw, service)
             result = {"written": True, "bytes": len(raw), "sha256": _sha(raw)}
+            if args.command == "continue":
+                result.update({"continued": True, "approval_transfer": False,
+                               "preview_id": args.preview_id,
+                               "reviewed_sha256": args.review_sha256})
         print(_json(result))
         return 0
     except (Error, OSError, ValueError, UnicodeError) as exc:

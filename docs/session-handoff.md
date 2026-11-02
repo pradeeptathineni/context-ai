@@ -17,16 +17,18 @@ python3 scripts/session_handoff.py \
   --project /absolute/consumer \
   --store /private/context-handoff-store \
   --project-id consumer-instance \
-  preview 53eac3e8-d8d6-4c6f-9d51-2be8ff4b6b0b --format json --max-bytes 32000
+  preview 53eac3e8-d8d6-4c6f-9d51-2be8ff4b6b0b --format json --max-bytes 32000 --include-content
 
 python3 scripts/session_handoff.py \
   --project /absolute/consumer \
   --store /private/context-handoff-store \
   --project-id consumer-instance \
-  export PREVIEW_ID --format json --output /private/fresh-session.json
+  continue PREVIEW_ID --review-sha256=RENDER_SHA256 --format json --output /private/fresh-session.json
 ```
 
-The output path is create-only, must be outside the configured project and Context trees, and is written with private file mode. To inspect exact saved text, call the explicit `reopen HANDOFF_ID`; `show HANDOFF_ID` returns redacted metadata and source references without the private handoff or record bodies. `revise HANDOFF_ID --expected-revision N --handoff TEXT` appends a user-authored synthesis revision and cannot edit source records. A revision invalidates its previous previews. Reopen, preview, revise and export refuse changed project or selected Context source observations.
+The reviewable preview identifies retained historical owner records separately from currently resolved Context guidance, including exact owner/source identities, revision/digest, source qualification and whether a whole record is included or omitted. `--include-content` reveals the exact immutable render only when explicitly requested; its `review_render.sha256` is the digest required by `continue`. `continue` replays that render against the current handoff and selected sources, refuses a changed digest or stale preview, and writes a create-only file with private mode outside the configured project and Context trees. Its receipt states that approval was not transferred. The legacy `export` command remains available for existing callers and does not require the new reviewed-digest gate.
+
+To inspect exact saved handoff text, call the explicit `reopen HANDOFF_ID`; `show HANDOFF_ID` returns redacted metadata and source references without the private handoff or record bodies. `revise HANDOFF_ID --expected-revision N --handoff TEXT` appends a user-authored synthesis revision and cannot edit source records. A revision invalidates its previous previews. Reopen, preview, revise, export and reviewed continuation refuse changed project or selected Context source observations.
 
 ## Input contract
 
@@ -81,6 +83,6 @@ The service uses Context's existing private, bounded, no-follow immutable store 
 
 ## API
 
-`SessionHandoffService(project, *, store, context_root=None, project_id="selected-project")` exposes `create(request)`, `show(handoff_id)`, `reopen(handoff_id)`, `revise(handoff_id, *, expected_revision, handoff)`, `preview(handoff_id, *, max_bytes=32000, format="json")` and `export(preview_id, *, format=None)`. `create` returns the UUID, current revision, request-meaning digest, idempotent-reopen flag and staleness indicator without source content. `show` is metadata-only; `reopen` is explicit and returns full saved text after freshness verification.
+`SessionHandoffService(project, *, store, context_root=None, project_id="selected-project")` exposes `create(request)`, `show(handoff_id)`, `reopen(handoff_id)`, `revise(handoff_id, *, expected_revision, handoff)`, `preview(handoff_id, *, max_bytes=32000, format="json", include_content=False)`, `export(preview_id, *, format=None)` and `continue_reviewed(preview_id, *, reviewed_sha256, format=None)`. Preview returns an identity-qualified retained/new input manifest. Content is omitted unless explicitly requested. `continue_reviewed` replays the exact preview only when its current rendered bytes match the caller-reviewed digest; it transfers no approval or execution authority. `create` returns the UUID, current revision, request-meaning digest, idempotent-reopen flag and staleness indicator without source content. `show` is metadata-only; `reopen` is explicit and returns full saved text after freshness verification.
 
 The standalone CLI takes the same global `--project`, `--store`, `--project-id` and optional `--context-root` settings before its subcommand. This producer is complete offline and synthetic; it does not establish that any native host obeys the exported text or improves task outcomes.
