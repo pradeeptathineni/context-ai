@@ -5,12 +5,13 @@ import {readFile, mkdir, writeFile} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import assert from 'node:assert/strict';
 import path from 'node:path';
+import {verifyAppearance} from './verify-appearance.mjs';
 const dist = fileURLToPath(new URL('../../.examples-output/web-dist/', import.meta.url));
 const out = process.env.WEB_EVIDENCE_DIR ? path.resolve(process.env.WEB_EVIDENCE_DIR)+'/' : fileURLToPath(new URL('../../.examples-output/web-evidence/', import.meta.url));
 await mkdir(out, {recursive:true});
 const server=createServer(async (req,res)=>{
   const name=req.url==='/'?'index.html':req.url.slice(1);
-  if (!['index.html','style.css','catalog.js','app.js'].includes(name)) {res.writeHead(404);res.end();return;}
+  if (!['index.html','style.css','catalog.js','app.js','appearance.js','theme/index.js','theme/LICENSE'].includes(name)) {res.writeHead(404);res.end();return;}
   try {res.setHeader('Content-Type',name.endsWith('.css')?'text/css':name.endsWith('.js')?'text/javascript':'text/html');res.end(await readFile(dist+name));}
   catch {res.writeHead(500);res.end();}
 });
@@ -19,13 +20,14 @@ const base=`http://127.0.0.1:${server.address().port}`;
 const browser=await chromium.launch({headless:true});
 const errors=[],results=[];
 try {
-  for (const width of [320,390,768,1440]) {
-    const context=await browser.newContext({viewport:{width,height:900},reducedMotion:'reduce',acceptDownloads:true});
+  for (const width of (process.env.APPEARANCE_ONLY ? [] : [320,390,768,1440])) {
+    const context=await browser.newContext({viewport:{width,height:900},colorScheme:'light',reducedMotion:'reduce',acceptDownloads:true});
     const page=await context.newPage();
     page.on('pageerror',e=>errors.push(e.message));
     page.on('console',m=>{if(m.type()==='error')errors.push(m.text());});
     page.on('requestfailed',r=>errors.push(r.url()));
     await page.goto(base);await page.locator('.equipment-card').last().waitFor();
+    await expect(page.locator('html')).toHaveAttribute('data-theme','neon1-light');
     const data=await page.evaluate(()=>window.CONTEXT_CATALOG);
     assert(data.library.options.length>2 && data.library.profiles.length>=2);
     assert.equal(data.opportunity_migration.status,'moved','retired-state catalog required');
@@ -63,17 +65,25 @@ try {
     await page.evaluate(name=>{window.CONTEXT_CATALOG.library.options[0].name=name;renderEquipment();},originalName);
     await page.locator('.equipment-card').first().locator('summary').click();
     await assertNoOverflow('source disclosure');
-    for (const palette of ['quiet','expressive']) {
-      if (palette==='expressive') await page.getByRole('button',{name:'Alternate colors'}).click();
+    for (const palette of ['neon1-dark','neon1-light','slate-dark','sand-light','forest-light','matrix-dark']) {
+      await page.locator('.appearance-settings > summary').click();
+      await page.getByLabel('Theme preset',{exact:true}).selectOption(palette);
+      await assertNoOverflow('appearance/'+palette);
+      if ([390,1440].includes(width)) await page.screenshot({path:out+`appearance-${palette}-${width}.png`});
+      const controlsAxe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
+      assert.deepEqual(controlsAxe.violations,[],JSON.stringify({width,palette,violations:controlsAxe.violations}));
+      await page.locator('.appearance-settings > summary').click();
       for (const tab of ['Guidance and tools','Project setups','Trials']) {
         await page.getByRole('tab',{name:tab,exact:true}).click();
         await assertNoOverflow(`${tab}/${palette}`);
-        if (tab==='Guidance and tools' && palette==='expressive' && [320,1440].includes(width)) { await page.evaluate(()=>scrollTo(0,0)); await page.screenshot({path:out+`expressive-equipment-${width}.png`}); }
+        if (tab==='Guidance and tools' && palette==='matrix-dark' && [320,1440].includes(width)) { await page.evaluate(()=>scrollTo(0,0)); await page.screenshot({path:out+`expressive-equipment-${width}.png`}); }
+        if (tab==='Project setups' && [390,1440].includes(width)) await page.screenshot({path:out+`profile-${palette}-${width}.png`});
         const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
         assert.deepEqual(axe.violations,[],JSON.stringify({width,palette,tab,violations:axe.violations}));
       }
     }
     await page.getByRole('button',{name:'Alternate colors'}).click();
+    await expect(page.locator('html')).toHaveAttribute('data-theme','neon1-light');
     await page.getByRole('tab',{name:'Project setups',exact:true}).click();
     await page.getByLabel('Project setup',{exact:true}).selectOption('principles');
     await expect(page.locator('.profile-card')).toHaveCount(1);
@@ -131,6 +141,7 @@ try {
     await page.goto(base);await page.keyboard.press('Tab');
     await expect(page.getByRole('link',{name:'Skip to guidance library'})).toBeFocused();
     await page.keyboard.press('Enter');await expect(page.locator('#main')).toBeFocused();
+    await page.keyboard.press('Tab');await expect(page.locator('.appearance-settings > summary')).toBeFocused();
     await page.keyboard.press('Tab');await expect(page.getByRole('tab',{name:'Guidance and tools',exact:true})).toBeFocused();
     await page.keyboard.press('ArrowRight');await expect(page.getByRole('tab',{name:'Project setups',exact:true})).toBeFocused();
     await expect(page.locator('#loadouts')).toBeVisible();
@@ -138,10 +149,11 @@ try {
     await page.keyboard.press('Home');await expect(page.getByRole('tab',{name:'Guidance and tools',exact:true})).toBeFocused();
     assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior),'auto');
     assert(!(await page.evaluate(()=>document.body.textContent.includes('/Users/'))),'public UI must exclude private absolute target paths');
-    results.push({width,axe_scans:6,axe_violations:0,overflow:false,public_action_requests:0,states:'equipment filter/empty/focus recovery, text-only source, native and focused profiles, canonical protected conflict, request download/edit, legacy loadout recovery, actual negative trial, keyboard tabs/skip, reduced motion'});
+    results.push({width,axe_scans:24,axe_violations:0,overflow:false,public_action_requests:0,states:'equipment filter/empty/focus recovery, text-only source, native and focused profiles, canonical protected conflict, request download/edit, legacy loadout recovery, actual negative trial, keyboard tabs/skip, reduced motion'});
     await context.close();
   }
+  const appearance=await verifyAppearance(browser,base);
   assert.deepEqual(errors,[]);
-  await writeFile(out+'results.json',JSON.stringify({evidence_class:'browser functional checks + builder visual inspection; canonical public fixture rendered, no local apply',results,errors,limits:['No assistive-technology user test. No deployed field Web Vitals. Axe does not certify WCAG conformance. No independent human usefulness measurement.']},null,2)+'\n');
-  console.log(`Web verification passed: ${results.length} widths, 24 axe scans, public request export, scoped trials and canonical conflict; evidence ${out}`);
+  await writeFile(out+'results.json',JSON.stringify({evidence_class:'browser functional checks + builder visual inspection; canonical public fixture rendered, no local apply',results,appearance,errors,limits:['Native select menu Arrow selection was not observed in headless macOS; focus/tab and shortcut Enter/Space were checked. No assistive-technology user test. No deployed field Web Vitals. Axe does not certify WCAG conformance. No independent human usefulness measurement.']},null,2)+'\n');
+  console.log(`Web verification passed: ${results.length} widths, ${results.reduce((total,row)=>total+row.axe_scans,0)} axe scans, public request export, scoped trials and canonical conflict; evidence ${out}`);
 } finally {await browser.close();await new Promise(resolve=>server.close(resolve));}

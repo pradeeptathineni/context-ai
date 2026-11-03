@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- Declared before JS so native controls follow the OS until a theme resolves. -->
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="" />
+    <title>@deep/theme standalone example</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --space: 16px;
+      }
+      :root[data-theme-density="compact"] {
+        --space: 10px;
+      }
+      *,
+      *::before,
+      *::after {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        padding: var(--space);
+        font-family: var(--font, system-ui, sans-serif);
+        line-height: 1.5;
+        /* System colors are the pre-JS fallback; no second palette here. */
+        background: var(--theme-surface-canvas, Canvas);
+        color: var(--theme-text-primary, CanvasText);
+        overflow-wrap: anywhere;
+      }
+      main {
+        max-width: 40rem;
+        margin: 0 auto;
+        display: grid;
+        gap: var(--space);
+      }
+      h1 {
+        font-size: 1.25rem;
+        margin: 0;
+      }
+      h2 {
+        font-size: 1.05rem;
+        margin: 0 0 calc(var(--space) / 2);
+      }
+      .card {
+        background: var(--theme-surface-panel, Canvas);
+        border: 1px solid var(--theme-border-strong, GrayText);
+        border-radius: var(--theme-radius, 8px);
+        padding: var(--space);
+      }
+      .muted {
+        color: var(--theme-text-muted, GrayText);
+        margin: 0;
+      }
+      .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: calc(var(--space) / 2);
+        align-items: end;
+      }
+      .row > label {
+        flex: 1 1 12rem;
+      }
+      label {
+        display: grid;
+        gap: 4px;
+      }
+      select,
+      input[type="text"],
+      button {
+        font: inherit;
+        min-height: 2.5rem;
+        max-width: 100%;
+      }
+      select,
+      input[type="text"] {
+        width: 100%;
+        padding: 0 calc(var(--space) / 2);
+        background: var(--theme-surface-inset, Field);
+        color: var(--theme-text-primary, FieldText);
+        border: 1px solid var(--theme-border-strong, GrayText);
+        border-radius: var(--theme-radius, 4px);
+      }
+      input[type="checkbox"] {
+        accent-color: var(--theme-accent, auto);
+      }
+      .check {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+      }
+      button {
+        padding: 0 var(--space);
+        border-radius: var(--theme-radius, 4px);
+        border: 1px solid var(--theme-border-strong, ButtonBorder);
+        background: var(--theme-surface-raised, ButtonFace);
+        color: var(--theme-text-primary, ButtonText);
+        cursor: pointer;
+      }
+      button.primary {
+        background: var(--theme-brand-action, ButtonFace);
+        border-color: var(--theme-brand-action, ButtonBorder);
+        color: var(--theme-on-brand, ButtonText);
+      }
+      button.primary:hover {
+        background: var(--theme-brand-hover, ButtonFace);
+      }
+      button.primary:active {
+        background: var(--theme-brand-press, ButtonFace);
+      }
+      :focus-visible {
+        outline: 2px solid var(--theme-focus, Highlight);
+        outline-offset: 2px;
+      }
+      .status {
+        margin: 0;
+        padding-left: 8px;
+        border-left: 4px solid var(--theme-status-warning, GrayText);
+      }
+      .status:empty {
+        display: none;
+      }
+      .unknown::before {
+        content: "";
+        display: inline-block;
+        width: 0.6em;
+        height: 0.6em;
+        margin-right: 6px;
+        border-radius: 50%;
+        background: var(--theme-status-unknown, GrayText);
+      }
+      dl {
+        display: grid;
+        grid-template-columns: auto 1fr;
+        gap: 4px var(--space);
+        margin: 0 0 var(--space);
+      }
+      dt {
+        color: var(--theme-text-muted, GrayText);
+      }
+      dd {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>@deep/theme standalone example</h1>
+      <section class="card" aria-labelledby="appearance-heading">
+        <h2 id="appearance-heading">Appearance</h2>
+        <div class="row">
+          <label
+            >Theme
+            <select id="appearance">
+              <option value="system">System</option>
+            </select>
+          </label>
+          <button type="button" id="reset">Reset to default</button>
+        </div>
+        <p class="muted" id="active">Active theme: browser default</p>
+        <p class="status" id="appearance-status" role="status">
+          Loading theme module… (needs an http(s) origin, not file://)
+        </p>
+      </section>
+      <section class="card" aria-labelledby="sample-heading">
+        <h2 id="sample-heading">Sample workspace (synthetic data)</h2>
+        <dl>
+          <dt>Provider</dt>
+          <dd>Example provider (not connected)</dd>
+          <dt>Status</dt>
+          <dd class="unknown">Unknown — not checked by this page</dd>
+          <dt>Cost</dt>
+          <dd>Not estimated; no requests are made</dd>
+        </dl>
+        <form id="sample" class="row">
+          <label
+            >Display name
+            <input
+              type="text"
+              name="name"
+              value="Sample project"
+              autocomplete="off"
+          /></label>
+          <label class="check"
+            ><input type="checkbox" name="notify" /> Notify me</label
+          >
+          <button type="submit" class="primary">Preview</button>
+        </form>
+        <p class="muted" id="preview" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <script type="module">
+      import {
+        presets,
+        defaultPreference,
+        parsePreference,
+        resolveTheme,
+        cssVariables,
+      } from "../index.js";
+
+      const KEY = "theme-example.appearance.v1";
+      const SESSION_ONLY =
+        "Browser storage is unavailable; appearance changes last for this page only.";
+      const darkQuery = matchMedia("(prefers-color-scheme: dark)");
+      const select = document.getElementById("appearance");
+      const systemOption = select.options[0];
+      const statusEl = document.getElementById("appearance-status");
+      const activeEl = document.getElementById("active");
+      const themeColorMeta = document.querySelector('meta[name="theme-color"]');
+      const schemeMeta = document.querySelector('meta[name="color-scheme"]');
+
+      for (const preset of presets) {
+        const option = document.createElement("option");
+        option.value = preset.id;
+        option.textContent = preset.label;
+        select.append(option);
+      }
+
+      // The storage getter itself throws in some privacy modes and sandboxed frames.
+      function getStorage() {
+        try {
+          return window.localStorage;
+        } catch {
+          return null;
+        }
+      }
+      const setStatus = (text) => {
+        statusEl.textContent = text;
+      };
+
+      function readStored() {
+        const storage = getStorage();
+        let raw = null;
+        try {
+          raw = storage ? storage.getItem(KEY) : null;
+        } catch {
+          return [defaultPreference, SESSION_ONLY];
+        }
+        if (!storage) return [defaultPreference, SESSION_ONLY];
+        if (raw === null) return [defaultPreference, ""];
+        try {
+          return [parsePreference(raw), ""];
+        } catch (error) {
+          return [
+            defaultPreference,
+            `Saved appearance is invalid (${error.message}). Using the default; the saved value is untouched until you choose again.`,
+          ];
+        }
+      }
+
+      let [current, initialNote] = readStored();
+
+      function render() {
+        const theme = resolveTheme(current, darkQuery.matches);
+        const root = document.documentElement;
+        for (const [name, value] of Object.entries(cssVariables(theme)))
+          root.style.setProperty(name, value);
+        root.style.colorScheme = theme.scheme;
+        root.dataset.theme = theme.id;
+        root.dataset.themeDensity = theme.tokens.density;
+        schemeMeta.content = theme.scheme;
+        themeColorMeta.content = theme.tokens.surfaceCanvas;
+        systemOption.textContent = `System (${darkQuery.matches ? "Dark" : "Light"})`;
+        select.value = current.mode === "system" ? "system" : current.preset;
+        activeEl.textContent = `Active theme: ${theme.label}`;
+      }
+
+      function save(preference) {
+        const storage = getStorage();
+        if (!storage) return setStatus(SESSION_ONLY);
+        try {
+          storage.setItem(KEY, JSON.stringify(preference));
+          setStatus("");
+        } catch {
+          setStatus(
+            "Could not save (storage blocked or full); this choice lasts for this page only.",
+          );
+        }
+      }
+
+      select.addEventListener("change", () => {
+        const next =
+          select.value === "system"
+            ? { ...current, mode: "system" }
+            : { ...current, mode: "preset", preset: select.value };
+        try {
+          current = parsePreference(next);
+        } catch (error) {
+          setStatus(`That appearance cannot be applied: ${error.message}`);
+          return render();
+        }
+        render();
+        save(current);
+      });
+
+      document.getElementById("reset").addEventListener("click", () => {
+        current = defaultPreference;
+        render();
+        const storage = getStorage();
+        try {
+          storage?.removeItem(KEY);
+          setStatus(storage ? "" : SESSION_ONLY);
+        } catch {
+          setStatus(
+            "Reset for this page, but the saved value could not be removed.",
+          );
+        }
+      });
+
+      // OS and other-tab changes only re-render; they never write back.
+      darkQuery.addEventListener("change", render);
+      window.addEventListener("storage", (event) => {
+        if (
+          (event.key !== KEY && event.key !== null) ||
+          event.storageArea !== getStorage()
+        )
+          return;
+        if (event.newValue === null) {
+          current = defaultPreference;
+          setStatus("Another tab reset the appearance.");
+          return render();
+        }
+        try {
+          current = parsePreference(event.newValue);
+          setStatus("");
+          render();
+        } catch (error) {
+          setStatus(
+            `Another tab saved an invalid appearance (${error.message}); keeping the current one.`,
+          );
+        }
+      });
+
+      document.getElementById("sample").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const name =
+          new FormData(event.currentTarget).get("name").trim() || "Untitled";
+        document.getElementById("preview").textContent =
+          `Preview only: “${name}” was not sent or saved.`;
+      });
+
+      render();
+      setStatus(initialNote);
+    </script>
+  </body>
+</html>

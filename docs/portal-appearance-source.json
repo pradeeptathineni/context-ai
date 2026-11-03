@@ -1,0 +1,45 @@
+{
+  "schema": "context.portal-appearance-source.v1",
+  "package": "@deep/theme",
+  "version": "1.0.0",
+  "status": "unreleased-candidate",
+  "source_revision": "ce503f61a0d3b1a60ce11ac99e7d4e954d2280dd",
+  "revision_evidence": "Pinned shared candidate declared in Monitoring docs/theme-source.json; exact archive and file bytes verified locally. The ce503f61 commit object was not available in the inspected Deep checkout.",
+  "archive": "deep-theme-1.0.0.tgz",
+  "archive_sha256": "f768faba9bca0c0ec6bfab672493118f7f6ae7dacdcee9539c793b7c0640d165",
+  "verified_archive_contents": [
+    "index.js",
+    "LICENSE",
+    "README.md",
+    "package.json",
+    "index.d.ts",
+    "examples/standalone.html"
+  ],
+  "source_equivalence": {
+    "deep_package_index_revision": "1f2694a03593bda865206ad4034442937bc0dd55",
+    "monitoring_package_adoption_revision": "924700f7323f74743cb1d89088c3f0bd1845737a"
+  },
+  "license": "MIT",
+  "vendored_files": {
+    "examples/web/theme/LICENSE": "69e8bc0e7e498d3dbc421855f3be2857130648cc0ef343e81d95afd2ad168296",
+    "examples/web/theme/README.md": "cd1fc3862ec4d85cb3d9a4b4ce07de1758c725d995dfe30c9fa8b92198d74351",
+    "examples/web/theme/index.d.ts": "3ca09c007bb1d1527452329d76ec4d5f5fb23104036ac17b5477c6d36461f17c",
+    "examples/web/theme/index.js": "ae259abb290ad8b5678b64e1d5e3726b16e24c592a3f94c3aaa53c05b285a1b4",
+    "examples/web/theme/package.json": "c6c1e847feafe01f6d35c338ac148dd730fb79f12791346e05e6fe5606da7cb7",
+    "examples/web/theme/examples/standalone.html": "356e66a34431e85d4cdc487f24c948446007a8d89710c17430e2230ba948989f"
+  },
+  "adapter_source": {
+    "project": "monitoring-ai",
+    "path": "monitoring_ai/web/appearance.js",
+    "revision": "3080bc9268d52c7f70a54bf365a369169018aec8",
+    "sha256": "865b866402e573de97948de721b7aaad844c627110577d1f1840eb4a2fe2f6cf"
+  },
+  "adaptation": "Monitoring adapter retains controls, parser, storage failure handling and system/tab behavior. Context changes its local key, adds the Alternate colors shared-preset shortcut with visible failure feedback and owns portal CSS mapping. No navigation shell is required by this tabbed reading portal.",
+  "adapted_files": {
+    "examples/web/appearance.js": "248fce3dcce0fad243968db111815b52fad6483070b255146fc28f6093556a3d",
+    "examples/web/style.css": "dd623a31012b333dd14b89d78533709e04c92a1ada1ec9f126b0f34b1586a31c",
+    "examples/web/index.html": "89ce74d3107232ef1e1758c49ba13c354b3b851b8b31fb3c089577b88cfd4c50",
+    "examples/web/app.js": "adb4cce3daae6694b62caca1cd5676198b8b4d4244074528dc47927b25eee43a",
+    "examples/web/build.mjs": "e0d1f4f94d73ea3fae34617d4e428716a1cd8c476dff07ab7d407727d579254f"
+  }
+}

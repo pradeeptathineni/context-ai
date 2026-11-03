@@ -34,7 +34,7 @@ For a user-curated handoff into a fresh native session, see [session reconstruct
 
 ## Keep a project selection
 
-The [catalog and project profiles](docs/library.md) preserve options, reasons, evidence and recurring selections. The [portal](examples/web/index.html) shows these public choices and installs nothing. Follow the source-environment setup in the library guide, then run from the Context checkout:
+The [catalog and project profiles](docs/library.md) preserve options, reasons, evidence and recurring selections. The [portal](examples/web/index.html) shows these public choices and installs nothing. Its Appearance disclosure uses the shared six-preset MIT theme package with Context-only browser preferences; [source and scope](docs/references.md#public-portal-appearance--reviewed-2026-11-03) describe the local adapter. Follow the source-environment setup in the library guide, then run from the Context checkout:
 
 ```sh
 .venv/bin/python scripts/context_ai.py catalog

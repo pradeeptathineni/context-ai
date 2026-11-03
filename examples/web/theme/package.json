@@ -1,0 +1,20 @@
+{
+  "name": "@deep/theme",
+  "version": "1.0.0",
+  "license": "MIT",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "README.md",
+    "LICENSE",
+    "examples/standalone.html"
+  ],
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    }
+  },
+  "sideEffects": false
+}

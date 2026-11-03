@@ -186,5 +186,4 @@ document.querySelector('#profile-filter').addEventListener('change', renderProfi
 document.querySelector('#search').addEventListener('input', renderLoadouts);
 document.querySelectorAll('[name=concern]').forEach(input => input.addEventListener('change', renderLoadouts));
 document.querySelector('#reset').addEventListener('click', () => { document.querySelector('#search').value = ''; document.querySelector('[name=concern][value=all]').checked = true; renderLoadouts(); document.querySelector('#search').focus(); });
-document.querySelector('#mode').addEventListener('click', event => { const active = event.currentTarget.getAttribute('aria-pressed') !== 'true'; event.currentTarget.setAttribute('aria-pressed',String(active)); document.body.dataset.mode = active ? 'expressive' : 'quiet'; });
 renderEquipment(); renderProfiles(); renderLoadouts(); renderTrials(); renderPreview(); updateCommand();
