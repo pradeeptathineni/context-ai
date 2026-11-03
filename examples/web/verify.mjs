@@ -43,10 +43,10 @@ try {
     };
     await assertNoOverflow('equipment');
     if ([320,1440].includes(width)) await page.screenshot({path:out+`equipment-${width}.png`});
-    await page.getByLabel('Find equipment').fill('no-such-equipment');
-    await expect(page.getByRole('heading',{name:'No matching equipment'})).toBeVisible();
-    await page.getByRole('button',{name:'Reset equipment filters'}).click();
-    await expect(page.getByLabel('Find equipment')).toBeFocused();
+    await page.getByLabel('Search guidance and tools').fill('no-such-equipment');
+    await expect(page.getByRole('heading',{name:'No matching guidance or tools'})).toBeVisible();
+    await page.getByRole('button',{name:'Reset filters'}).click();
+    await expect(page.getByLabel('Search guidance and tools')).toBeFocused();
     await page.getByLabel('Selection',{exact:true}).selectOption('alternative');
     await expect(page.locator('#equipment-matt-pocock-tdd')).toBeVisible();
     await expect(page.locator('#equipment-context-output')).toHaveCount(0);
@@ -64,22 +64,22 @@ try {
     await page.locator('.equipment-card').first().locator('summary').click();
     await assertNoOverflow('source disclosure');
     for (const palette of ['quiet','expressive']) {
-      if (palette==='expressive') await page.getByRole('button',{name:'Expressive palette'}).click();
-      for (const tab of ['Equipment','Loadouts','Trials']) {
+      if (palette==='expressive') await page.getByRole('button',{name:'Alternate colors'}).click();
+      for (const tab of ['Guidance and tools','Project setups','Trials']) {
         await page.getByRole('tab',{name:tab,exact:true}).click();
         await assertNoOverflow(`${tab}/${palette}`);
-        if (tab==='Equipment' && palette==='expressive' && [320,1440].includes(width)) { await page.evaluate(()=>scrollTo(0,0)); await page.screenshot({path:out+`expressive-equipment-${width}.png`}); }
+        if (tab==='Guidance and tools' && palette==='expressive' && [320,1440].includes(width)) { await page.evaluate(()=>scrollTo(0,0)); await page.screenshot({path:out+`expressive-equipment-${width}.png`}); }
         const axe=await new AxeBuilder({page}).withTags(['wcag2a','wcag2aa','wcag21aa','wcag22aa']).analyze();
         assert.deepEqual(axe.violations,[],JSON.stringify({width,palette,tab,violations:axe.violations}));
       }
     }
-    await page.getByRole('button',{name:'Expressive palette'}).click();
-    await page.getByRole('tab',{name:'Loadouts',exact:true}).click();
-    await page.getByLabel('Project setup').selectOption('principles');
+    await page.getByRole('button',{name:'Alternate colors'}).click();
+    await page.getByRole('tab',{name:'Project setups',exact:true}).click();
+    await page.getByLabel('Project setup',{exact:true}).selectOption('principles');
     await expect(page.locator('.profile-card')).toHaveCount(1);
     await expect(page.locator('.profile-card')).toContainText('No added task guidance; ordinary work uses native tools');
     if ([320,1440].includes(width)) { await page.evaluate(()=>scrollTo(0,0)); await page.screenshot({path:out+`native-loadout-${width}.png`}); }
-    await page.getByLabel('Project setup').selectOption('signals');
+    await page.getByLabel('Project setup',{exact:true}).selectOption('signals');
     await expect(page.locator('.profile-card')).toContainText(data.library.options.find(item=>item.id==='context-output').name);
     await expect(page.locator('.profile-card')).toContainText(data.library.profiles.find(profile => profile.id === 'signals').selections.find(choice => choice.option === 'context-output').reason);
     await page.locator('.profile-card summary').click();
@@ -93,8 +93,8 @@ try {
     const requestNetwork=[];
     const recordRequest=request=>requestNetwork.push({url:request.url(),method:request.method()});
     page.on('request',recordRequest);
-    await page.getByText('Explicit equipment commands and recovery',{exact:true}).click();
-    await page.getByLabel('Equipment to inspect locally').selectOption('context-output');
+    await page.getByText('Local commands and recovery',{exact:true}).click();
+    await page.getByLabel('Guidance or tool to inspect locally').selectOption('context-output');
     await page.getByLabel('Host',{exact:true}).selectOption('both');
     await expect(page.locator('#local-command')).toContainText('plan --with context-output --project /absolute/project --provider both');
     const downloaded=page.waitForEvent('download');
@@ -107,18 +107,18 @@ try {
     assert.deepEqual(request.constraints,[]);assert.deepEqual(request.findings,[]);
     assert(!JSON.stringify(request).includes('/Users/'));
     await expect(page.locator('#request-status')).toContainText('nothing was installed');
-    await page.getByLabel('Project setup').selectOption('principles');
-    await page.getByLabel('Equipment to inspect locally').selectOption('web-experience');
+    await page.getByLabel('Project setup',{exact:true}).selectOption('principles');
+    await page.getByLabel('Guidance or tool to inspect locally').selectOption('web-experience');
     await expect(page.locator('#request-status')).toBeEmpty();
     await expect(page.locator('#local-command')).toContainText('plan web-experience --project /absolute/project');
     assert.deepEqual(requestNetwork,[],'public controls/export must not send requests');page.off('request',recordRequest);
     await expect(page.getByRole('button',{name:'Apply',exact:true})).toHaveCount(0);
     await assertNoOverflow('request and commands');
-    await page.getByText('Browse all concern-specific loadouts',{exact:true}).click();
-    await page.getByLabel('Find a loadout').fill('no-such-loadout');
-    await expect(page.getByRole('heading',{name:'No matching loadouts'})).toBeVisible();
+    await page.getByText('Browse guidance bundles by topic',{exact:true}).click();
+    await page.getByLabel('Find a guidance bundle').fill('no-such-loadout');
+    await expect(page.getByRole('heading',{name:'No matching guidance bundles'})).toBeVisible();
     await page.getByRole('button',{name:'Clear filters'}).click();
-    await expect(page.getByLabel('Find a loadout')).toBeFocused();
+    await expect(page.getByLabel('Find a guidance bundle')).toBeFocused();
     await expect(page.locator('.loadout')).toHaveCount(data.loadouts.length);
     await page.getByLabel('Web',{exact:true}).check();
     await expect(page.locator('.loadout')).toHaveCount(data.loadouts.filter(item=>item.kind==='web').length);
@@ -129,13 +129,13 @@ try {
     await assertNoOverflow('negative trial detail');
     if ([320,1440].includes(width)) { await page.evaluate(()=>scrollTo(0,0)); await page.screenshot({path:out+`negative-trial-${width}.png`}); }
     await page.goto(base);await page.keyboard.press('Tab');
-    await expect(page.getByRole('link',{name:'Skip to equipment library'})).toBeFocused();
+    await expect(page.getByRole('link',{name:'Skip to guidance library'})).toBeFocused();
     await page.keyboard.press('Enter');await expect(page.locator('#main')).toBeFocused();
-    await page.keyboard.press('Tab');await expect(page.getByRole('tab',{name:'Equipment',exact:true})).toBeFocused();
-    await page.keyboard.press('ArrowRight');await expect(page.getByRole('tab',{name:'Loadouts',exact:true})).toBeFocused();
+    await page.keyboard.press('Tab');await expect(page.getByRole('tab',{name:'Guidance and tools',exact:true})).toBeFocused();
+    await page.keyboard.press('ArrowRight');await expect(page.getByRole('tab',{name:'Project setups',exact:true})).toBeFocused();
     await expect(page.locator('#loadouts')).toBeVisible();
     await page.keyboard.press('End');await expect(page.getByRole('tab',{name:'Trials',exact:true})).toBeFocused();
-    await page.keyboard.press('Home');await expect(page.getByRole('tab',{name:'Equipment',exact:true})).toBeFocused();
+    await page.keyboard.press('Home');await expect(page.getByRole('tab',{name:'Guidance and tools',exact:true})).toBeFocused();
     assert.equal(await page.evaluate(()=>getComputedStyle(document.documentElement).scrollBehavior),'auto');
     assert(!(await page.evaluate(()=>document.body.textContent.includes('/Users/'))),'public UI must exclude private absolute target paths');
     results.push({width,axe_scans:6,axe_violations:0,overflow:false,public_action_requests:0,states:'equipment filter/empty/focus recovery, text-only source, native and focused profiles, canonical protected conflict, request download/edit, legacy loadout recovery, actual negative trial, keyboard tabs/skip, reduced motion'});
