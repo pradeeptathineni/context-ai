@@ -99,6 +99,30 @@ class ImportImpactTests(unittest.TestCase):
         caller = next(row for row in first["nodes"] if row["path"] == "caller.py")
         self.assertEqual(caller["via"], "parent_a.py")
 
+    def test_changed_files_share_one_deterministic_reverse_import_graph(self):
+        self.put("first.py", "")
+        self.put("second.py", "")
+        self.put("a.py", "import first\n")
+        self.put("b.py", "import second\n")
+        self.put("entry.py", "import b\nimport a\n")
+        self.commit()
+        first = import_impact.inspect_change_impact(self.root, ["second.py", "first.py"])
+        second = import_impact.inspect_change_impact(self.root, ["first.py", "second.py"])
+        self.assertEqual(first, second)
+        self.assertEqual(first["schema"], import_impact.SET_SCHEMA)
+        self.assertEqual(first["seeds"], ["first.py", "second.py"])
+        self.assertEqual(
+            [(row["path"], row["depth"], row["via"]) for row in first["nodes"]],
+            [
+                ("first.py", 0, None), ("second.py", 0, None),
+                ("a.py", 1, "first.py"), ("b.py", 1, "second.py"),
+                ("entry.py", 2, "a.py"),
+            ],
+        )
+        self.assertEqual(import_impact.inspect_impact(self.root, "first.py")["schema"], import_impact.SCHEMA)
+        with self.assertRaisesRegex(import_impact.ImpactError, "distinct paths within max_nodes"):
+            import_impact.inspect_change_impact(self.root, ["first.py", "second.py"], max_nodes=1)
+
     def test_ambiguity_dynamic_import_and_external_import_are_disclosed(self):
         self.put("foo.py", "")
         self.put("src/foo.py", "")

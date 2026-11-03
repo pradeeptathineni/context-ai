@@ -5,10 +5,14 @@
 ```sh
 python -m scripts.import_impact --project /absolute/checkout --list
 python -m scripts.import_impact --project /absolute/checkout --seed src/package/module.py --format json
+python -m scripts.import_impact --project /absolute/checkout \
+  --seed src/package/module.py --seed src/package/other.py
 python -m scripts.import_impact --project /absolute/checkout --seed src/package/module.py --max-depth 6 --max-nodes 150
 ```
 
 The Python API is `list_files(project: Path) -> dict` and `inspect_impact(project: Path, seed: str, *, max_depth: int = 4, max_nodes: int = 100) -> dict`. Both return schema `context-ai/import-impact/v1`. `list_files` returns eligible tracked `.py` paths and the observed HEAD/dirty state. An impact response adds a SHA-256 over sorted relative paths and source-byte digests, nodes with `path`, `depth`, `via`, and `sha256` of each exact node file, direct edges with `from`, `to`, and source `line`, `complete`, diagnostics, and qualifications. The per-node digest can be compared with another source owner’s exact excerpt. A clean Git state does not imply the analysis is atomic or that imported code is active.
+
+For a change set, repeat `--seed` or call `inspect_change_impact(project, seeds: list[str], *, max_depth=4, max_nodes=100)`. The additive `context-ai/import-impact-set/v1` result has sorted `seeds` and one combined reverse-import graph from the same captured source snapshot. Each seed has depth zero; a shared importer gets the shortest path and a deterministic lexical `via`. The existing one-seed API and CLI response retain their original schema and `seed` field. At most 20 distinct eligible seeds are accepted, and `max_nodes` must accommodate them. This is a static candidate set for review, not proof that all importers execute or that every project test is selected.
 
 The reader considers tracked regular `.py` files under the repository root and `src/`. It uses the descriptor-relative no-follow reader and the file exclusions in `scripts/repo_map.py`: symlinks, submodules, secret-style paths/names, generated/vendor/cache directories and non-regular files are omitted. Limits are 5,000 tracked files, 256,000 bytes per source file, 8,000,000 bytes total, depth 8, 200 nodes, 2,000 returned edges and 12 bounded diagnostic samples. A result is marked incomplete when it encounters a parse/encoding omission, unresolved or ambiguous imports, dynamic import syntax, policy-skipped Python paths, or a traversal/output cap. Diagnostic totals remain visible when samples are omitted.
 

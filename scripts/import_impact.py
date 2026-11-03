@@ -15,10 +15,12 @@ from scripts import repo_map
 
 
 SCHEMA = "context-ai/import-impact/v1"
+SET_SCHEMA = "context-ai/import-impact-set/v1"
 DEFAULT_DEPTH = 4
 MAX_DEPTH = 8
 DEFAULT_NODES = 100
 MAX_NODES = 200
+MAX_SEEDS = 20
 MAX_EDGES = 2000
 MAX_DIAGNOSTICS = 12
 MAX_DIAGNOSTIC_CHARS = 180
@@ -414,13 +416,36 @@ def inspect_impact(
     max_nodes: int = DEFAULT_NODES,
 ) -> dict:
     """Trace tracked static importers of a Python seed using bounded AST reads."""
+    return _inspect_impact(project, [seed], max_depth=max_depth, max_nodes=max_nodes)
+
+
+def inspect_change_impact(
+    project: Path,
+    seeds: list[str],
+    *,
+    max_depth: int = DEFAULT_DEPTH,
+    max_nodes: int = DEFAULT_NODES,
+) -> dict:
+    """Trace one combined reverse-import graph for a bounded set of changed files."""
+    return _inspect_impact(project, seeds, max_depth=max_depth, max_nodes=max_nodes, set_result=True)
+
+
+def _inspect_impact(project, seeds, *, max_depth, max_nodes, set_result=False):
     _validate_limits(max_depth, max_nodes)
+    if (
+        not isinstance(seeds, list) or not 1 <= len(seeds) <= MAX_SEEDS
+        or len(seeds) > max_nodes or any(not isinstance(seed, str) for seed in seeds)
+        or len(set(seeds)) != len(seeds)
+    ):
+        raise ImpactError(f"seeds must be 1-{MAX_SEEDS} distinct paths within max_nodes")
+    seeds = sorted(seeds)
     root = _project_root(project)
     status = _git(root, "status", "--porcelain", "--untracked-files=normal", "--ignore-submodules=all")
     before = _snapshot(root, _tracked(root), status)
     eligible, skipped = _eligible_records(before["index"])
     paths = {row[3] for row in eligible}
-    _validate_seed(seed, paths)
+    for seed in seeds:
+        _validate_seed(seed, paths)
     sources = _read_sources(root, eligible)
     diagnostics = _diagnostics()
     if skipped:
@@ -455,9 +480,9 @@ def inspect_impact(
                     edge_rows.add((path, dependency, node.lineno))
                     reverse.setdefault(dependency, set()).add(path)
 
-    # Edges are reported only when they participate in the seed's reverse walk.
-    nodes = {seed: {"path": seed, "depth": 0, "via": None}}
-    frontier = [seed]
+    # Edges are reported only when they participate in the seeds' reverse walk.
+    nodes = {seed: {"path": seed, "depth": 0, "via": None} for seed in seeds}
+    frontier = seeds
     truncated_depth = False
     truncated_nodes = False
     for depth in range(max_depth):
@@ -506,9 +531,8 @@ def inspect_impact(
             **node,
             "sha256": sources[node["path"]]["digest"],
         })
-    return {
-        "schema": SCHEMA,
-        "seed": seed,
+    result = {
+        "schema": SET_SCHEMA if set_result else SCHEMA,
         "snapshot": {**_snapshot_public(before), "source_digest": source_digest},
         "nodes": public_nodes,
         "edges": output_edges,
@@ -520,6 +544,8 @@ def inspect_impact(
             "Unresolved, dynamic, ambiguous, skipped and capped paths are disclosed.",
         ],
     }
+    result["seeds" if set_result else "seed"] = seeds if set_result else seeds[0]
+    return result
 
 
 def main(argv=None):
@@ -527,15 +553,18 @@ def main(argv=None):
     parser.add_argument("--project", required=True, type=Path, help="explicit Git repository root")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--list", action="store_true", help="list eligible tracked Python files")
-    group.add_argument("--seed", help="eligible tracked relative Python path")
+    group.add_argument("--seed", action="append", help="eligible tracked relative Python path; repeat for a change set")
     parser.add_argument("--max-depth", type=int, default=DEFAULT_DEPTH)
     parser.add_argument("--max-nodes", type=int, default=DEFAULT_NODES)
     parser.add_argument("--format", choices=("json",), default="json")
     args = parser.parse_args(argv)
     try:
-        result = list_files(args.project) if args.list else inspect_impact(
-            args.project, args.seed, max_depth=args.max_depth, max_nodes=args.max_nodes
-        )
+        if args.list:
+            result = list_files(args.project)
+        elif len(args.seed) == 1:
+            result = inspect_impact(args.project, args.seed[0], max_depth=args.max_depth, max_nodes=args.max_nodes)
+        else:
+            result = inspect_change_impact(args.project, args.seed, max_depth=args.max_depth, max_nodes=args.max_nodes)
     except (ImpactError, OSError) as exc:
         parser.exit(2, f"import-impact: {exc}\n")
     json.dump(result, sys.stdout, ensure_ascii=False, sort_keys=True, indent=2)
