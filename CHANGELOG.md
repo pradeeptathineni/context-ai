@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Trace a set of changed Python files in one bounded import-impact snapshot, retaining the existing single-file response and reporting unresolved imports and depth limits.
+
 - Add an exact session-continuation review render with separate retained-record and current Context-guidance identities, plus a digest-confirmed `continue` action that cold-replays the preview and transfers no approval; legacy `export` remains compatible.
 
 - Add compiler-backed TS/JS navigation: search declarations, then inspect definitions, references and one-hop incoming/outgoing calls with exact UTF-16 source locations through the host's installed TypeScript 6 LanguageService. Tracked eligible source is captured safely and served from memory, without project config or packages. Results are snapshot-bound and rechecked after the engine run, and bounds and unresolved imports are explicit. Inspection includes a bounded exact source excerpt with original file hash, UTF-16 range and visible truncation.
