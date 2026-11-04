@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 from context_ai import Invalid, digest, inside, installed
-from context_guidance import GuidanceConflict, select
+from context_guidance import GuidanceConflict, read_guidance, select
 
 SCHEMA_VERSION = 1
 MAX_CONTEXT_CHARS = 9500  # Below Claude's documented 10k hook context limit.
@@ -14,34 +14,25 @@ MAX_INPUT_BYTES = 65536
 SOURCES = {'startup', 'resume', 'clear', 'compact', 'fork'}
 
 
-def _text(path, limit=MAX_CONTEXT_CHARS):
-    if not path.is_file() or path.stat().st_size > limit:
-        raise Invalid('required guidance missing or oversized')
-    return path.read_text(encoding='utf-8')
-
-
-def _private(root, name):
-    # Private identity is retained in-process for a local caller, never in hook JSON.
-    path = inside(root, name)
-    return _text(path)
-
-
 def prepare(project, provider, *, private_root=None, stage=None,
             private_resources=(), optional_private_resources=(),
-            max_chars=MAX_CONTEXT_CHARS, task_files=()):
-    """Resolve installed project guidance, then optional known-task material.
+            max_chars=MAX_CONTEXT_CHARS, task_files=(), discover_ancestor=False):
+    """Resolve this installed project and optional task guidance without writes or model calls.
 
-    Returns private local_identity for a trusted local caller; public_receipt must
-    be used for project artifacts. No write or provider call occurs here.
+    Hook callers may explicitly discover an equipped ancestor. Task paths are
+    relative to the selected equipped root. Only public_receipt belongs in artifacts.
     """
     # The installation binds the caller's project spelling; resolving /var
     # aliases here would turn a valid equipped checkout into another identity.
     project = Path(project).absolute()
-    # Hooks may start below an equipped root. Only a real installation selects it.
-    for candidate in (project, *project.parents):
-        if (candidate / '.context-ai/lock.json').is_file():
-            project = candidate
-            break
+    if not isinstance(discover_ancestor, bool):
+        raise Invalid('ancestor discovery must be explicit')
+    if discover_ancestor:
+        # Session hooks may start below the root; explicit project selection does not
+        for candidate in (project, *project.parents):
+            if (candidate / '.context-ai/lock.json').is_file():
+                project = candidate
+                break
     if provider not in ('codex', 'claude'):
         raise Invalid('unsupported provider')
     if not project.is_dir():
@@ -60,13 +51,14 @@ def prepare(project, provider, *, private_root=None, stage=None,
             raise Invalid('installed resource drift')
     route = lock['routing_block']
     route_path = inside(project, 'AGENTS.md')
-    project_text = _text(route_path)
+    project_text, project_sha = read_guidance(route_path, MAX_CONTEXT_CHARS)
     if project_text.count(route) != 1:
         raise Invalid('project routing block drift')
     claude_text = ''
+    claude_sha = None
     if provider == 'claude' and lock.get('claude_routing'):
         entry = lock['claude_routing']
-        claude_text = _text(inside(project, entry['path']))
+        claude_text, claude_sha = read_guidance(inside(project, entry['path']), MAX_CONTEXT_CHARS)
         if claude_text.count(entry['block']) != 1:
             raise Invalid('Claude routing block drift')
         claude_text = claude_text.replace(entry['block'], '', 1).strip()
@@ -79,7 +71,9 @@ def prepare(project, provider, *, private_root=None, stage=None,
     selected = [{'scope': 'project', 'name': 'AGENTS.md',
                  'reason': 'checked project instructions'}]
     local_sources = [{'scope': 'project', 'name': 'AGENTS.md',
-                      'sha256': digest(project_text.encode())}]
+                      'sha256': project_sha}]
+    if claude_sha is not None:
+        local_sources.append({'scope': 'project', 'name': entry['path'], 'sha256': claude_sha})
     project_user = project_text.replace(route, '', 1).strip()
     if project_user:
         entries.append(('project instructions', project_user))
@@ -87,8 +81,6 @@ def prepare(project, provider, *, private_root=None, stage=None,
         entries.append(('Claude project instructions', claude_text))
         selected.append({'scope': 'project', 'name': 'Claude project instructions',
                          'reason': 'provider project instructions'})
-        local_sources.append({'scope': 'project', 'name': 'CLAUDE.md',
-                              'sha256': digest(claude_text.encode())})
     entries.append(('project route', route))
     omissions = []
     if stage is not None:
@@ -100,8 +92,8 @@ def prepare(project, provider, *, private_root=None, stage=None,
             if not sha:
                 raise Invalid('stage resource has no source pin')
             path = inside(project, '.context-ai/resources/' + name)
-            body = _text(path)
-            if digest(body.encode()) != sha:
+            body, source_sha = read_guidance(path, MAX_CONTEXT_CHARS)
+            if source_sha != sha:
                 raise Invalid('stage resource drift')
             entries.append((name, body))
             selected.append({'scope': 'project', 'name': name,
@@ -124,10 +116,10 @@ def prepare(project, provider, *, private_root=None, stage=None,
             if name not in required and not path.is_file():
                 omissions.append({'scope': 'private', 'reason': 'optional missing'})
                 continue
-            body = _private(root, name)
+            body, source_sha = read_guidance(path, MAX_CONTEXT_CHARS)
             private_parts.append((name, body))
             local_sources.append({'scope': 'private', 'name': name,
-                                  'sha256': digest(body.encode())})
+                                  'sha256': source_sha})
             private_entries.append(('private guidance', body))
     elif optional_private_resources:
         omissions.append({'scope': 'private', 'reason': 'optional root unavailable'})
@@ -173,7 +165,8 @@ def hook_response(provider, payload, *, private_root=None, stage=None,
         raise Invalid('missing hook project directory')
     result = prepare(cwd, provider, private_root=private_root, stage=stage,
                      private_resources=private_resources,
-                     optional_private_resources=optional_private_resources, task_files=task_files)
+                     optional_private_resources=optional_private_resources, task_files=task_files,
+                     discover_ancestor=True)
     return {'hookSpecificOutput': {'hookEventName': 'SessionStart',
                                    'additionalContext': result['context']}}
 

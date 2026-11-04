@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Bind session-delivery local identities to original guidance bytes while retaining LF-normalized rendering. Valid raw-pinned CRLF stages now deliver, and newline-only changes remain visible locally without publishing private hashes. Direct API and `--project` selection require the exact equipped root. Hook ancestor lookup remains available through explicit `discover_ancestor=True` for callers that need it.
+
 - Trace a set of changed Python files in one bounded import-impact snapshot, retaining the existing single-file response and reporting unresolved imports and depth limits.
 
 - Add an exact session-continuation review render with separate retained-record and current Context-guidance identities, plus a digest-confirmed `continue` action that cold-replays the preview and transfers no approval; legacy `export` remains compatible.

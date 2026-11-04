@@ -128,7 +128,7 @@ class ContextDelivery(unittest.TestCase):
     def test_subdirectory_finds_nearest_equipped_project(self):
         child = self.project / 'src'
         child.mkdir()
-        self.assertEqual(d.prepare(child, 'codex')['public_receipt']['source_digest'],
+        self.assertEqual(d.prepare(child, 'codex', discover_ancestor=True)['public_receipt']['source_digest'],
                          d.prepare(self.project, 'codex')['public_receipt']['source_digest'])
 
     def test_claude_imports_agents_symlink(self):

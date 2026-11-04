@@ -59,23 +59,28 @@ def _globs(path, patterns):
         matches(path, p) for p in negative)
 
 
-def _read(path, limit):
+def read_guidance(path, limit):
+    """Return normalized UTF-8 text with the digest of its bounded original bytes."""
     if not path.is_file() or path.stat().st_size > limit:
         raise Invalid('selected guidance missing or oversized')
-    return path.read_text(encoding='utf-8')
+    with path.open('rb') as stream:
+        raw = stream.read(limit + 1)
+    if len(raw) > limit:
+        raise Invalid('selected guidance missing or oversized')
+    return raw.decode('utf-8').replace('\r\n', '\n').replace('\r', '\n'), digest(raw)
 
 
 def _load(root, name, scope, sources):
     path = inside(root, name)
     if not path.exists():
         return []
-    raw = _read(path, MAX_MANIFEST_BYTES)
-    doc = parse_yaml(raw)
+    text, source_sha = read_guidance(path, MAX_MANIFEST_BYTES)
+    doc = parse_yaml(text)
     try:
         validate_schema('task-guidance', doc)
     except Exception:
         raise Invalid('invalid task guidance manifest') from None
-    sources.append({'scope': scope, 'name': name, 'sha256': digest(raw.encode())})
+    sources.append({'scope': scope, 'name': name, 'sha256': source_sha})
     ids = set()
     rules = []
     for spec in doc['rules']:
@@ -140,9 +145,9 @@ def select(project, private_root, files, limit):
         decision.update(status='selected' if paths else 'omitted', reason=reason, matches=paths)
         decisions.append(decision)
         if paths:
-            rule['body'] = _read(inside(rule['root'], rule['path']), limit)
+            rule['body'], source_sha = read_guidance(inside(rule['root'], rule['path']), limit)
             sources.append({'scope': rule['scope'], 'name': rule['path'],
-                            'sha256': digest(rule['body'].encode())})
+                            'sha256': source_sha})
             rule['decision'] = decision
             rule['rank'] = (2 if rule['scope'] == 'project' else 1,
                             len(rule['directory'].split('/')) if rule['directory'] and not rule.get('always_apply') else 0)

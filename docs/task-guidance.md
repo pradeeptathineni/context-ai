@@ -71,8 +71,11 @@ An unresolved topic returns `guidance_conflict` without partial context;
 `prepare(project, provider, task_files=(...), private_root=...)` is the same
 read-only pre-execution entrypoint used by Maestro. It returns `context`,
 `local_identity`, `local_sources`, `task_guidance` and `public_receipt`.
+Direct selection requires this exact equipped project. Ancestor lookup is
+reserved for hooks or callers explicitly passing `discover_ancestor=True`.
 The local identity binds known paths, decisions and exact consulted guidance
-bytes; reprepare under the worker lock to catch drift. A Maestro campaign must
+bytes, including original line endings. Reprepare under the worker lock to catch
+drift. A Maestro campaign must
 derive these paths from its approved task, not model guesses. Deep can display
 the receipt and consumes this owner contract; it needs no second resolver.
 

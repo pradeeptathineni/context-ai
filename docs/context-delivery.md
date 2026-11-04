@@ -1,7 +1,13 @@
 # Session context delivery (candidate)
 
 `scripts/context_delivery.py` reads an existing `plan`/`apply` installation. It
-uses the nearest equipped ancestor of a session's working directory. At session
+uses the nearest equipped ancestor for a session hook's working directory. Direct
+`prepare(project, ...)` calls and CLI `--project` require that exact project's
+complete installation. An unequipped nested project cannot borrow its parent's
+instructions. Callers that deliberately need the earlier ancestor lookup must
+pass `discover_ancestor=True`. Hook delivery opts into that lookup explicitly.
+Known task paths are relative to the selected equipped root, or absolute within
+it. At session
 start it delivers private user guidance first when a private root was explicitly
 configured, followed by the checked project instructions and managed route. A
 caller that knows the task may request an installed stage and explicit private
@@ -17,9 +23,16 @@ on stdin and emits their documented `hookSpecificOutput.additionalContext` JSON.
 It handles `startup`, `resume`, `clear`, `compact`, and `fork`. A missing required
 file, changed pin, unsafe path, unsupported event, or output beyond 9,500
 characters yields `continue: false` without partial guidance. The in-memory
-`local_identity` binds exact delivered bytes for a trusted local consumer;
+`local_identity` binds delivered text and the original bytes of consulted
+instructions, stage files, private resources, guidance manifests and rules.
+Rendering normalizes line endings to LF, while hashes use the original bytes.
+A newline-only source change therefore changes local identity even if the
+rendered text is unchanged. A correctly pinned CRLF stage remains valid.
+This exact identity is for a trusted local consumer only. The
 `public_receipt` excludes private text, paths and hashes. Its status is
 `prepared_unverified`, not proof that a hook ran or a model followed guidance.
+Its `source_digest` is a public selection fingerprint, not an exact hash of
+private text or proof that two private preparations match.
 
 For a **reviewed, project-local** qualification, point a synchronous command
 hook at an absolute path to this script and pass `--provider codex` or
