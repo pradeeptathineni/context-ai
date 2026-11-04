@@ -9,8 +9,10 @@ pass `discover_ancestor=True`. Hook delivery opts into that lookup explicitly.
 Known task paths are relative to the selected equipped root, or absolute within
 it. At session
 start it delivers private user guidance first when a private root was explicitly
-configured, followed by the checked project instructions and managed route. A
-caller that knows the task may request an installed stage and explicit private
+configured, followed by the checked project instructions and managed route.
+A private root must contain `README.md`, which is always delivered first. If a
+writing-kit directory is the root, its README must be written as guidance.
+A caller that knows the task may request an installed stage and explicit private
 task resources. The same `prepare()` function is the prelaunch entrypoint for a
 Maestro adapter; it has no model or filesystem writes.
 
@@ -30,6 +32,18 @@ and owned native skill pins. Every owned native skill must match its pin before
 delivery, even when the short rendered route is unchanged. This identity change
 requires a new preview for outstanding context-bound approvals; it grants no
 new approval or installation authority.
+A refusal prints stable, path-free JSON: `continue: false`, a `reason` code and a
+short next step in `stopReason`. Codes cover an unequipped or unavailable project,
+provider or stage outside the installed selection, installation or route drift,
+a shadowing Claude route, private-root and guidance-file problems, oversized
+context, invalid task files or guidance manifests, and invalid hook input. An
+equal-precedence guidance conflict keeps `guidance_conflict`; its details stay in local
+`--project --format local` output only. Only exact, known static messages map to
+a code. Any other error, including one that names a path, returns the generic
+failure with no `reason` and no exception text. Hook success is ASCII-escaped
+JSON, so it parses to the same Unicode under any stdout encoding. A direct
+call without `--project` exits 2 with a usage error when stdin is a terminal
+instead of waiting for a hook payload.
 Rendering normalizes line endings to LF, while hashes use the original bytes.
 A newline-only source change therefore changes local identity even if the
 rendered text is unchanged. A correctly pinned CRLF stage remains valid.

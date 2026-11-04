@@ -1,14 +1,43 @@
+import contextlib
+import io
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import context_ai as c
 import context_delivery as d
+from context_guidance import GuidanceConflict
+
+SCRIPT = str(ROOT / 'scripts/context_delivery.py')
+GENERIC = 'Context delivery failed; inspect local installation.'
+
+
+class FakeTerminal:
+    """Interactive stdin whose payload must never be read."""
+    def isatty(self):
+        return True
+
+    @property
+    def buffer(self):
+        raise AssertionError('interactive stdin was read')
+
+
+def run_main(argv, stdin=None):
+    out, err = io.StringIO(), io.StringIO()
+    with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err), \
+            mock.patch.object(sys, 'stdin', stdin or io.TextIOWrapper(io.BytesIO(b''))):
+        try:
+            code = d.main(argv)
+        except SystemExit as exit_:
+            code = exit_.code
+    return code, out.getvalue(), err.getvalue()
 
 
 class ContextDelivery(unittest.TestCase):
@@ -148,6 +177,157 @@ class ContextDelivery(unittest.TestCase):
         c.apply(other, lock, files)
         self.assertNotEqual(d.prepare(other, 'codex')['public_receipt']['source_digest'],
                             d.prepare(self.project, 'codex')['public_receipt']['source_digest'])
+
+    def equipped(self, name, provider='both'):
+        project = Path(self.temp.name) / name
+        project.mkdir()
+        (project / 'AGENTS.md').write_text('Project rule wins.\n')
+        lock, files = c.resolve(['essentials'], project, provider)
+        c.apply(project, lock, files)
+        return project
+
+    def hook(self, *args, cwd=None, stdin=None, env=None):
+        payload = stdin if stdin is not None else json.dumps(
+            {'hook_event_name': 'SessionStart', 'source': 'startup',
+             'cwd': str(cwd or self.project)}).encode()
+        return subprocess.run([sys.executable, SCRIPT, '--provider', 'codex', *args],
+                              input=payload, capture_output=True, env=env)
+
+    def test_common_refusals_name_their_cause_and_next_step(self):
+        missing = str(Path(self.temp.name) / 'missing')
+        unequipped = Path(self.temp.name) / 'unequipped'
+        unequipped.mkdir()
+        outside = str(Path(self.temp.name) / 'outside.md')
+        private = str(self.private)
+        cases = [
+            ('project_not_equipped', unequipped, []),
+            ('project_unavailable', Path(missing), []),
+            ('stage_unavailable', self.project, ['--stage', 'nope']),
+            ('private_root_required', self.project, ['--private-resource', 'task.md']),
+            ('private_root_unavailable', self.project, ['--private-root', missing]),
+            ('guidance_unavailable', self.project,
+             ['--private-root', private, '--private-resource', 'missing.md']),
+            ('task_file_invalid', self.project, ['--task-file', outside]),
+        ]
+        valid = ['--stage', 'implement', '--private-root', private,
+                 '--private-resource', 'task.md', '--task-file', 'src/new.py']
+        delivered = json.loads(self.hook(*valid).stdout)
+        self.assertNotIn('continue', delivered)
+        self.assertIn('PRIVATE_TASK_MARKER', delivered['hookSpecificOutput']['additionalContext'])
+        code, out, _ = run_main(['--provider', 'codex', '--project', str(self.project), *valid])
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)['status'], 'prepared_unverified')
+        stops = set()
+        for reason, project, args in cases:
+            with self.subTest(reason=reason):
+                hook = self.hook(*args, cwd=project)
+                self.assertEqual(hook.returncode, 0)
+                direct = run_main(['--provider', 'codex', '--project', str(project), *args])
+                self.assertEqual(direct[0], 2)
+                for text in (hook.stdout.decode(), direct[1]):
+                    failure = json.loads(text)
+                    self.assertFalse(failure['continue'])
+                    self.assertEqual(failure['reason'], reason)
+                    self.assertNotEqual(failure['stopReason'], GENERIC)
+                    self.assertNotIn(self.temp.name, text)
+                stops.add(failure['stopReason'])
+        self.assertEqual(len(stops), len(cases))
+
+    def test_drift_provider_and_hook_input_refusals(self):
+        resource = self.equipped('resource-drift')
+        (resource / '.context-ai/resources/core/testing.md').write_text('Changed')
+        route = self.equipped('route-drift')
+        (route / 'AGENTS.md').write_text('Drifted\n')
+        codex_only = self.equipped('codex-only', 'codex')
+        for reason, project, provider in (('installation_drift', resource, 'codex'),
+                                          ('routing_drift', route, 'codex'),
+                                          ('provider_not_installed', codex_only, 'claude')):
+            with self.subTest(reason=reason):
+                code, out, _ = run_main(['--provider', provider, '--project', str(project)])
+                self.assertEqual((code, json.loads(out)['reason']), (2, reason))
+                self.assertNotIn(self.temp.name, out)
+        self.assertEqual(run_main(['--provider', 'codex', '--project', str(codex_only)])[0], 0)
+        for stdin in (b'not json', b'\xff\xfe', b'{"hook_event_name": "Other"}'):
+            with self.subTest(stdin=stdin):
+                failure = json.loads(self.hook(stdin=stdin).stdout)
+                self.assertEqual((failure['continue'], failure['reason']),
+                                 (False, 'hook_input_invalid'))
+
+    def test_unknown_and_path_bearing_errors_stay_generic(self):
+        secret = '/private/SECRET_PATH/notes.md'
+        errors = (c.Invalid('unsafe relative path: ' + secret), c.Invalid('new unlisted ' + secret),
+                  ValueError('project unavailable'), OSError(secret), KeyError(secret))
+        for error in errors:
+            with self.subTest(error=type(error).__name__), \
+                    mock.patch.object(d, 'prepare', side_effect=error):
+                code, out, err = run_main(['--provider', 'codex', '--project', str(self.project)])
+                self.assertEqual(code, 2)
+                self.assertEqual(json.loads(out), {'continue': False, 'stopReason': GENERIC})
+                self.assertNotIn('SECRET_PATH', out + err)
+        # Real inside() refusals carry the requested name; none of it may be echoed.
+        hook = self.hook('--private-root', str(self.private), '--private-resource', '../escape.md')
+        self.assertEqual(json.loads(hook.stdout), {'continue': False, 'stopReason': GENERIC})
+
+    def test_guidance_conflict_keeps_reason_and_local_only_details(self):
+        rules = [{'scope': 'project', 'id': 'a', 'path': 'a.md'},
+                 {'scope': 'project', 'id': 'b', 'path': 'b.md'}]
+        conflict = GuidanceConflict('style', 'src/app.py', rules)
+        with mock.patch.object(d, 'prepare', side_effect=conflict):
+            for fmt, details in (('receipt', False), ('context', False), ('local', True)):
+                with self.subTest(format=fmt):
+                    code, out, _ = run_main(['--provider', 'codex', '--project',
+                                             str(self.project), '--format', fmt])
+                    failure = json.loads(out)
+                    self.assertEqual((code, failure['reason']), (2, 'guidance_conflict'))
+                    self.assertEqual(failure.get('conflict'), conflict.details if details else None)
+        payload = json.dumps({'hook_event_name': 'SessionStart', 'source': 'startup',
+                              'cwd': str(self.project)}).encode()
+        with mock.patch.object(d, 'hook_response', side_effect=conflict):
+            code, out, _ = run_main(['--provider', 'codex'],
+                                    stdin=io.TextIOWrapper(io.BytesIO(payload)))
+        failure = json.loads(out)
+        self.assertEqual((code, failure['reason']), (0, 'guidance_conflict'))
+        self.assertNotIn('conflict', failure)
+
+    def test_hook_success_is_ascii_json_with_unicode_preserved(self):
+        text = 'Règle — ✓ \U0001f680'
+        (self.private / 'README.md').write_text('PRIVATE_START_MARKER ' + text + '\n', encoding='utf-8')
+        expected = d.hook_response('codex', {'hook_event_name': 'SessionStart',
+                                             'source': 'startup', 'cwd': str(self.project)},
+                                   private_root=self.private)
+        env = {**os.environ, 'PYTHONIOENCODING': 'ascii:strict'}
+        hook = self.hook('--private-root', str(self.private), env=env)
+        self.assertEqual(hook.returncode, 0, hook.stderr)
+        hook.stdout.decode('ascii')
+        parsed = json.loads(hook.stdout)
+        self.assertEqual(parsed, expected)
+        self.assertIn(text, parsed['hookSpecificOutput']['additionalContext'])
+
+    def test_interactive_direct_call_without_project_is_a_usage_error(self):
+        for argv in (['--provider', 'codex'], ['--provider', 'claude', '--private-root', str(self.private)]):
+            with self.subTest(argv=argv):
+                code, out, err = run_main(argv, stdin=FakeTerminal())
+                self.assertEqual((code, out), (2, ''))
+                self.assertIn('--project', err)
+        code, out, _ = run_main(['--provider', 'codex', '--project', str(self.project)],
+                                stdin=FakeTerminal())
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)['status'], 'prepared_unverified')
+
+    @unittest.skipUnless(hasattr(os, 'openpty'), 'needs a pseudo-terminal')
+    def test_native_terminal_stdin_fails_fast_without_waiting(self):
+        for extra, code in (([], 2), (['--project', str(self.project)], 0)):
+            master, slave = os.openpty()
+            try:
+                result = subprocess.run([sys.executable, SCRIPT, '--provider', 'codex', *extra],
+                                        stdin=slave, capture_output=True, text=True, timeout=20)
+            finally:
+                os.close(master)
+                os.close(slave)
+            self.assertEqual(result.returncode, code, result.stderr)
+            if code:
+                self.assertIn('--project', result.stderr)
+                self.assertEqual(result.stdout, '')
 
 
 if __name__ == '__main__':

@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Diagnose common session-delivery refusals with stable path-free `reason` codes and short next steps, using an exact allowlist of static messages; unknown or path-bearing errors stay generic and `guidance_conflict` is unchanged. Hook success is now ASCII-escaped JSON (same parsed Unicode, guidance bytes and hashes), and a direct call without `--project` on a terminal exits with a usage error instead of waiting on stdin.
+
 - Bind session-delivery identity to advertised installation pins and reject changed owned native skills before delivery. Context-bound approvals need a fresh preview after this identity change.
 
 - Bind session-delivery local identities to original guidance bytes while retaining LF-normalized rendering. Valid raw-pinned CRLF stages now deliver, and newline-only changes remain visible locally without publishing private hashes. Direct API and `--project` selection require the exact equipped root. Hook ancestor lookup remains available through explicit `discover_ancestor=True` for callers that need it.

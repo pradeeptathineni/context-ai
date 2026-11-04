@@ -12,6 +12,55 @@ SCHEMA_VERSION = 1
 MAX_CONTEXT_CHARS = 9500  # Below Claude's documented 10k hook context limit.
 MAX_INPUT_BYTES = 65536
 SOURCES = {'startup', 'resume', 'clear', 'compact', 'fork'}
+GENERIC_FAILURE = 'Context delivery failed; inspect local installation.'
+
+
+# Group exact static messages under one safe next step
+def _refusals(code, step, *messages):
+    return {message: (code, step) for message in messages}
+
+
+# Exact static Invalid messages only. Path-bearing or unknown errors stay generic.
+REFUSALS = {
+    **_refusals('project_unavailable', 'Check that the project directory exists, then retry.',
+                'project unavailable'),
+    **_refusals('project_not_equipped',
+                'Run Context plan/apply in this project, or finish or undo its pending change.',
+                'project has no complete Context installation'),
+    **_refusals('provider_not_installed',
+                'Use an installed provider, or re-apply the selection with this one.',
+                'provider outside installed selection'),
+    **_refusals('installation_drift',
+                'Installed Context files differ from their pins; review them and re-run apply.',
+                'installed resource drift', 'stage resource drift', 'stage resource has no source pin'),
+    **_refusals('routing_drift',
+                'The managed route in project instructions changed; restore it or re-run apply.',
+                'project routing block drift', 'Claude routing block drift'),
+    **_refusals('claude_route_shadowed',
+                'Review the unmanaged CLAUDE.md and re-apply Claude routing, then retry.',
+                'unmanaged Claude route shadows project instructions'),
+    **_refusals('stage_unavailable', 'Choose a stage from the installed selection.',
+                'stage is not installed'),
+    **_refusals('private_root_required', 'Pass --private-root with private resources.',
+                'private source root required'),
+    **_refusals('private_root_unavailable', 'Check that the private root directory exists.',
+                'private source root unavailable'),
+    **_refusals('guidance_unavailable',
+                'Check that each selected guidance file exists and is within the size bound.',
+                'selected guidance missing or oversized'),
+    **_refusals('context_too_large', 'Narrow the selection or shorten its guidance.',
+                'selected context exceeds hook delivery bound'),
+    **_refusals('hook_input_invalid',
+                'Send one SessionStart JSON payload with a supported source and cwd.',
+                'unsupported hook event', 'unsupported session source',
+                'missing hook project directory', 'hook payload exceeds bound',
+                'hook payload is not valid JSON'),
+    **_refusals('task_file_invalid', 'Pass known task files inside the equipped project.',
+                'too many task files', 'task file must be a path', 'task file outside project'),
+    **_refusals('guidance_manifest_invalid', 'Fix the guidance manifest, then retry.',
+                'invalid task guidance manifest', 'duplicate guidance id',
+                'unsafe guidance directory', 'unsupported guidance glob'),
+}
 
 
 def prepare(project, provider, *, private_root=None, stage=None,
@@ -194,6 +243,8 @@ def main(argv=None):
     parser.add_argument('--format', choices=('receipt', 'context', 'local'), default='receipt',
                         help='Direct output; context/local may contain private guidance')
     args = parser.parse_args(argv)
+    if args.project is None and sys.stdin.isatty():
+        parser.error('--project is required when stdin is a terminal; hooks send a JSON payload on stdin')
     try:
         if args.project is not None:
             result = prepare(args.project, args.provider, private_root=args.private_root,
@@ -208,22 +259,29 @@ def main(argv=None):
         raw = sys.stdin.buffer.read(MAX_INPUT_BYTES + 1)
         if len(raw) > MAX_INPUT_BYTES:
             raise Invalid('hook payload exceeds bound')
-        output = hook_response(args.provider, json.loads(raw),
+        try:
+            payload = json.loads(raw)
+        except ValueError:
+            raise Invalid('hook payload is not valid JSON') from None
+        output = hook_response(args.provider, payload,
                                private_root=args.private_root, stage=args.stage,
                                private_resources=args.private_resource,
                                optional_private_resources=args.optional_private_resource,
                                task_files=args.task_file)
     except Exception as error:
         # Do not put paths or private source material in provider-facing errors.
-        failure = {'continue': False, 'stopReason': 'Context delivery failed; inspect local installation.'}
+        failure = {'continue': False, 'stopReason': GENERIC_FAILURE}
         if isinstance(error, GuidanceConflict):
             failure.update(reason='guidance_conflict', stopReason=(
                 'Equally ranked guidance disagrees; narrow its scope or revise topic assignments.'))
             if args.project is not None and args.format == 'local':
                 failure['conflict'] = error.details
+        elif type(error) is Invalid and str(error) in REFUSALS:
+            failure['reason'], failure['stopReason'] = REFUSALS[str(error)]
         print(json.dumps(failure))
         return 2 if args.project is not None else 0
-    print(json.dumps(output, ensure_ascii=False))
+    # ASCII escapes parse to the same Unicode and survive any stdout encoding.
+    print(json.dumps(output))
     return 0
 
 
