@@ -49,6 +49,13 @@ def prepare(project, provider, *, private_root=None, stage=None,
         path = inside(project, '.context-ai/resources/' + name)
         if not path.is_file() or digest(path.read_bytes()) != sha:
             raise Invalid('installed resource drift')
+    # Native skill entrypoints must match the advertised installation too
+    for name, sha in lock['owned'].items():
+        if name.startswith('.context-ai/resources/'):
+            continue
+        path = inside(project, name)
+        if not path.is_file() or digest(path.read_bytes()) != sha:
+            raise Invalid('installed resource drift')
     route = lock['routing_block']
     route_path = inside(project, 'AGENTS.md')
     project_text, project_sha = read_guidance(route_path, MAX_CONTEXT_CHARS)
@@ -147,6 +154,10 @@ def prepare(project, provider, *, private_root=None, stage=None,
               'source_digest': digest(json.dumps(public_selection, sort_keys=True).encode())}
     # The local identity binds exact private bytes for a trusted local consumer.
     local = digest(json.dumps({'context': rendered, 'sources': local_sources,
+                              'installation': {
+                                  'source_tree_sha256': resolution['source_tree_sha256'],
+                                  'library_revision': resolution['library_revision'],
+                                  'loadouts': resolution['loadouts'], 'owned': lock['owned']},
                               'task_files': guidance['task_files'],
                               'decisions': guidance['decisions']}, sort_keys=True).encode())
     return {'context': rendered, 'public_receipt': public,

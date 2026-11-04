@@ -35,6 +35,42 @@ class DeliveryIntegrity(unittest.TestCase):
                 self.assertNotIn(selected['sha256'], json.dumps(after['public_receipt']))
                 path.write_bytes(raw)
 
+    def test_reinstalled_advertised_resources_invalidate_an_unchanged_preview(self):
+        """Bind advertised resources even when the short delivered route is unchanged."""
+        before = d.prepare(self.project, 'codex')
+        lock_path = self.project / '.context-ai/lock.json'
+        lock = json.loads(lock_path.read_text())
+        name = next(iter(lock['resolution']['resources']))
+        path = self.project / '.context-ai/resources' / name
+        path.write_bytes(path.read_bytes() + b'\nSYNTHETIC UPDATED RESOURCE\n')
+        sha = c.digest(path.read_bytes())
+        lock['resolution']['resources'][name] = sha
+        lock['resolution']['source_tree_sha256'] = c.digest(c.encoded(lock['resolution']['resources']))
+        lock['owned']['.context-ai/resources/' + name] = sha
+        lock_path.write_text(json.dumps(lock))
+        after = d.prepare(self.project, 'codex')
+        self.assertEqual(before['context'], after['context'])
+        self.assertNotEqual(before['local_identity'], after['local_identity'])
+        self.assertNotIn(sha, json.dumps(after['public_receipt']))
+
+    def test_changed_native_skill_refuses_delivery_for_both_providers(self):
+        """Native skill bytes must match the same installation that preview checked."""
+        lock = c.installed(self.project)
+        names = [name for name in lock['owned'] if '/skills/' in name]
+        self.assertTrue(names)
+        for name in names:
+            path = self.project / name
+            original = path.read_bytes()
+            with self.subTest(name=name):
+                try:
+                    path.write_bytes(original + b'\nSYNTHETIC UNPINNED INSTRUCTION\n')
+                    for provider in ('codex', 'claude'):
+                        with self.assertRaisesRegex(c.Invalid, '^installed resource drift$'):
+                            d.prepare(self.project, provider)
+                finally:
+                    path.write_bytes(original)
+        d.prepare(self.project, 'codex')
+
     def test_claude_project_identity_uses_complete_original_source_bytes(self):
         project = self.project.parent / 'claude'
         project.mkdir()

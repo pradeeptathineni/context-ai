@@ -25,6 +25,11 @@ file, changed pin, unsafe path, unsupported event, or output beyond 9,500
 characters yields `continue: false` without partial guidance. The in-memory
 `local_identity` binds delivered text and the original bytes of consulted
 instructions, stage files, private resources, guidance manifests and rules.
+It also binds the installed library revision, selected loadouts, resource tree
+and owned native skill pins. Every owned native skill must match its pin before
+delivery, even when the short rendered route is unchanged. This identity change
+requires a new preview for outstanding context-bound approvals; it grants no
+new approval or installation authority.
 Rendering normalizes line endings to LF, while hashes use the original bytes.
 A newline-only source change therefore changes local identity even if the
 rendered text is unchanged. A correctly pinned CRLF stage remains valid.
